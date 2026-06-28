@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Signal Panel / Agent Artifacts</title>
+    <meta
+      name="description"
+      content="Example HTML artifact showing a compact status panel layout."
+    >
+    <link rel="stylesheet" href="../../assets/site.css">
+    <style>
+      .signal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .signal-card {
+        border: 1px solid #d7dde8;
+        border-radius: 8px;
+        padding: 18px;
+        background: #ffffff;
+      }
+
+      .signal-value {
+        margin: 10px 0 6px;
+        font-size: 2rem;
+        line-height: 1;
+        font-weight: 700;
+      }
+
+      .signal-label {
+        margin: 0;
+        color: #526071;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 12px;
+        margin: 24px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .timeline li {
+        display: grid;
+        grid-template-columns: 84px 1fr;
+        gap: 14px;
+        align-items: start;
+        padding: 14px 0;
+        border-top: 1px solid #e6ebf2;
+      }
+
+      .time {
+        color: #526071;
+        font-variant-numeric: tabular-nums;
+      }
+
+      @media (max-width: 560px) {
+        .timeline li {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="masthead" aria-labelledby="page-title">
+        <p class="eyebrow">Example Artifact</p>
+        <h1 id="page-title">Signal Panel</h1>
+        <p class="lede">
+          A compact HTML dashboard example for publishing final agent outputs
+          with a readable status summary and simple timeline.
+        </p>
+      </section>
+
+      <section class="panel" aria-labelledby="status-title">
+        <p class="eyebrow">Snapshot</p>
+        <h2 id="status-title">Artifact Health</h2>
+
+        <div class="signal-grid">
+          <article class="signal-card">
+            <p class="eyebrow">Files</p>
+            <p class="signal-value">2</p>
+            <p class="signal-label">HTML examples published</p>
+          </article>
+          <article class="signal-card">
+            <p class="eyebrow">Registry</p>
+            <p class="signal-value">OK</p>
+            <p class="signal-label">Manifest entry is linked</p>
+          </article>
+          <article class="signal-card">
+            <p class="eyebrow">Pages</p>
+            <p class="signal-value">Live</p>
+            <p class="signal-label">Ready for static hosting</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="timeline-title">
+        <p class="eyebrow">Flow</p>
+        <h2 id="timeline-title">Publish Timeline</h2>
+        <ul class="timeline">
+          <li>
+            <span class="time">Step 1</span>
+            <span>Create a final, self-contained HTML artifact.</span>
+          </li>
+          <li>
+            <span class="time">Step 2</span>
+            <span>Place it under <code>artifacts/&lt;slug&gt;/index.html</code>.</span>
+          </li>
+          <li>
+            <span class="time">Step 3</span>
+            <span>Register it in <code>artifacts.json</code> so the homepage can list it.</span>
+          </li>
+        </ul>
+        <p>
+          <a href="../../">Back to artifact registry</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

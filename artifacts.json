@@ -7,6 +7,14 @@
       "createdAt": "2026-06-28",
       "type": "html",
       "url": "artifacts/hello-world/"
+    },
+    {
+      "title": "Signal Panel",
+      "slug": "signal-panel",
+      "description": "A compact status-panel example for final HTML artifact publishing.",
+      "createdAt": "2026-06-28",
+      "type": "html",
+      "url": "artifacts/signal-panel/"
     }
   ]
 }
