@@ -37,6 +37,26 @@ When an agent publishes a final HTML artifact:
 https://irfansp.dev/agent-artifacts/artifacts/<slug>/
 ```
 
+## Local Publish Helper
+
+For local publishing through a git checkout, use:
+
+```bash
+node scripts/add-artifact.mjs \
+  --slug litellm-cache-report \
+  --title "LiteLLM Cache Report" \
+  --description "Short description of the artifact." \
+  --file /path/to/final/index.html
+```
+
+Then commit and push:
+
+```bash
+git add artifacts artifacts.json
+git commit -m "publish litellm cache report"
+git push origin main
+```
+
 ## Artifact Manifest
 
 `artifacts.json` is the lightweight registry used by the homepage.
