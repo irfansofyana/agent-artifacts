@@ -1,0 +1,12 @@
+{
+  "artifacts": [
+    {
+      "title": "Hello World",
+      "slug": "hello-world",
+      "description": "A tiny smoke-test page for the agent artifact publishing flow.",
+      "createdAt": "2026-06-28",
+      "type": "html",
+      "url": "artifacts/hello-world/"
+    }
+  ]
+}
