@@ -44,15 +44,17 @@
       </section>
       <article>
 <h2 id="executive-summary">Executive Summary</h2>
-<p>Recommended path: install <code>headroom-ai</code> into the mirrored LiteLLM Docker image and enable Headroom&rsquo;s LiteLLM callback in the existing LiteLLM <code>config.yaml</code>.</p>
+<p>Recommended path: install <code>headroom-ai</code> into the mirrored LiteLLM Docker image, copy a tiny local wrapper module into <code>/app</code>, and enable that wrapper callback in the existing LiteLLM <code>config.yaml</code>.</p>
 <p>This is the least invasive option for a single-replica LiteLLM proxy on EKS. It keeps the existing LiteLLM service shape, works across LiteLLM-supported providers, and avoids adding another proxy hop. Headroom also offers ASGI middleware and a standalone proxy, but those are better as a second phase if you specifically need response headers or proxy-level features.</p>
+<p>Important version note: <code>litellm==1.82.3</code> can run the Headroom callback, but LiteLLM Proxy does not reliably support an installed package dotted path directly in YAML, such as <code>headroom.integrations.litellm_callback.HeadroomCallback</code>. With proxy config loaded from a YAML file, the callback loader resolves that value as a local module file relative to the config path. Use a local wrapper module instead. This behavior was still present in checked LiteLLM versions through <code>1.90.1</code>, so upgrading LiteLLM is not the fix for this specific startup error.</p>
 <p>Sources:
 - Headroom LiteLLM integration: https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/litellm.mdx
 - Headroom PyPI package: https://pypi.org/project/headroom-ai/
 - Headroom configuration: https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/configuration.mdx
 - LiteLLM request hook docs: https://docs.litellm.ai/docs/proxy/call_hooks
 - LiteLLM production docs: https://docs.litellm.ai/docs/proxy/prod
-- LiteLLM prompt compression docs: https://docs.litellm.ai/docs/completion/prompt_compression</p>
+- LiteLLM prompt compression docs: https://docs.litellm.ai/docs/completion/prompt_compression
+- LiteLLM <code>v1.82.3</code> callback loader: https://raw.githubusercontent.com/BerriAI/litellm/v1.82.3/litellm/proxy/types_utils/utils.py</p>
 <h2 id="what-headroom-does">What Headroom Does</h2>
 <p>Headroom compresses large prompt/context payloads before they reach the LLM provider. The useful cases are long tool outputs, logs, file contents, RAG chunks, API responses, and long conversation histories.</p>
 <p>Headroom advertises:
@@ -65,13 +67,22 @@
 <pre><code class="language-yaml">litellm_settings:
   callbacks: [&quot;headroom.integrations.litellm_callback.HeadroomCallback&quot;]
 </code></pre>
+<p>In practice, that direct installed-package path is misleading for LiteLLM Proxy YAML config. On <code>1.82.3</code>, it can fail with:</p>
+<pre><code class="language-text">ImportError: Could not find module file /app/headroom/integrations/litellm_callback.py
+ImportError: Could not import HeadroomCallback from headroom.integrations.litellm_callback
+</code></pre>
+<p>The runtime-safe proxy config form is a local wrapper file in <code>/app</code>:</p>
+<pre><code class="language-yaml">litellm_settings:
+  callbacks:
+    - litellm_headroom_callback.HeadroomCallback
+</code></pre>
 <p>or ASGI middleware:</p>
 <pre><code class="language-python">from litellm.proxy.proxy_server import app
 from headroom.integrations.asgi import CompressionMiddleware
 
 app.add_middleware(CompressionMiddleware)
 </code></pre>
-<p>The callback compresses messages in LiteLLM&rsquo;s <code>pre_call_hook</code> before LiteLLM sends the request to the provider. LiteLLM&rsquo;s own docs confirm <code>async_pre_call_hook</code> is the correct hook for modifying incoming request data before the LLM API call.</p>
+<p>The callback compresses messages in LiteLLM's <code>pre_call_hook</code> before LiteLLM sends the request to the provider. LiteLLM's own docs confirm <code>async_pre_call_hook</code> is the correct hook for modifying incoming request data before the LLM API call.</p>
 <h2 id="integration-options">Integration Options</h2>
 <h3 id="option-a-litellm-callback">Option A: LiteLLM Callback</h3>
 <p>Recommended for the current EKS setup.</p>
@@ -82,7 +93,7 @@ app.add_middleware(CompressionMiddleware)
 - Lower operational risk
 - Good match for single replica</p>
 <p>Cons:
-- Does not expose Headroom&rsquo;s ASGI response headers such as <code>x-headroom-tokens-saved</code>
+- Does not expose Headroom's ASGI response headers such as <code>x-headroom-tokens-saved</code>
 - Savings visibility is mainly through logs or provider/LiteLLM spend deltas unless you add custom logging
 - Constructor tuning via YAML is limited; use a custom callback module if you need parameters</p>
 <h3 id="option-b-asgi-middleware">Option B: ASGI Middleware</h3>
@@ -125,7 +136,7 @@ app.add_middleware(CompressionMiddleware)
 <li>p50/p95 latency</li>
 <li>error rate</li>
 </ul>
-<h2 id="step-1-pin-versions">Step 1: Pin Versions</h2>
+<h2 id="step-1-pin-versions-and-add-the-wrapper-module">Step 1: Pin Versions and Add the Wrapper Module</h2>
 <p>Do not use unpinned <code>latest</code> for the production image. Pin both:</p>
 <ul>
 <li>LiteLLM base image tag</li>
@@ -138,23 +149,36 @@ FROM ${LITELLM_IMAGE}
 
 USER root
 RUN pip install --no-cache-dir &quot;headroom-ai==0.28.0&quot;
+
+COPY litellm_headroom_callback.py /app/litellm_headroom_callback.py
+
 USER litellm
 </code></pre>
 <p>If the base image does not use <code>litellm</code> as the final user, inspect it and preserve the original user instead of blindly setting <code>USER litellm</code>.</p>
+<p>Wrapper file:</p>
+<pre><code class="language-python"># litellm_headroom_callback.py
+from headroom.integrations.litellm_callback import HeadroomCallback
+</code></pre>
 <h2 id="step-2-enable-callback-in-litellm-config">Step 2: Enable Callback in LiteLLM Config</h2>
-<p>Add the Headroom callback to the existing LiteLLM config.</p>
+<p>Add the wrapper callback to the existing LiteLLM config.</p>
 <pre><code class="language-yaml">litellm_settings:
   callbacks:
-    - headroom.integrations.litellm_callback.HeadroomCallback
+    - litellm_headroom_callback.HeadroomCallback
 </code></pre>
 <p>If you already have callbacks, append Headroom instead of replacing them.</p>
 <p>Example:</p>
 <pre><code class="language-yaml">litellm_settings:
   callbacks:
     - langfuse
-    - headroom.integrations.litellm_callback.HeadroomCallback
+    - litellm_headroom_callback.HeadroomCallback
 </code></pre>
 <p>Callback order matters if another callback mutates messages. Put Headroom after policy/guardrail callbacks that need raw input, but before observability callbacks if you want logs to reflect compressed provider-bound prompts. If observability must capture original prompts, put observability before Headroom or keep raw prompt capture in the app layer.</p>
+<p>Do not use this installed package path directly in LiteLLM Proxy YAML:</p>
+<pre><code class="language-yaml">litellm_settings:
+  callbacks:
+    - headroom.integrations.litellm_callback.HeadroomCallback
+</code></pre>
+<p>That path is importable in normal Python, but the LiteLLM proxy config loader resolves callback modules as local files when <code>config_file_path</code> is set.</p>
 <h2 id="step-3-add-environment-variables">Step 3: Add Environment Variables</h2>
 <p>For OSS local mode, do not set <code>HEADROOM_API_KEY</code>. The callback uses local compression by default. If <code>HEADROOM_API_KEY</code> is present, Headroom switches to cloud compression according to its integration source.</p>
 <p>Recommended env:</p>
@@ -219,13 +243,14 @@ livenessProbe:
   config:
     litellm_settings:
       callbacks:
-        - headroom.integrations.litellm_callback.HeadroomCallback
+        - litellm_headroom_callback.HeadroomCallback
 </code></pre>
 <p>If your chart mounts LiteLLM config from a ConfigMap or Secret, update that object instead:</p>
 <pre><code class="language-yaml">litellm_settings:
   callbacks:
-    - headroom.integrations.litellm_callback.HeadroomCallback
+    - litellm_headroom_callback.HeadroomCallback
 </code></pre>
+<p>If your Helm chart creates a migration Job that starts LiteLLM or loads the same LiteLLM config, make sure that Job uses the same image containing <code>/app/litellm_headroom_callback.py</code>. Otherwise, use a migration-only config without callbacks. The startup trace that looks like a DB migration failure is usually the callback import failing before the app can finish startup.</p>
 <p>Then upgrade with a dry run first:</p>
 <pre><code class="language-bash">helm upgrade --install &lt;release&gt; &lt;chart&gt; \
   -n &lt;namespace&gt; \
@@ -299,6 +324,7 @@ helm -n &lt;namespace&gt; rollback &lt;release&gt; &lt;previous-revision&gt; --w
 </code></pre>
 <p>If there are no Headroom logs:
 - Confirm <code>headroom-ai</code> is installed in the image.
+- Confirm <code>/app/litellm_headroom_callback.py</code> exists in every container that loads the LiteLLM config, including migration jobs.
 - Confirm the callback exists in the effective LiteLLM config.
 - Confirm the pod restarted onto the new image.
 - Confirm traffic is hitting <code>/chat/completions</code> or compatible completion routes.</p>
@@ -348,7 +374,7 @@ helm -n &lt;namespace&gt; rollback &lt;release&gt; &lt;previous-revision&gt; --w
 - LiteLLM errors
 - provider errors
 - p95/p99 latency
-- &ldquo;Headroom compression failed, using original messages&rdquo; warnings
+- "Headroom compression failed, using original messages" warnings
 - token/cost trend</p>
 <h3 id="phase-3-tune-or-expand">Phase 3: Tune or Expand</h3>
 <p>If savings are material and stable, decide whether to:
@@ -365,14 +391,14 @@ helm -n &lt;namespace&gt; rollback &lt;release&gt; &lt;previous-revision&gt; --w
   litellm=&lt;old-ecr-image-tag&gt;
 </code></pre>
 <p>Config rollback:
-- Remove <code>headroom.integrations.litellm_callback.HeadroomCallback</code> from <code>litellm_settings.callbacks</code>.
+- Remove <code>litellm_headroom_callback.HeadroomCallback</code> from <code>litellm_settings.callbacks</code>.
 - Restart the pod.</p>
 <p>Because the callback fails open according to the source code path, compression failures should log a warning and use original messages. Still, do not rely on fail-open behavior as your only rollback.</p>
 <h2 id="risks-and-mitigations">Risks and Mitigations</h2>
 <h3 id="risk-data-governance">Risk: Data Governance</h3>
 <p>Local callback mode keeps compression in-process. Cloud mode sends messages to Headroom Cloud if <code>HEADROOM_API_KEY</code> is set. Do not set <code>HEADROOM_API_KEY</code> unless cloud processing has been reviewed.</p>
 <h3 id="risk-latency-overhead">Risk: Latency Overhead</h3>
-<p>Compression adds CPU work before provider calls. Monitor p95/p99 latency and CPU. If traffic grows, prefer scaling pods over increasing workers inside the same pod, matching LiteLLM&rsquo;s production guidance of one Uvicorn worker per pod.</p>
+<p>Compression adds CPU work before provider calls. Monitor p95/p99 latency and CPU. If traffic grows, prefer scaling pods over increasing workers inside the same pod, matching LiteLLM's production guidance of one Uvicorn worker per pod.</p>
 <h3 id="risk-quality-regression">Risk: Quality Regression</h3>
 <p>Compression can alter the prompt context. Use representative regression prompts, especially for:
 - tool-heavy agent traces
@@ -391,12 +417,16 @@ helm -n &lt;namespace&gt; rollback &lt;release&gt; &lt;previous-revision&gt; --w
 
 USER root
 RUN pip install --no-cache-dir &quot;headroom-ai==0.28.0&quot;
+COPY litellm_headroom_callback.py /app/litellm_headroom_callback.py
 USER litellm
+</code></pre>
+<p>Wrapper:</p>
+<pre><code class="language-python">from headroom.integrations.litellm_callback import HeadroomCallback
 </code></pre>
 <p>Config:</p>
 <pre><code class="language-yaml">litellm_settings:
   callbacks:
-    - headroom.integrations.litellm_callback.HeadroomCallback
+    - litellm_headroom_callback.HeadroomCallback
 </code></pre>
 <p>Env:</p>
 <pre><code class="language-yaml">- name: HEADROOM_TELEMETRY

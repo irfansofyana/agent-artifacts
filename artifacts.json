@@ -3,7 +3,7 @@
     {
       "title": "Headroom + LiteLLM on EKS Runbook",
       "slug": "headroom-litellm-eks-runbook",
-      "description": "Runbook for integrating Headroom prompt compression into a Helm-deployed LiteLLM proxy on AWS EKS.",
+      "description": "Runbook for adding Headroom prompt compression to LiteLLM on AWS EKS, including Helm rollout guidance.",
       "createdAt": "2026-06-30",
       "type": "html",
       "url": "artifacts/headroom-litellm-eks-runbook/"
