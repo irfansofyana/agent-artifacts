@@ -188,8 +188,68 @@ docker build \
 
 docker push &quot;$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG&quot;
 </code></pre>
-<h2 id="step-5-update-eks-deployment-or-helm-values">Step 5: Update EKS Deployment or Helm Values</h2>
-<p>If using plain Deployment:</p>
+<h2 id="step-5-update-helm-values">Step 5: Update Helm Values</h2>
+<p>Because your LiteLLM deployment uses Helm, make the image, config, and env changes in your chart values rather than patching the Deployment directly.</p>
+<p>Exact keys depend on your LiteLLM chart, but the values usually map to these concepts:</p>
+<pre><code class="language-yaml">replicaCount: 1
+
+image:
+  repository: &lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/litellm-headroom
+  tag: litellm-&lt;version&gt;-headroom-0.28.0
+  pullPolicy: IfNotPresent
+
+env:
+  - name: HEADROOM_TELEMETRY
+    value: &quot;off&quot;
+  - name: HEADROOM_STATELESS
+    value: &quot;true&quot;
+
+readinessProbe:
+  httpGet:
+    path: /health/readiness
+    port: 4000
+
+livenessProbe:
+  httpGet:
+    path: /health/liveliness
+    port: 4000
+</code></pre>
+<p>If your chart embeds LiteLLM config in values, add the callback there:</p>
+<pre><code class="language-yaml">litellm:
+  config:
+    litellm_settings:
+      callbacks:
+        - headroom.integrations.litellm_callback.HeadroomCallback
+</code></pre>
+<p>If your chart mounts LiteLLM config from a ConfigMap or Secret, update that object instead:</p>
+<pre><code class="language-yaml">litellm_settings:
+  callbacks:
+    - headroom.integrations.litellm_callback.HeadroomCallback
+</code></pre>
+<p>Then upgrade with a dry run first:</p>
+<pre><code class="language-bash">helm upgrade --install &lt;release&gt; &lt;chart&gt; \
+  -n &lt;namespace&gt; \
+  -f values.yaml \
+  -f values-headroom.yaml \
+  --dry-run --debug
+</code></pre>
+<p>Apply:</p>
+<pre><code class="language-bash">helm upgrade --install &lt;release&gt; &lt;chart&gt; \
+  -n &lt;namespace&gt; \
+  -f values.yaml \
+  -f values-headroom.yaml \
+  --wait --timeout 5m
+</code></pre>
+<p>Verify rollout:</p>
+<pre><code class="language-bash">kubectl -n &lt;namespace&gt; rollout status deploy/&lt;litellm-deployment&gt;
+kubectl -n &lt;namespace&gt; get pods -l app.kubernetes.io/instance=&lt;release&gt;
+kubectl -n &lt;namespace&gt; describe pod &lt;pod-name&gt; | grep -E &quot;Image:|HEADROOM_&quot;
+</code></pre>
+<p>Rollback if needed:</p>
+<pre><code class="language-bash">helm -n &lt;namespace&gt; history &lt;release&gt;
+helm -n &lt;namespace&gt; rollback &lt;release&gt; &lt;previous-revision&gt; --wait --timeout 5m
+</code></pre>
+<p>If using a plain Deployment instead of Helm, the equivalent patch is:</p>
 <pre><code class="language-yaml">spec:
   replicas: 1
   template:
@@ -352,7 +412,7 @@ USER litellm
 <li>Do you already use Langfuse/LiteLLM spend tracking in production?</li>
 <li>Is the main token pain from coding-agent/tool traces, RAG chunks, long chat history, or generic user prompts?</li>
 <li>Are you allowed to use Headroom Cloud, or must everything stay local/VPC-only?</li>
-<li>Is your LiteLLM deployed through Helm, Kustomize, ArgoCD, or plain manifests?</li>
+<li>Which Helm chart are you using for LiteLLM: the official chart, an internal chart, or a wrapper chart?</li>
 </ol>
       </article>
       <p class="source-note">Generated from <code>research/headroom-litellm-eks-runbook-2026-06-30.md</code>.</p>
