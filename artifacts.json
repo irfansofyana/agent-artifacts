@@ -15,6 +15,14 @@
       "createdAt": "2026-06-28",
       "type": "html",
       "url": "artifacts/signal-panel/"
+    },
+    {
+      "title": "Headroom + LiteLLM on EKS Runbook",
+      "slug": "headroom-litellm-eks-runbook",
+      "description": "Runbook for adding Headroom prompt compression to a mirrored LiteLLM image running on AWS EKS.",
+      "createdAt": "2026-06-30",
+      "type": "html",
+      "url": "artifacts/headroom-litellm-eks-runbook/"
     }
   ]
 }

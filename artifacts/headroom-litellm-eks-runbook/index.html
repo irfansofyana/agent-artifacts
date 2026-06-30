@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Headroom + LiteLLM on EKS Runbook / Agent Artifacts</title>
+    <meta name="description" content="Runbook for integrating Headroom with a mirrored LiteLLM Docker image on AWS EKS to reduce token consumption.">
+    <link rel="stylesheet" href="../../assets/site.css">
+    <style>
+      :root { color-scheme: light; }
+      body { background: #f7f8fb; color: #18202f; }
+      .shell { max-width: 980px; margin: 0 auto; padding: 48px 22px 80px; }
+      .masthead { border-bottom: 1px solid #d9deea; padding-bottom: 26px; margin-bottom: 34px; }
+      .eyebrow { margin: 0 0 10px; color: #536079; font-size: 0.78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+      h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.02; letter-spacing: 0; }
+      .lede { max-width: 760px; margin: 16px 0 0; color: #46536a; font-size: 1.08rem; line-height: 1.6; }
+      .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; color: #5a657a; font-size: .92rem; }
+      article { font-size: 1rem; line-height: 1.7; }
+      article h2 { margin-top: 2.1em; padding-top: .2em; font-size: 1.55rem; line-height: 1.22; letter-spacing: 0; }
+      article h3 { margin-top: 1.65em; font-size: 1.18rem; letter-spacing: 0; }
+      article p, article li { color: #263247; }
+      article a { color: #0b64c0; text-underline-offset: 3px; }
+      article code { border: 1px solid #d7dce8; border-radius: 5px; background: #eef2f8; padding: .12rem .32rem; font-size: .92em; }
+      article pre { overflow-x: auto; border: 1px solid #d7dce8; border-radius: 8px; background: #101827; color: #f2f5fa; padding: 16px 18px; line-height: 1.55; }
+      article pre code { border: 0; background: transparent; color: inherit; padding: 0; }
+      article blockquote { margin: 1.25rem 0; padding: .7rem 1rem; border-left: 4px solid #4a89dc; background: #eef5ff; color: #263247; }
+      article table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .95rem; }
+      article th, article td { border: 1px solid #d7dce8; padding: 10px 12px; text-align: left; vertical-align: top; }
+      article th { background: #eef2f8; }
+      .source-note { margin-top: 44px; padding-top: 18px; border-top: 1px solid #d9deea; color: #667086; font-size: .9rem; }
+      @media (max-width: 640px) {
+        .shell { padding: 34px 16px 64px; }
+        article pre { border-radius: 6px; padding: 13px 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="masthead" aria-labelledby="page-title">
+        <p class="eyebrow">Runbook</p>
+        <h1 id="page-title">Headroom + LiteLLM on AWS EKS</h1>
+        <p class="lede">A practical integration path for adding Headroom prompt compression to a mirrored LiteLLM Docker image running as a single replica on EKS.</p>
+        <div class="meta"><span>Published artifact</span><span>Updated 2026-06-30</span></div>
+      </section>
+      <article>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Recommended path: install <code>headroom-ai</code> into the mirrored LiteLLM Docker image and enable Headroom&rsquo;s LiteLLM callback in the existing LiteLLM <code>config.yaml</code>.</p>
+<p>This is the least invasive option for a single-replica LiteLLM proxy on EKS. It keeps the existing LiteLLM service shape, works across LiteLLM-supported providers, and avoids adding another proxy hop. Headroom also offers ASGI middleware and a standalone proxy, but those are better as a second phase if you specifically need response headers or proxy-level features.</p>
+<p>Sources:
+- Headroom LiteLLM integration: https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/litellm.mdx
+- Headroom PyPI package: https://pypi.org/project/headroom-ai/
+- Headroom configuration: https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/configuration.mdx
+- LiteLLM request hook docs: https://docs.litellm.ai/docs/proxy/call_hooks
+- LiteLLM production docs: https://docs.litellm.ai/docs/proxy/prod
+- LiteLLM prompt compression docs: https://docs.litellm.ai/docs/completion/prompt_compression</p>
+<h2 id="what-headroom-does">What Headroom Does</h2>
+<p>Headroom compresses large prompt/context payloads before they reach the LLM provider. The useful cases are long tool outputs, logs, file contents, RAG chunks, API responses, and long conversation histories.</p>
+<p>Headroom advertises:
+- Library mode: <code>compress(messages)</code>
+- LiteLLM callback: <code>litellm.callbacks = [HeadroomCallback()]</code>
+- ASGI middleware: <code>app.add_middleware(CompressionMiddleware)</code>
+- Standalone proxy: <code>headroom proxy</code>
+- MCP integration and agent wrappers</p>
+<p>For LiteLLM proxy specifically, the official Headroom docs show two supported integration paths:</p>
+<pre><code class="language-yaml">litellm_settings:
+  callbacks: [&quot;headroom.integrations.litellm_callback.HeadroomCallback&quot;]
+</code></pre>
+<p>or ASGI middleware:</p>
+<pre><code class="language-python">from litellm.proxy.proxy_server import app
+from headroom.integrations.asgi import CompressionMiddleware
+
+app.add_middleware(CompressionMiddleware)
+</code></pre>
+<p>The callback compresses messages in LiteLLM&rsquo;s <code>pre_call_hook</code> before LiteLLM sends the request to the provider. LiteLLM&rsquo;s own docs confirm <code>async_pre_call_hook</code> is the correct hook for modifying incoming request data before the LLM API call.</p>
+<h2 id="integration-options">Integration Options</h2>
+<h3 id="option-a-litellm-callback">Option A: LiteLLM Callback</h3>
+<p>Recommended for the current EKS setup.</p>
+<p>Pros:
+- Minimal change: Docker dependency plus <code>config.yaml</code>
+- No new Service, Deployment, Ingress, or sidecar
+- Works inside the existing LiteLLM request lifecycle
+- Lower operational risk
+- Good match for single replica</p>
+<p>Cons:
+- Does not expose Headroom&rsquo;s ASGI response headers such as <code>x-headroom-tokens-saved</code>
+- Savings visibility is mainly through logs or provider/LiteLLM spend deltas unless you add custom logging
+- Constructor tuning via YAML is limited; use a custom callback module if you need parameters</p>
+<h3 id="option-b-asgi-middleware">Option B: ASGI Middleware</h3>
+<p>Good second phase if you want response headers or endpoint-level interception.</p>
+<p>Pros:
+- Intercepts <code>/v1/messages</code>, <code>/v1/chat/completions</code>, <code>/v1/responses</code>, and <code>/chat/completions</code>
+- Adds response headers such as <code>x-headroom-compressed</code>, <code>x-headroom-tokens-before</code>, <code>x-headroom-tokens-after</code>, and <code>x-headroom-tokens-saved</code></p>
+<p>Cons:
+- Requires changing the app startup path, because the official LiteLLM image normally starts through the <code>litellm</code> CLI
+- More fragile across LiteLLM image upgrades</p>
+<h3 id="option-c-separate-headroom-proxy">Option C: Separate Headroom Proxy</h3>
+<p>Not recommended for this first pass.</p>
+<p>Pros:
+- Zero changes to LiteLLM internals if clients can point to Headroom first
+- Can enable proxy features such as <code>--mode token</code> or <code>--mode cache</code></p>
+<p>Cons:
+- Adds another hop: client -&gt; Headroom -&gt; LiteLLM -&gt; provider
+- Needs extra auth/networking decisions
+- More moving pieces on EKS
+- Harder to reason about failures and request IDs</p>
+<h2 id="target-architecture">Target Architecture</h2>
+<pre><code class="language-text">Client / Open WebUI / internal apps
+  -&gt; Kubernetes Service / Ingress
+  -&gt; LiteLLM pod, single replica
+     -&gt; HeadroomCallback inside LiteLLM process
+     -&gt; provider SDK/API via LiteLLM
+  -&gt; Bedrock / OpenAI / Anthropic / Azure / etc.
+</code></pre>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Existing LiteLLM proxy config mounted into the pod, usually <code>config.yaml</code></li>
+<li>Existing mirrored official LiteLLM image build pipeline</li>
+<li>Python 3.10+ in the base image, required by Headroom</li>
+<li>ECR repository for the custom image</li>
+<li>EKS deployment or Helm values under your control</li>
+<li>Baseline metrics for comparison:</li>
+<li>LiteLLM request count</li>
+<li>LiteLLM spend tracking, if enabled</li>
+<li>provider-side input/output token counts</li>
+<li>p50/p95 latency</li>
+<li>error rate</li>
+</ul>
+<h2 id="step-1-pin-versions">Step 1: Pin Versions</h2>
+<p>Do not use unpinned <code>latest</code> for the production image. Pin both:</p>
+<ul>
+<li>LiteLLM base image tag</li>
+<li><code>headroom-ai</code> package version</li>
+</ul>
+<p>As of this research, PyPI lists <code>headroom-ai 0.28.0</code>, released 2026-06-29, requiring Python <code>&gt;=3.10</code>.</p>
+<p>Example:</p>
+<pre><code class="language-dockerfile">ARG LITELLM_IMAGE=docker.litellm.ai/berriai/litellm:&lt;pin-this&gt;
+FROM ${LITELLM_IMAGE}
+
+USER root
+RUN pip install --no-cache-dir &quot;headroom-ai==0.28.0&quot;
+USER litellm
+</code></pre>
+<p>If the base image does not use <code>litellm</code> as the final user, inspect it and preserve the original user instead of blindly setting <code>USER litellm</code>.</p>
+<h2 id="step-2-enable-callback-in-litellm-config">Step 2: Enable Callback in LiteLLM Config</h2>
+<p>Add the Headroom callback to the existing LiteLLM config.</p>
+<pre><code class="language-yaml">litellm_settings:
+  callbacks:
+    - headroom.integrations.litellm_callback.HeadroomCallback
+</code></pre>
+<p>If you already have callbacks, append Headroom instead of replacing them.</p>
+<p>Example:</p>
+<pre><code class="language-yaml">litellm_settings:
+  callbacks:
+    - langfuse
+    - headroom.integrations.litellm_callback.HeadroomCallback
+</code></pre>
+<p>Callback order matters if another callback mutates messages. Put Headroom after policy/guardrail callbacks that need raw input, but before observability callbacks if you want logs to reflect compressed provider-bound prompts. If observability must capture original prompts, put observability before Headroom or keep raw prompt capture in the app layer.</p>
+<h2 id="step-3-add-environment-variables">Step 3: Add Environment Variables</h2>
+<p>For OSS local mode, do not set <code>HEADROOM_API_KEY</code>. The callback uses local compression by default. If <code>HEADROOM_API_KEY</code> is present, Headroom switches to cloud compression according to its integration source.</p>
+<p>Recommended env:</p>
+<pre><code class="language-yaml">env:
+  - name: HEADROOM_TELEMETRY
+    value: &quot;off&quot;
+  - name: HEADROOM_STATELESS
+    value: &quot;true&quot;
+</code></pre>
+<p>Notes:
+- <code>HEADROOM_TELEMETRY</code> defaults to opt-in/off in the docs, but set it explicitly for enterprise hygiene.
+- <code>HEADROOM_STATELESS=true</code> reduces filesystem writes. Use this for the first rollout unless you deliberately want local memory/persistent savings.
+- If you later use persistent Headroom features, mount a PVC and set <code>HEADROOM_WORKSPACE_DIR</code>.</p>
+<p>Do not set these unless you intentionally want cloud mode:</p>
+<pre><code class="language-yaml">HEADROOM_API_KEY
+HEADROOM_API_URL
+</code></pre>
+<h2 id="step-4-build-and-push-to-ecr">Step 4: Build and Push to ECR</h2>
+<p>Example:</p>
+<pre><code class="language-bash">AWS_ACCOUNT_ID=&quot;$(aws sts get-caller-identity --query Account --output text)&quot;
+AWS_REGION=&quot;ap-southeast-1&quot;
+ECR_REPO=&quot;litellm-headroom&quot;
+IMAGE_TAG=&quot;litellm-&lt;version&gt;-headroom-0.28.0&quot;
+
+aws ecr get-login-password --region &quot;$AWS_REGION&quot; \
+  | docker login --username AWS --password-stdin &quot;$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com&quot;
+
+docker build \
+  --build-arg LITELLM_IMAGE=docker.litellm.ai/berriai/litellm:&lt;pin-this&gt; \
+  -t &quot;$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG&quot; .
+
+docker push &quot;$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG&quot;
+</code></pre>
+<h2 id="step-5-update-eks-deployment-or-helm-values">Step 5: Update EKS Deployment or Helm Values</h2>
+<p>If using plain Deployment:</p>
+<pre><code class="language-yaml">spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: litellm
+          image: &lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/litellm-headroom:litellm-&lt;version&gt;-headroom-0.28.0
+          env:
+            - name: HEADROOM_TELEMETRY
+              value: &quot;off&quot;
+            - name: HEADROOM_STATELESS
+              value: &quot;true&quot;
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+          livenessProbe:
+            httpGet:
+              path: /health/liveliness
+              port: 4000
+</code></pre>
+<p>LiteLLM docs list <code>/health</code>, <code>/health/readiness</code>, and <code>/health/liveliness</code> as proxy health endpoints.</p>
+<p>LiteLLM production docs recommend one Uvicorn worker per pod by default and resource sizing roughly <code>1 CPU</code> and <code>4Gi</code> memory per worker. For your single replica, start with the existing sizing if it is stable, then watch CPU and latency after enabling compression.</p>
+<h2 id="step-6-smoke-test">Step 6: Smoke Test</h2>
+<p>Port-forward:</p>
+<pre><code class="language-bash">kubectl -n &lt;namespace&gt; port-forward deploy/&lt;litellm-deployment&gt; 4000:4000
+</code></pre>
+<p>Send a deliberately large prompt where compression should trigger:</p>
+<pre><code class="language-bash">curl -sS http://localhost:4000/chat/completions \
+  -H &quot;Authorization: Bearer $LITELLM_MASTER_KEY&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{
+    &quot;model&quot;: &quot;&lt;your-litellm-model-name&gt;&quot;,
+    &quot;messages&quot;: [
+      {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;Summarize this log and identify the root cause:\n&lt;large repeated log payload here&gt;&quot;
+      }
+    ]
+  }'
+</code></pre>
+<p>Check pod logs:</p>
+<pre><code class="language-bash">kubectl -n &lt;namespace&gt; logs deploy/&lt;litellm-deployment&gt; --tail=200 | grep -i headroom
+</code></pre>
+<p>Expected signal:</p>
+<pre><code class="language-text">Headroom: &lt;before&gt;→&lt;after&gt; tokens (saved &lt;n&gt;, &lt;percent&gt;%)
+</code></pre>
+<p>If there are no Headroom logs:
+- Confirm <code>headroom-ai</code> is installed in the image.
+- Confirm the callback exists in the effective LiteLLM config.
+- Confirm the pod restarted onto the new image.
+- Confirm traffic is hitting <code>/chat/completions</code> or compatible completion routes.</p>
+<h2 id="step-7-measure-savings">Step 7: Measure Savings</h2>
+<p>Use a before/after window, not a single request.</p>
+<p>Minimum useful measurement:</p>
+<ol>
+<li>Pick a representative workload window, such as one business day or a replay set.</li>
+<li>Record baseline:</li>
+<li>request count</li>
+<li>provider input tokens</li>
+<li>provider output tokens</li>
+<li>cost</li>
+<li>p50/p95 latency</li>
+<li>error rate</li>
+<li>Enable Headroom for the same traffic type.</li>
+<li>Compare:</li>
+<li>input token reduction</li>
+<li>output token change</li>
+<li>total cost delta</li>
+<li>latency delta</li>
+<li>answer quality issues</li>
+</ol>
+<p>Important: Headroom mainly reduces input/context tokens unless you use proxy-level output shaping. LiteLLM callback mode should be evaluated primarily on provider input token reduction.</p>
+<h2 id="rollout-plan">Rollout Plan</h2>
+<h3 id="phase-0-local-image-validation">Phase 0: Local Image Validation</h3>
+<p>Run the custom image locally with the production-ish config and send one synthetic long request.</p>
+<p>Exit criteria:
+- LiteLLM starts
+- Headroom imports successfully
+- Normal short request still works
+- Long request logs savings</p>
+<h3 id="phase-1-eks-shadowcanary">Phase 1: EKS Shadow/Canary</h3>
+<p>Because you currently run one replica, the safest first EKS validation is either:
+- deploy a second temporary LiteLLM service with the Headroom image and point only test clients to it, or
+- deploy during a low-traffic window and be ready to roll back the image.</p>
+<p>Exit criteria:
+- no startup crash
+- no auth/config regression
+- no increase in 5xx
+- p95 latency acceptable
+- observed savings on long prompts</p>
+<h3 id="phase-2-production-enablement">Phase 2: Production Enablement</h3>
+<p>Roll the main Deployment to the new image and config.</p>
+<p>Watch for 30-60 minutes:
+- pod restarts
+- LiteLLM errors
+- provider errors
+- p95/p99 latency
+- &ldquo;Headroom compression failed, using original messages&rdquo; warnings
+- token/cost trend</p>
+<h3 id="phase-3-tune-or-expand">Phase 3: Tune or Expand</h3>
+<p>If savings are material and stable, decide whether to:
+- stay on callback mode
+- add custom Headroom callback instantiation for stricter tuning
+- move to ASGI middleware for response headers
+- evaluate Headroom Cloud/self-hosted team deployment only if governance accepts it</p>
+<h2 id="rollback">Rollback</h2>
+<p>Fast rollback:</p>
+<pre><code class="language-bash">kubectl -n &lt;namespace&gt; rollout undo deploy/&lt;litellm-deployment&gt;
+</code></pre>
+<p>or set the old image tag:</p>
+<pre><code class="language-bash">kubectl -n &lt;namespace&gt; set image deploy/&lt;litellm-deployment&gt; \
+  litellm=&lt;old-ecr-image-tag&gt;
+</code></pre>
+<p>Config rollback:
+- Remove <code>headroom.integrations.litellm_callback.HeadroomCallback</code> from <code>litellm_settings.callbacks</code>.
+- Restart the pod.</p>
+<p>Because the callback fails open according to the source code path, compression failures should log a warning and use original messages. Still, do not rely on fail-open behavior as your only rollback.</p>
+<h2 id="risks-and-mitigations">Risks and Mitigations</h2>
+<h3 id="risk-data-governance">Risk: Data Governance</h3>
+<p>Local callback mode keeps compression in-process. Cloud mode sends messages to Headroom Cloud if <code>HEADROOM_API_KEY</code> is set. Do not set <code>HEADROOM_API_KEY</code> unless cloud processing has been reviewed.</p>
+<h3 id="risk-latency-overhead">Risk: Latency Overhead</h3>
+<p>Compression adds CPU work before provider calls. Monitor p95/p99 latency and CPU. If traffic grows, prefer scaling pods over increasing workers inside the same pod, matching LiteLLM&rsquo;s production guidance of one Uvicorn worker per pod.</p>
+<h3 id="risk-quality-regression">Risk: Quality Regression</h3>
+<p>Compression can alter the prompt context. Use representative regression prompts, especially for:
+- tool-heavy agent traces
+- RAG answers requiring exact citations
+- compliance-sensitive responses
+- prompts where exact logs or JSON fields matter</p>
+<h3 id="risk-observability-confusion">Risk: Observability Confusion</h3>
+<p>LiteLLM/provider token counts will show the compressed prompt, not necessarily the original logical payload. Decide whether app-layer observability should retain original prompt size for internal ROI tracking.</p>
+<h3 id="risk-single-replica-restart">Risk: Single Replica Restart</h3>
+<p>With one replica, image rollout causes downtime unless your deployment has enough surge capacity and readiness behavior. Use low-traffic rollout or temporarily set <code>replicas: 2</code> for the deployment window if your DB/Redis/config supports it.</p>
+<h3 id="risk-callback-limit-or-callback-order">Risk: Callback Limit or Callback Order</h3>
+<p>LiteLLM has callback limits and every callback adds per-request processing. If you already use many callbacks, check callback count and latency.</p>
+<h2 id="recommended-first-implementation">Recommended First Implementation</h2>
+<p>Use local callback mode:</p>
+<pre><code class="language-dockerfile">FROM docker.litellm.ai/berriai/litellm:&lt;pin-this&gt;
+
+USER root
+RUN pip install --no-cache-dir &quot;headroom-ai==0.28.0&quot;
+USER litellm
+</code></pre>
+<p>Config:</p>
+<pre><code class="language-yaml">litellm_settings:
+  callbacks:
+    - headroom.integrations.litellm_callback.HeadroomCallback
+</code></pre>
+<p>Env:</p>
+<pre><code class="language-yaml">- name: HEADROOM_TELEMETRY
+  value: &quot;off&quot;
+- name: HEADROOM_STATELESS
+  value: &quot;true&quot;
+</code></pre>
+<p>This should be the first POC because it is the smallest change with the cleanest rollback.</p>
+<h2 id="open-questions-for-irfan">Open Questions for Irfan</h2>
+<p>These do not block the first POC:</p>
+<ol>
+<li>Which providers/models are routed through your LiteLLM today: Bedrock Claude, OpenAI, Azure OpenAI, Gemini, or mixed?</li>
+<li>Do you already use Langfuse/LiteLLM spend tracking in production?</li>
+<li>Is the main token pain from coding-agent/tool traces, RAG chunks, long chat history, or generic user prompts?</li>
+<li>Are you allowed to use Headroom Cloud, or must everything stay local/VPC-only?</li>
+<li>Is your LiteLLM deployed through Helm, Kustomize, ArgoCD, or plain manifests?</li>
+</ol>
+      </article>
+      <p class="source-note">Generated from <code>research/headroom-litellm-eks-runbook-2026-06-30.md</code>.</p>
+    </main>
+  </body>
+</html>
