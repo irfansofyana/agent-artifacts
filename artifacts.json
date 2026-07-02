@@ -23,6 +23,14 @@
       "createdAt": "2026-06-28",
       "type": "html",
       "url": "artifacts/signal-panel/"
+    },
+    {
+      "title": "Wedding Venue Price Benchmark",
+      "slug": "wedding-venue-comparison-2026-07-02",
+      "description": "Public-safe wedding venue price comparison with venue-only, vendor charge, and venue+catering benchmarks.",
+      "createdAt": "2026-07-02",
+      "type": "html",
+      "url": "artifacts/wedding-venue-comparison-2026-07-02/"
     }
   ]
 }
