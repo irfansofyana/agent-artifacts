@@ -4,31 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Wedding Venue Price Benchmark</title>
-    <meta name="description" content="Ringkasan benchmark harga venue, charge vendor, dan paket venue+catering untuk persiapan wedding.">
+    <meta name="description" content="Ringkasan benchmark harga venue, charge vendor, dan paket wedding terbaru untuk persiapan wedding Irfan dan Inez.">
     <style>
       :root {
-        --ink: #1f2523;
-        --muted: #66706d;
-        --line: #d8ded8;
-        --paper: #fbfaf5;
+        color-scheme: light;
+        --paper: #f8f6f0;
         --panel: #ffffff;
-        --mint: #dfeee5;
-        --sage: #6e8f79;
-        --gold: #c7963b;
-        --rose: #c7786d;
-        --blue: #506f91;
-        --shadow: 0 20px 60px rgba(45, 54, 48, 0.12);
+        --ink: #202623;
+        --muted: #66706d;
+        --line: #d9dfda;
+        --sage: #5f8470;
+        --sage-soft: #e3efe8;
+        --gold: #b7832f;
+        --rose: #b96d64;
+        --blue: #516f93;
+        --shadow: 0 18px 50px rgba(42, 52, 46, 0.1);
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
 
       body {
         margin: 0;
         color: var(--ink);
         background:
-          linear-gradient(135deg, rgba(223, 238, 229, 0.7), rgba(251, 250, 245, 0.2) 34%, rgba(199, 150, 59, 0.12)),
+          linear-gradient(135deg, rgba(227, 239, 232, 0.9), rgba(248, 246, 240, 0.35) 38%, rgba(183, 131, 47, 0.12)),
           var(--paper);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         line-height: 1.5;
@@ -40,15 +39,15 @@
         padding: 32px 0 56px;
       }
 
-      .hero {
-        display: grid;
-        gap: 20px;
-        padding: 28px;
-        border: 1px solid rgba(110, 143, 121, 0.28);
-        background: rgba(255, 255, 255, 0.78);
+      .hero,
+      .panel {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.86);
         box-shadow: var(--shadow);
-        backdrop-filter: blur(12px);
       }
+
+      .hero { padding: 28px; }
+      .panel { margin-top: 18px; padding: 22px; }
 
       .eyebrow {
         margin: 0 0 8px;
@@ -59,50 +58,56 @@
         text-transform: uppercase;
       }
 
+      h1, h2, h3, p { margin-top: 0; }
+
       h1 {
-        margin: 0;
         max-width: 820px;
+        margin-bottom: 14px;
         font-family: Georgia, "Times New Roman", serif;
         font-size: clamp(34px, 5vw, 64px);
-        line-height: 0.95;
-        font-weight: 700;
+        line-height: 0.96;
       }
 
+      h2 { margin-bottom: 4px; font-size: 21px; }
+      h3 { margin-bottom: 8px; font-size: 16px; }
+
       .lede {
-        max-width: 760px;
-        margin: 0;
+        max-width: 780px;
+        margin-bottom: 0;
         color: var(--muted);
         font-size: 16px;
       }
 
-      .meta {
+      .meta,
+      .chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 2px;
+        gap: 8px;
+        margin-top: 14px;
       }
 
-      .pill {
+      .pill,
+      .chip {
         display: inline-flex;
         align-items: center;
-        min-height: 32px;
-        padding: 6px 10px;
+        min-height: 30px;
+        padding: 5px 9px;
         border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.72);
-        color: #34403b;
-        font-size: 13px;
-        font-weight: 700;
+        background: rgba(255, 255, 255, 0.78);
+        color: #33403a;
+        font-size: 12px;
+        font-weight: 750;
       }
 
       .summary {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
-        margin: 18px 0 20px;
+        margin-top: 18px;
       }
 
       .metric {
-        min-height: 116px;
+        min-height: 118px;
         padding: 16px;
         border: 1px solid var(--line);
         background: var(--panel);
@@ -110,7 +115,7 @@
 
       .metric strong {
         display: block;
-        font-size: 23px;
+        font-size: 24px;
         line-height: 1.05;
       }
 
@@ -126,12 +131,7 @@
         align-items: end;
         justify-content: space-between;
         gap: 16px;
-        margin: 28px 0 12px;
-      }
-
-      .section-title h2 {
-        margin: 0;
-        font-size: 20px;
+        margin-bottom: 12px;
       }
 
       .section-title p {
@@ -144,18 +144,16 @@
         overflow-x: auto;
         border: 1px solid var(--line);
         background: var(--panel);
-        box-shadow: 0 12px 34px rgba(45, 54, 48, 0.08);
       }
 
       table {
         width: 100%;
-        min-width: 1080px;
+        min-width: 920px;
         border-collapse: collapse;
       }
 
-      th,
-      td {
-        padding: 13px 12px;
+      th, td {
+        padding: 12px;
         border-bottom: 1px solid var(--line);
         vertical-align: top;
         text-align: left;
@@ -163,27 +161,24 @@
       }
 
       th {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background: #eef4ef;
-        color: #34403b;
+        background: #edf4ef;
+        color: #33403a;
         font-size: 12px;
-        font-weight: 800;
+        font-weight: 850;
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
 
-      tbody tr:hover {
-        background: #fbfcf8;
-      }
+      tbody tr:hover { background: #fbfcf8; }
+      td:first-child { font-weight: 800; }
 
-      td:first-child {
+      .money {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
         font-weight: 800;
-        color: #202a26;
       }
 
-      .status {
+      .tag {
         display: inline-flex;
         width: max-content;
         padding: 3px 8px;
@@ -192,35 +187,11 @@
         font-weight: 800;
       }
 
-      .active {
-        color: var(--sage);
-        background: rgba(110, 143, 121, 0.1);
-      }
-
-      .pending {
-        color: var(--blue);
-        background: rgba(80, 111, 145, 0.1);
-      }
-
-      .hold {
-        color: var(--gold);
-        background: rgba(199, 150, 59, 0.12);
-      }
-
-      .no {
-        color: var(--rose);
-        background: rgba(199, 120, 109, 0.12);
-      }
-
-      .money {
-        white-space: nowrap;
-        font-variant-numeric: tabular-nums;
-        font-weight: 750;
-      }
-
-      .note {
-        color: var(--muted);
-      }
+      .good { color: var(--sage); background: rgba(95, 132, 112, 0.1); }
+      .watch { color: var(--gold); background: rgba(183, 131, 47, 0.12); }
+      .heavy { color: var(--rose); background: rgba(185, 109, 100, 0.12); }
+      .pending { color: var(--blue); background: rgba(81, 111, 147, 0.1); }
+      .note { color: var(--muted); }
 
       .cards {
         display: grid;
@@ -231,288 +202,120 @@
       .card {
         padding: 16px;
         border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.82);
-      }
-
-      .card h3 {
-        margin: 0 0 8px;
-        font-size: 15px;
+        background: var(--panel);
       }
 
       .card p,
       .card ul {
-        margin: 0;
+        margin-bottom: 0;
         color: var(--muted);
         font-size: 13px;
       }
 
-      .card ul {
-        padding-left: 18px;
-      }
+      .card ul { padding-left: 18px; }
+      footer { margin-top: 22px; color: var(--muted); font-size: 12px; }
 
-      footer {
-        margin-top: 28px;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      @media (max-width: 820px) {
-        .shell {
-          width: min(100% - 20px, 1180px);
-          padding-top: 12px;
-        }
-
-        .hero {
-          padding: 20px;
-        }
-
+      @media (max-width: 860px) {
         .summary,
-        .cards {
-          grid-template-columns: 1fr;
-        }
+        .cards { grid-template-columns: 1fr 1fr; }
+      }
 
-        .section-title {
-          display: block;
-        }
-
-        th,
-        td {
-          padding: 11px 10px;
-        }
+      @media (max-width: 620px) {
+        .shell { width: min(100% - 24px, 1180px); padding-top: 20px; }
+        .hero, .panel { padding: 18px; }
+        .summary,
+        .cards { grid-template-columns: 1fr; }
+        .section-title { display: grid; }
       }
     </style>
   </head>
   <body>
     <main class="shell">
       <section class="hero" aria-labelledby="page-title">
-        <div>
-          <p class="eyebrow">Wedding preparation benchmark</p>
-          <h1 id="page-title">Venue Price Comparison</h1>
-        </div>
-        <p class="lede">Ringkasan harga venue-only, charge vendor, nett venue-side, dan benchmark venue+catering untuk membantu shortlist venue wedding 400-500 tamu.</p>
-        <div class="meta" aria-label="Metadata">
-          <span class="pill">Updated 2 July 2026</span>
-          <span class="pill">Budget target: around IDR 200 juta</span>
+        <p class="eyebrow">Wedding Prep / Price Benchmark</p>
+        <h1 id="page-title">Wedding Venue Price Benchmark</h1>
+        <p class="lede">Update 3 Juli 2026: benchmark Puspita Sawargi sudah dimasukkan sebagai paket catering + WO + lengser adat Sunda, belum termasuk venue. Angka Puspita dinormalisasi ke estimasi 400 pax dengan mengurangi Rp24 juta dari quote awal.</p>
+        <div class="meta" aria-label="Artifact metadata">
+          <span class="pill">Updated: 2026-07-03 18:15 WIB</span>
+          <span class="pill">Target comparison: 400 pax</span>
           <span class="pill">Public-safe summary</span>
         </div>
+        <div class="summary" aria-label="Key numbers">
+          <article class="metric"><p class="eyebrow">Lowest Puspita</p><strong>Rp137jt</strong><span>Aminta Hall package benchmark, venue excluded.</span></article>
+          <article class="metric"><p class="eyebrow">Second Cheapest</p><strong>Rp142jt</strong><span>Al Azhar Aula Buya Hamka, venue excluded.</span></article>
+          <article class="metric"><p class="eyebrow">Active Venue-Side Low</p><strong>Rp17,5jt</strong><span>Deptan D Hall promo + akad with rekanan assumption.</span></article>
+          <article class="metric"><p class="eyebrow">Budget Warning</p><strong>+ venue</strong><span>Puspita numbers are not all-in because venue still needs to be added.</span></article>
+        </div>
       </section>
 
-      <section class="summary" aria-label="Quick highlights">
-        <article class="metric">
-          <strong>Bulog / Oryza</strong>
-          <span>Cheapest Tiga Dara benchmark: IDR 104,54 juta for 500 guests.</span>
-        </article>
-        <article class="metric">
-          <strong>Deptan D Hall</strong>
-          <span>Most interesting venue-side number if the room flow works for 400-ish guests.</span>
-        </article>
-        <article class="metric">
-          <strong>Deptan F Hall</strong>
-          <span>Viable for 500 guests, but venue-side cost rises to IDR 60,75-76 juta.</span>
-        </article>
-        <article class="metric">
-          <strong>Agro Plaza</strong>
-          <span>Keep as all-in benchmark through Heroca: IDR 155-185 juta depending pax.</span>
-        </article>
-      </section>
-
-      <section aria-labelledby="comparison-title">
+      <section class="panel" aria-labelledby="puspita-title">
         <div class="section-title">
-          <h2 id="comparison-title">Venue Table</h2>
-          <p>Amounts are in Indonesian rupiah. Blank cells mean data has not been confirmed yet.</p>
+          <div><p class="eyebrow">Package Benchmark</p><h2 id="puspita-title">Puspita Sawargi</h2></div>
+          <p>Catering + WO + lengser adat Sunda. Venue excluded.</p>
         </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Venue</th>
-                <th>Status</th>
-                <th>Venue only / base</th>
-                <th>Vendor charge</th>
-                <th>Nett venue-side</th>
-                <th>Tiga Dara 500 guests</th>
-                <th>Public-safe notes</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Venue Label</th><th>Original Quote</th><th>400 Pax Normalized</th><th>Status Read</th><th>Notes</th></tr></thead>
             <tbody>
-              <tr>
-                <td>Deptan F Hall</td>
-                <td><span class="status active">Active</span></td>
-                <td><span class="money">32,5 jt</span> venue-only; <span class="money">37,5 jt</span> with akad</td>
-                <td><span class="money">23,25 jt</span> rekanan; <span class="money">38,5 jt</span> non-rekanan</td>
-                <td><span class="money">60,75 jt</span> rekanan; <span class="money">76 jt</span> non-rekanan</td>
-                <td><span class="money">152,75 jt</span></td>
-                <td class="note">Tiga Dara benchmark is specifically for F Hall. Check whether 500 guests fills the room well.</td>
-              </tr>
-              <tr>
-                <td>Deptan D Hall</td>
-                <td><span class="status active">Active</span></td>
-                <td><span class="money">15 jt</span> promo; <span class="money">17,5 jt</span> normal; akad add-on <span class="money">2,5 jt</span></td>
-                <td>No visible rekanan charge yet; <span class="money">15,5 jt</span> non-rekanan</td>
-                <td><span class="money">17,5-20 jt</span> rekanan; <span class="money">33-35,5 jt</span> non-rekanan</td>
-                <td>-</td>
-                <td class="note">Likely better sized for 400-ish guests, pending on-site flow check.</td>
-              </tr>
-              <tr>
-                <td>Agro Plaza / Heroca</td>
-                <td><span class="status active">Active / keep</span></td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td><span class="money">155 jt</span> for 300 pax; <span class="money">185 jt</span> for 600 pax</td>
-                <td class="note">All-in Heroca path. Package components should not be assumed removable.</td>
-              </tr>
-              <tr>
-                <td>Bulog / Oryza Function Hall</td>
-                <td><span class="status active">Active</span></td>
-                <td><span class="money">25 jt</span></td>
-                <td><span class="money">17 jt</span> flat</td>
-                <td><span class="money">42 jt</span></td>
-                <td><span class="money">104,54 jt</span></td>
-                <td class="note">Best current price signal for venue+catering benchmark. Confirm what the flat charge covers.</td>
-              </tr>
-              <tr>
-                <td>Rajawali Place</td>
-                <td><span class="status no">Not priority</span></td>
-                <td><span class="money">35 jt</span> / 6h; <span class="money">50 jt</span> / 10h; overtime <span class="money">2 jt/h</span></td>
-                <td>Not confirmed</td>
-                <td><span class="money">50-60 jt</span> practical estimate</td>
-                <td>-</td>
-                <td class="note">Strong venue feel, but access and front-area flow need careful checking. All-in signal: <span class="money">190 jt</span>.</td>
-              </tr>
-              <tr>
-                <td>CIBIS Park / Sirih Gading</td>
-                <td><span class="status no">No</span></td>
-                <td><span class="money">45 jt</span></td>
-                <td><span class="money">15,1 jt</span> rekanan; <span class="money">21 jt</span> non-rekanan</td>
-                <td><span class="money">60,1 jt</span> rekanan; <span class="money">66 jt</span> non-rekanan</td>
-                <td><span class="money">133,74 jt</span></td>
-                <td class="note">Not continuing because the room scale does not fit the target guest count.</td>
-              </tr>
-              <tr>
-                <td>Aminta Hall</td>
-                <td><span class="status pending">Pending</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td><span class="money">129,77 jt</span></td>
-                <td class="note">Ask venue-only, vendor charge, capacity, and guest-flow details.</td>
-              </tr>
-              <tr>
-                <td>Sienna Hall</td>
-                <td><span class="status pending">Lead</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td><span class="money">136,232 jt</span></td>
-                <td class="note">New benchmark from Tiga Dara.</td>
-              </tr>
-              <tr>
-                <td>Gedung Granadi</td>
-                <td><span class="status pending">Lead</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td><span class="money">147,095 jt</span></td>
-                <td class="note">Slightly below Deptan F Hall in Tiga Dara benchmark, but still high for a 200 juta target.</td>
-              </tr>
-              <tr>
-                <td>Menara 165 / Andalucia Ballroom</td>
-                <td><span class="status pending">Lead</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td><span class="money">140,965 jt</span></td>
-                <td class="note">High-ish venue+catering benchmark; needs inclusion check.</td>
-              </tr>
-              <tr>
-                <td>Allwynn Ballroom</td>
-                <td><span class="status hold">If budget opens</span></td>
-                <td><span class="money">80 jt</span></td>
-                <td>Multiple visible add-ons</td>
-                <td>Minimum visible around <span class="money">91,75 jt</span></td>
-                <td>-</td>
-                <td class="note">Base venue-side cost is already high before catering and package items.</td>
-              </tr>
-              <tr>
-                <td>Balai Sudirman</td>
-                <td><span class="status no">Likely no</span></td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td><span class="money">170 jt</span> venue+catering 400 pax signal</td>
-                <td class="note">Likely above the current comfort range.</td>
-              </tr>
-              <tr>
-                <td>Dome Arkadia</td>
-                <td><span class="status hold">Dream</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>-</td>
-                <td class="note">Keep only if budget opens up.</td>
-              </tr>
-              <tr>
-                <td>PTIK / STIK-PTIK</td>
-                <td><span class="status pending">Pending reply</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>-</td>
-                <td class="note">Not comparable yet.</td>
-              </tr>
-              <tr>
-                <td>BRIN Lebak Bulus</td>
-                <td><span class="status pending">Pending reply</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>-</td>
-                <td class="note">Not comparable yet.</td>
-              </tr>
-              <tr>
-                <td>Andrawina / Gedung Antam</td>
-                <td><span class="status hold">Parked</span></td>
-                <td>Public signal around <span class="money">32,65 jt</span></td>
-                <td>Not confirmed</td>
-                <td>Not confirmed</td>
-                <td>-</td>
-                <td class="note">Check catering minimum carefully before treating it as budget-friendly.</td>
-              </tr>
+              <tr><td>Aminta Hall</td><td class="money">Rp161jt</td><td class="money">Rp137jt</td><td><span class="tag good">Best price</span></td><td class="note">Lowest Puspita benchmark. Still add Aminta room-only or venue-side costs if using this route.</td></tr>
+              <tr><td>Al Azhar Aula Buya Hamka</td><td class="money">Rp166jt</td><td class="money">Rp142jt</td><td><span class="tag good">Worth checking</span></td><td class="note">Close to the cheapest tier; potentially useful as a sanity benchmark.</td></tr>
+              <tr><td>Granadi Kuningan</td><td class="money">Rp201jt</td><td class="money">Rp177jt</td><td><span class="tag watch">Middle-high</span></td><td class="note">Added from latest Inez clarification. Needs venue/detail validation before serious comparison.</td></tr>
+              <tr><td>Bulog / Oryza</td><td class="money">Rp206jt</td><td class="money">Rp182jt</td><td><span class="tag watch">Heavy</span></td><td class="note">Not cheap once venue-side cost is added, but Bulog remains an active venue candidate.</td></tr>
+              <tr><td>Aneka Tambang / Antam</td><td class="money">Rp211jt</td><td class="money">Rp187jt</td><td><span class="tag watch">Heavy</span></td><td class="note">Venue looked potentially okay from earlier lead, but the package benchmark is already high.</td></tr>
+              <tr><td>PTIK</td><td class="money">Rp231jt</td><td class="money">Rp207jt</td><td><span class="tag heavy">Too heavy</span></td><td class="note">Likely hard to fit the target budget if venue is still separate.</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <section aria-labelledby="decision-title">
+      <section class="panel" aria-labelledby="venue-title">
         <div class="section-title">
-          <h2 id="decision-title">Decision Notes</h2>
-          <p>Shortlist view for the next discussion.</p>
+          <div><p class="eyebrow">Venue-Side Costs</p><h2 id="venue-title">Active Venue Comparison</h2></div>
+          <p>These are venue-side or room-only figures, not full wedding totals.</p>
         </div>
-        <div class="cards">
-          <article class="card">
-            <h3>Most realistic right now</h3>
-            <ul>
-              <li>Bulog / Oryza</li>
-              <li>Deptan D Hall if the room flow works</li>
-              <li>Deptan F Hall if 500 guests and hall quality justify the premium</li>
-              <li>Agro Plaza if the all-in package covers enough major items</li>
-            </ul>
-          </article>
-          <article class="card">
-            <h3>Budget sanity</h3>
-            <p>Healthy venue-side target is around IDR 30-45 juta. IDR 50-60 juta can work only when the venue clearly earns it. Above IDR 70 juta starts to pressure a 200 juta total budget.</p>
-          </article>
-          <article class="card">
-            <h3>How to read Tiga Dara</h3>
-            <p>The Tiga Dara column is a venue+catering benchmark for 500 guests, not venue-only. It is useful for comparing total direction, but inclusions still need checking.</p>
-          </article>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Venue</th><th>Status</th><th>Venue/Base</th><th>Vendor Charge</th><th>Quick Total</th><th>Read</th></tr></thead>
+            <tbody>
+              <tr><td>Deptan D Hall</td><td><span class="tag good">Active</span></td><td class="money">Rp17,5jt promo + akad</td><td class="money">Rp0 visible rekanan / Rp15,5jt non-rekanan</td><td class="money">Rp17,5jt-Rp33jt promo path</td><td class="note">Best venue-side math so far if D Hall feels good enough for 400 pax.</td></tr>
+              <tr><td>Deptan F Hall</td><td><span class="tag good">Active</span></td><td class="money">Rp37,5jt with akad</td><td class="money">Rp23,25jt rekanan / Rp38,5jt non-rekanan</td><td class="money">Rp60,75jt-Rp76jt</td><td class="note">Nicer/larger hall, but risky unless the room quality clearly justifies the jump.</td></tr>
+              <tr><td>Bulog / Oryza</td><td><span class="tag good">Active</span></td><td class="money">Rp25jt</td><td class="money">Rp17jt clean charge</td><td class="money">Rp42jt</td><td class="note">Still in active comparison; package cost needs careful pairing.</td></tr>
+              <tr><td>Aminta Hall</td><td><span class="tag pending">Visit target</span></td><td class="money">Rp35,39jt room-only</td><td class="money">Up to Rp7,5jt non-rekanan</td><td class="money">Rp42,89jt possible venue-side</td><td class="note">Good to compare with Puspita because Puspita Aminta is the lowest package benchmark.</td></tr>
+              <tr><td>Agro Plaza via Heroca</td><td><span class="tag good">Active baseline</span></td><td class="money">Package path</td><td class="money">Not takeout/custom down</td><td class="money">Heroca package comparison</td><td class="note">Still strongest visited path by fit/value, but components should not be assumed removable.</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <footer>
-        Prepared from wedding preparation notes. Public-safe version: no contact numbers, no private scheduling details beyond venue status, and no vendor-private files.
-      </footer>
+      <section class="panel" aria-labelledby="tiga-title">
+        <div class="section-title">
+          <div><p class="eyebrow">Separate Benchmark</p><h2 id="tiga-title">Tiga Dara Venue + Catering</h2></div>
+          <p>Paket Mawar 500 tamu; these include venue + catering, unlike Puspita.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Venue</th><th>Tiga Dara Price</th><th>Scope</th><th>Read</th></tr></thead>
+            <tbody>
+              <tr><td>Gedung Bulog / Oryza</td><td class="money">Rp104,54jt</td><td>Venue + catering</td><td class="note">Lowest Tiga Dara benchmark found so far.</td></tr>
+              <tr><td>Aminta Hall</td><td class="money">Rp129,77jt</td><td>Venue + catering</td><td class="note">Useful cross-check against Aminta room-only + Puspita package.</td></tr>
+              <tr><td>CIBIS Park</td><td class="money">Rp133,74jt</td><td>Venue + catering</td><td class="note">Not active because venue felt too small.</td></tr>
+              <tr><td>Deptan F Hall</td><td class="money">Rp152,75jt</td><td>Venue + catering</td><td class="note">Felt expensive compared with lower venue-only Deptan path.</td></tr>
+              <tr><td>Gedung Granadi</td><td class="money">Rp147,095jt</td><td>Venue + catering</td><td class="note">Cheaper than Deptan F in Tiga Dara benchmark, still needs fit validation.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="take-title">
+        <div class="section-title"><div><p class="eyebrow">Jax Read</p><h2 id="take-title">Decision Notes</h2></div></div>
+        <div class="cards">
+          <article class="card"><h3>Do not mix scopes</h3><p>Puspita is catering + WO + lengser, venue excluded. Tiga Dara rows are venue + catering. Venue-side rows are not full packages.</p></article>
+          <article class="card"><h3>Most interesting pairs</h3><ul><li>Aminta Hall + Puspita because package benchmark is lowest.</li><li>Deptan D Hall because venue-side math is strongest.</li><li>Bulog because venue-side is clear, but package pairing may get heavy.</li></ul></article>
+          <article class="card"><h3>Watch the ceiling</h3><p>If the event target stays around Rp200jt excluding rings/seserahan/mahar, package routes above Rp180jt before venue are already danger-zone.</p></article>
+        </div>
+      </section>
+
+      <footer>Source: Irfan/Inez wedding preparation notes and latest WhatsApp updates through 2026-07-03 18:15 WIB. Public-safe summary; verify directly with vendors before booking.</footer>
     </main>
   </body>
 </html>
