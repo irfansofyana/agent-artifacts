@@ -31,6 +31,14 @@
       "createdAt": "2026-07-03",
       "type": "html",
       "url": "artifacts/wedding-venue-comparison-2026-07-02/"
+    },
+    {
+      "title": "Amazon Bedrock Mantle vs Runtime",
+      "slug": "bedrock-mantle-vs-runtime-2026-07-09",
+      "description": "Deep research comparing Bedrock Mantle and Bedrock Runtime across APIs, IAM, model availability, quotas, Projects, data residency, and LiteLLM.",
+      "createdAt": "2026-07-09",
+      "type": "html",
+      "url": "artifacts/bedrock-mantle-vs-runtime-2026-07-09/"
     }
   ]
 }
