@@ -29,7 +29,6 @@
     pre { background:var(--code); color:#ecf3fb; padding:18px; overflow:auto; border-radius:8px; border-left:4px solid var(--accent2); }
     pre code { background:transparent; color:inherit; padding:0; }
     blockquote { margin:20px 0; padding:12px 18px; border-left:4px solid var(--accent); background:var(--soft); color:#334155; }
-    .note { margin:30px 0 0; padding:18px; background:#f0f7f6; border:1px solid #cce7e3; border-radius:8px; }
     @media (max-width: 680px) { .shell { padding: 24px 16px 56px; } h1 { font-size:36px; } .lede { font-size:17px; } table { font-size:13px; } th,td { padding:8px; } }
   </style>
 </head>
@@ -38,7 +37,7 @@
     <header>
       <p class="eyebrow">Research Artifact</p>
       <h1>Amazon Bedrock Mantle vs Runtime</h1>
-      <p class="lede">A technical comparison of AWS Bedrock's classic runtime endpoint and the newer Mantle endpoint, with practical guidance for IAM, API keys, model availability, quotas, data residency, Projects, and LiteLLM.</p>
+      <p class="lede">A technical comparison of AWS Bedrock's classic runtime endpoint and the newer Mantle endpoint, with practical guidance for IAM, API keys, model availability, quotas, data residency, Projects, model-level app access, and LiteLLM.</p>
       <div class="meta"><span class="pill">Research date: 2026-07-09</span><span class="pill">Author: Jax</span><span class="pill">Source-first technical brief</span></div>
     </header>
     <main><article><h1 id="amazon-bedrock-mantle-vs-bedrock-runtime">Amazon Bedrock Mantle vs Bedrock Runtime</h1>
@@ -60,9 +59,9 @@ Scope: endpoint differences, access patterns, IAM/API-key implications, model av
 </ul>
 <p>This distinction matters because a model can be hosted on Mantle, but the application still integrates with a specific public API surface: OpenAI Responses, OpenAI Chat Completions, or Anthropic Messages.</p>
 <p>Sources:
-- AWS endpoints page: https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html
-- AWS Responses/Mantle page: https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html
-- AWS zero operator access blog: https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/</p>
+- AWS endpoints page: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html">https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html</a>
+- AWS Responses/Mantle page: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</a>
+- AWS zero operator access blog: <a href="https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/">https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/</a></p>
 <h2 id="quick-comparison">Quick Comparison</h2>
 <table>
 <thead>
@@ -75,8 +74,8 @@ Scope: endpoint differences, access patterns, IAM/API-key implications, model av
 <tbody>
 <tr>
 <td>Endpoint</td>
-<td><code>https://bedrock-runtime.{region}.amazonaws.com</code></td>
-<td><code>https://bedrock-mantle.{region}.api.aws</code></td>
+<td><code>&lt;https://bedrock-runtime.{region}.amazonaws.com</code>&gt;</td>
+<td><code>&lt;https://bedrock-mantle.{region}.api.aws</code>&gt;</td>
 </tr>
 <tr>
 <td>Primary fit</td>
@@ -121,9 +120,9 @@ Scope: endpoint differences, access patterns, IAM/API-key implications, model av
 </tbody>
 </table>
 <p>Sources:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html">https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html">https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html</a></p>
 <h2 id="how-people-access-each-endpoint">How People Access Each Endpoint</h2>
 <h3 id="bedrock-runtime">Bedrock Runtime</h3>
 <p>Common access patterns:</p>
@@ -131,7 +130,7 @@ Scope: endpoint differences, access patterns, IAM/API-key implications, model av
 <li>AWS SDKs with <code>bedrock-runtime</code> client.</li>
 <li>SigV4-signed HTTP requests.</li>
 <li>Bedrock API key via <code>AWS_BEARER_TOKEN_BEDROCK</code> or <code>Authorization: Bearer</code>.</li>
-<li>OpenAI-compatible Chat Completions path at <code>https://bedrock-runtime.{region}.amazonaws.com/v1/chat/completions</code>.</li>
+<li>OpenAI-compatible Chat Completions path at <code>&lt;https://bedrock-runtime.{region}.amazonaws.com/v1/chat/completions</code>.&gt;</li>
 </ul>
 <p>Typical boto3 shape:</p>
 <pre><code class="language-python">import boto3
@@ -146,8 +145,8 @@ response = client.converse(
 <h3 id="bedrock-mantle">Bedrock Mantle</h3>
 <p>Common access patterns:</p>
 <ul>
-<li>OpenAI SDK with <code>OPENAI_BASE_URL=https://bedrock-mantle.&lt;region&gt;.api.aws/v1</code>.</li>
-<li>OpenAI SDK with special OpenAI model path, for example GPT-5.5 uses <code>https://bedrock-mantle.us-east-2.api.aws/openai/v1</code>.</li>
+<li>OpenAI SDK with <code>OPENAI_BASE_URL=&lt;https://bedrock-mantle.&lt;region&gt;&gt;.api.aws/v1</code>.</li>
+<li>OpenAI SDK with special OpenAI model path, for example GPT-5.5 uses <code>&lt;https://bedrock-mantle.us-east-2.api.aws/openai/v1</code>.&gt;</li>
 <li>Bedrock API key as <code>OPENAI_API_KEY</code>.</li>
 <li>Direct HTTP with <code>Authorization: Bearer</code>.</li>
 <li>AWS credentials/SigV4 for HTTP requests where supported.</li>
@@ -170,9 +169,9 @@ response = client.chat.completions.create(
 export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&quot;
 </code></pre>
 <p>Sources:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions-mantle.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions-mantle.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html">https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html</a></p>
 <h2 id="why-bedrock-has-bedrock-runtime">Why Bedrock Has <code>bedrock-runtime</code></h2>
 <p><code>bedrock-runtime</code> is the original Bedrock model invocation data plane. It exists because Bedrock originally exposed model access through AWS-native APIs:</p>
 <ul>
@@ -182,24 +181,24 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 </ul>
 <p>Mantle does not erase that. It adds a newer, OpenAI/Anthropic-compatible inference plane optimized for modern API compatibility and agentic workflows.</p>
 <p>Source:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html">https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html">https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html</a></p>
 <h2 id="what-models-are-inside-one-endpoint-vs-another">What Models Are Inside One Endpoint vs Another</h2>
 <p>AWS now maintains an "Endpoint availability by models" page that shows whether each model is available on <code>bedrock-runtime</code>, <code>bedrock-mantle</code>, or both.</p>
 <p>Important observations:</p>
 <ul>
 <li>Many mainstream model families are listed on both endpoints.</li>
 <li>Some models and features are endpoint-specific.</li>
-<li>GPT-5.5 and GPT-5.4 are explicitly documented on <code>bedrock-mantle</code> via the Responses API; GPT-5.5 uses <code>openai.gpt-5.5</code> and the endpoint URL <code>https://bedrock-mantle.{region}.api.aws/openai/v1</code>.</li>
+<li>GPT-5.5 and GPT-5.4 are explicitly documented on <code>bedrock-mantle</code> via the Responses API; GPT-5.5 uses <code>openai.gpt-5.5</code> and the endpoint URL <code>&lt;https://bedrock-mantle.{region}.api.aws/openai/v1</code>.&gt;</li>
 <li>Some older/native models still matter through <code>bedrock-runtime</code>, especially when the app depends on <code>InvokeModel</code> or <code>Converse</code>.</li>
 <li>Region availability is still separate from endpoint availability. A model can support Mantle but still not exist in the region you need.</li>
 </ul>
 <p>For Jakarta specifically, the Mantle endpoint exists: <code>bedrock-mantle.ap-southeast-3.api.aws</code>. But that does not mean every Mantle model is available in Jakarta. Model-level regional compatibility still decides.</p>
 <p>Sources:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/models-endpoint-availability.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-endpoint-availability.html">https://docs.aws.amazon.com/bedrock/latest/userguide/models-endpoint-availability.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html">https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html">https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</a></p>
 <h2 id="iam-api-keys-roles-and-policies">IAM, API Keys, Roles, and Policies</h2>
 <h3 id="api-key-model">API Key Model</h3>
 <p>Amazon Bedrock API keys are bearer tokens for Bedrock. AWS documents two types:</p>
@@ -215,9 +214,9 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 </ul>
 <p>API keys are limited to Bedrock and Bedrock Runtime actions, not all Bedrock-adjacent services.</p>
 <p>Sources:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-generate.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-generate.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-generate.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html</a></p>
 <h3 id="separate-iam-namespaces">Separate IAM Namespaces</h3>
 <p>This is the part to be careful with:</p>
 <ul>
@@ -239,8 +238,8 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 <li><code>bedrock-mantle:ServiceTier</code></li>
 </ul>
 <p>Sources:
-- https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html
-- https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html</p>
+- <a href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html">https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html</a>
+- <a href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html">https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html</a></p>
 <h3 id="giving-an-app-access-to-runtime-vs-mantle">Giving an App Access to Runtime vs Mantle</h3>
 <p>For a classic Bedrock app using <code>InvokeModel</code> or <code>Converse</code>, grant Bedrock runtime actions and model resources, for example:</p>
 <pre><code class="language-json">{
@@ -281,9 +280,148 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 </code></pre>
 <p>Exact actions should be validated against the live AWS service authorization page because Mantle is actively expanding.</p>
 <p>Sources:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-modify.html
-- https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-modify.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-modify.html</a>
+- <a href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html">https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html</a></p>
+<h2 id="giving-one-app-access-to-specific-mantle-models">Giving One App Access to Specific Mantle Models</h2>
+<p>Short answer: yes, it is possible, but it should be designed as "app identity + Mantle IAM policy + optional Project boundary", not as a magic per-app toggle in the model catalog.</p>
+<p>There are three layers:</p>
+<ol>
+<li>App identity: the application should run as its own IAM principal, such as an ECS task role, EKS Pod Identity role, IRSA role, EC2 instance profile, or a dedicated IAM user only when API-key exploration is acceptable.</li>
+<li>Mantle authorization: that principal must have <code>bedrock-mantle</code> permissions, not only <code>bedrock</code> permissions.</li>
+<li>Model/project constraints: restrict which models and projects the principal can use through Mantle resource ARNs and condition keys.</li>
+</ol>
+<p>The most important Mantle condition key for model-level gating is:</p>
+<ul>
+<li><code>bedrock-mantle:Model</code></li>
+</ul>
+<p>The most important project-level condition key is:</p>
+<ul>
+<li><code>bedrock-mantle:ProjectArn</code></li>
+</ul>
+<p>That means an internal platform can give App A access to only a subset of Mantle models by attaching a policy to App A's role that allows Mantle inference only when <code>bedrock-mantle:Model</code> matches the approved model IDs.</p>
+<p>Example shape:</p>
+<pre><code class="language-json">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;AllowSpecificMantleModels&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: [
+        &quot;bedrock-mantle:CreateInference&quot;,
+        &quot;bedrock-mantle:GetInference&quot;,
+        &quot;bedrock-mantle:ListModels&quot;
+      ],
+      &quot;Resource&quot;: &quot;*&quot;,
+      &quot;Condition&quot;: {
+        &quot;StringEquals&quot;: {
+          &quot;bedrock-mantle:Model&quot;: [
+            &quot;openai.gpt-oss-120b&quot;,
+            &quot;anthropic.claude-sonnet-4-6&quot;
+          ]
+        }
+      }
+    }
+  ]
+}
+</code></pre>
+<p>If the app must be isolated to one Project as well:</p>
+<pre><code class="language-json">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;AllowSpecificMantleProjectAndModels&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: [
+        &quot;bedrock-mantle:CreateInference&quot;,
+        &quot;bedrock-mantle:GetInference&quot;
+      ],
+      &quot;Resource&quot;: &quot;*&quot;,
+      &quot;Condition&quot;: {
+        &quot;StringEquals&quot;: {
+          &quot;bedrock-mantle:ProjectArn&quot;: &quot;arn:aws:bedrock-mantle:us-east-1:123456789012:project/proj_example&quot;,
+          &quot;bedrock-mantle:Model&quot;: [
+            &quot;openai.gpt-oss-120b&quot;
+          ]
+        }
+      }
+    }
+  ]
+}
+</code></pre>
+<p>For bearer-token use, the principal also needs Mantle bearer token permission:</p>
+<pre><code class="language-json">{
+  &quot;Effect&quot;: &quot;Allow&quot;,
+  &quot;Action&quot;: &quot;bedrock-mantle:CallWithBearerToken&quot;,
+  &quot;Resource&quot;: &quot;*&quot;
+}
+</code></pre>
+<p>Production recommendation: prefer short-term Bedrock API keys or SigV4 IAM role access. Long-term API keys create a hidden IAM user and are acceptable for exploration, but they are awkward for tightly controlled app access because the credential lifecycle can drift away from the app's workload identity.</p>
+<p>Sources:
+- <a href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html">https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html</a></p>
+<h2 id="is-per-app-per-model-mantle-access-perfect">Is Per-App Per-Model Mantle Access Perfect?</h2>
+<p>Not fully.</p>
+<p>What works:</p>
+<ul>
+<li>Separate IAM principal per app.</li>
+<li>Allow/deny by Mantle IAM action.</li>
+<li>Restrict by <code>bedrock-mantle:Model</code>.</li>
+<li>Restrict by <code>bedrock-mantle:ProjectArn</code>.</li>
+<li>Use Projects for cost isolation and stored-response scope.</li>
+<li>Use separate API keys per app if you intentionally choose bearer-token access.</li>
+</ul>
+<p>What does not appear to exist as a first-class Mantle product feature yet:</p>
+<ul>
+<li>A Bedrock console "App X can use only models A/B/C" toggle.</li>
+<li>A Project-native model allowlist that replaces IAM.</li>
+<li>A LiteLLM-native guarantee that every Mantle Project/Workspace header edge case is already correct across all APIs.</li>
+</ul>
+<p>So the clean internal platform design is:</p>
+<ol>
+<li>Define model groups in your platform catalog.</li>
+<li>Map each app to an IAM role.</li>
+<li>Generate IAM policy from the app's approved model group.</li>
+<li>Optionally create one Mantle Project per app/team/environment for cost and observability.</li>
+<li>Route app calls through LiteLLM or your gateway with explicit provider strings and project headers.</li>
+<li>Validate with real deny tests, because IAM condition behavior is the source of truth.</li>
+</ol>
+<p>For example:</p>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>IAM principal</th>
+<th>Mantle Project</th>
+<th>Allowed models</th>
+<th>Auth path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aml-case-assistant-prod</code></td>
+<td><code>role/aml-case-assistant-prod</code></td>
+<td><code>proj_aml_prod</code></td>
+<td><code>openai.gpt-oss-120b</code>, <code>anthropic.claude-sonnet-4-6</code></td>
+<td>SigV4 preferred</td>
+</tr>
+<tr>
+<td><code>devex-copilot-dev</code></td>
+<td><code>role/devex-copilot-dev</code></td>
+<td><code>proj_devex_dev</code></td>
+<td><code>openai.gpt-oss-20b</code></td>
+<td>short-term API key acceptable</td>
+</tr>
+<tr>
+<td><code>finance-sandbox</code></td>
+<td><code>role/finance-sandbox</code></td>
+<td><code>proj_finance_sandbox</code></td>
+<td>low-cost models only</td>
+<td>short-term API key</td>
+</tr>
+</tbody>
+</table>
 <h2 id="projects-in-bedrock-mantle">Projects in Bedrock Mantle</h2>
 <p>Projects are application-level boundaries for OpenAI-compatible workloads on Mantle.</p>
 <p>Use Projects when you need:</p>
@@ -297,8 +435,8 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 <p>Each AWS account has a default project; additional projects can be created through the Projects API. Requests can be associated with a project using OpenAI-compatible project headers.</p>
 <p>Important operational consequence: stored Responses API data is scoped by Project. A stored response from one Project cannot be used as <code>previous_response_id</code> in another Project.</p>
 <p>Source:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/projects.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/projects.html">https://docs.aws.amazon.com/bedrock/latest/userguide/projects.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</a></p>
 <h2 id="limits-quotas-and-throughput">Limits, Quotas, and Throughput</h2>
 <h3 id="runtime-quotas">Runtime Quotas</h3>
 <p><code>bedrock-runtime</code> uses the classic quota model:</p>
@@ -320,9 +458,9 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 </ul>
 <p>Important: custom inference profile quotas, batch inference quotas, and provisioned throughput allocations apply only to <code>bedrock-runtime</code>, not Mantle.</p>
 <p>Sources:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/scaling-throughput-best-practices.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html">https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/scaling-throughput-best-practices.html">https://docs.aws.amazon.com/bedrock/latest/userguide/scaling-throughput-best-practices.html</a></p>
 <h2 id="data-residency-and-retention">Data Residency and Retention</h2>
 <p>Data residency is controlled by region selection and inference routing mode:</p>
 <ul>
@@ -340,10 +478,10 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 <p>AWS also added explicit data retention controls at account/project level. If the account/project is configured for zero data retention and a model requires retention, Bedrock blocks the request rather than silently retaining data.</p>
 <p>Zero operator access is a separate but related design claim: AWS says Mantle is designed so no AWS operator, customer operator, or model provider operator can access prompts/completions during service operation.</p>
 <p>Sources:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html
-- https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html">https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html">https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html</a>
+- <a href="https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/">https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/</a></p>
 <h2 id="litellm-integration">LiteLLM Integration</h2>
 <p>LiteLLM currently documents a dedicated <code>bedrock_mantle/</code> provider prefix:</p>
 <pre><code class="language-python">from litellm import completion
@@ -385,14 +523,14 @@ response = completion(
 <li>For production today, prefer the newest stable LiteLLM version because open issues still exist around Mantle project headers and SigV4 details.</li>
 </ul>
 <p>Sources:
-- https://docs.litellm.ai/docs/providers/bedrock_mantle
-- Git history inspected from https://github.com/BerriAI/litellm
-- https://github.com/BerriAI/litellm/issues/29463
-- https://github.com/BerriAI/litellm/issues/29665
-- https://github.com/BerriAI/litellm/issues/31113
-- https://github.com/BerriAI/litellm/issues/31475
-- https://github.com/BerriAI/litellm/issues/31925
-- https://github.com/BerriAI/litellm/issues/31947</p>
+- <a href="https://docs.litellm.ai/docs/providers/bedrock_mantle">https://docs.litellm.ai/docs/providers/bedrock_mantle</a>
+- Git history inspected from <a href="https://github.com/BerriAI/litellm">https://github.com/BerriAI/litellm</a>
+- <a href="https://github.com/BerriAI/litellm/issues/29463">https://github.com/BerriAI/litellm/issues/29463</a>
+- <a href="https://github.com/BerriAI/litellm/issues/29665">https://github.com/BerriAI/litellm/issues/29665</a>
+- <a href="https://github.com/BerriAI/litellm/issues/31113">https://github.com/BerriAI/litellm/issues/31113</a>
+- <a href="https://github.com/BerriAI/litellm/issues/31475">https://github.com/BerriAI/litellm/issues/31475</a>
+- <a href="https://github.com/BerriAI/litellm/issues/31925">https://github.com/BerriAI/litellm/issues/31925</a>
+- <a href="https://github.com/BerriAI/litellm/issues/31947">https://github.com/BerriAI/litellm/issues/31947</a></p>
 <h2 id="why-we-should-pay-attention-to-bedrock-mantle">Why We Should Pay Attention to Bedrock Mantle</h2>
 <p>Short version: Mantle is where AWS is putting the new abstraction layer.</p>
 <p>Reasons:</p>
@@ -415,8 +553,8 @@ response = completion(
 </ul>
 <p>But the strategic direction is obvious: new OpenAI-compatible, project-scoped, agentic, stateful, and latest-model experiences are being oriented around Mantle. The correct platform posture is not "runtime is deprecated"; it is "support both, but make Mantle a first-class integration path now."</p>
 <p>Source:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html
-- https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html">https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html</a></p>
 <h2 id="recommendations-for-an-internal-ai-platform">Recommendations for an Internal AI Platform</h2>
 <ol>
 <li>Treat <code>bedrock-runtime</code> and <code>bedrock-mantle</code> as separate providers internally.</li>
@@ -471,7 +609,7 @@ response = completion(
 </ol>
 <p>Runtime metrics and Mantle metrics do not land under the same assumptions. Mantle uses <code>AWS/BedrockMantle</code> for metrics and has project/model dimensions.</p>
 <p>Source:
-- https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-mantle-metrics.html</p>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-mantle-metrics.html">https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-mantle-metrics.html</a></p>
 <h2 id="open-questions-things-to-validate-in-a-real-aws-account">Open Questions / Things to Validate in a Real AWS Account</h2>
 <ul>
 <li>Exact IAM action minimum for Mantle inference per API surface: Responses vs Chat Completions vs Messages.</li>
@@ -484,35 +622,35 @@ response = completion(
 </ul>
 <h2 id="source-index">Source Index</h2>
 <ul>
-<li>AWS APIs supported by Bedrock: https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html</li>
-<li>AWS endpoints supported by Bedrock: https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html</li>
-<li>AWS Mantle / Responses API: https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</li>
-<li>AWS Chat Completions on Bedrock: https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions-mantle.html</li>
-<li>AWS API keys: https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html</li>
-<li>AWS API key generation: https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-generate.html</li>
-<li>AWS API key usage: https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html</li>
-<li>AWS API key permissions: https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html</li>
-<li>AWS Projects: https://docs.aws.amazon.com/bedrock/latest/userguide/projects.html</li>
-<li>AWS endpoint availability by model: https://docs.aws.amazon.com/bedrock/latest/userguide/models-endpoint-availability.html</li>
-<li>AWS regional availability by model: https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html</li>
-<li>AWS Mantle quotas: https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html</li>
-<li>AWS Runtime quotas: https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html</li>
-<li>AWS scaling and throughput: https://docs.aws.amazon.com/bedrock/latest/userguide/scaling-throughput-best-practices.html</li>
-<li>AWS data retention: https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html</li>
-<li>AWS data protection: https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html</li>
-<li>AWS GPT-5.5 model card: https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html</li>
-<li>AWS Mantle IAM service authorization: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html</li>
-<li>AWS Bedrock IAM service authorization: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html</li>
-<li>AWS Mantle CloudWatch metrics: https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-mantle-metrics.html</li>
-<li>AWS Mantle zero operator access blog: https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/</li>
-<li>LiteLLM Bedrock Mantle provider: https://docs.litellm.ai/docs/providers/bedrock_mantle</li>
-<li>LiteLLM repository: https://github.com/BerriAI/litellm</li>
-<li>LiteLLM issue 29463: https://github.com/BerriAI/litellm/issues/29463</li>
-<li>LiteLLM issue 29665: https://github.com/BerriAI/litellm/issues/29665</li>
-<li>LiteLLM issue 31113: https://github.com/BerriAI/litellm/issues/31113</li>
-<li>LiteLLM issue 31475: https://github.com/BerriAI/litellm/issues/31475</li>
-<li>LiteLLM issue 31925: https://github.com/BerriAI/litellm/issues/31925</li>
-<li>LiteLLM issue 31947: https://github.com/BerriAI/litellm/issues/31947</li>
+<li>AWS APIs supported by Bedrock: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html">https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html</a></li>
+<li>AWS endpoints supported by Bedrock: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html">https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html</a></li>
+<li>AWS Mantle / Responses API: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html</a></li>
+<li>AWS Chat Completions on Bedrock: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions-mantle.html</a></li>
+<li>AWS API keys: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html</a></li>
+<li>AWS API key generation: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-generate.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-generate.html</a></li>
+<li>AWS API key usage: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html</a></li>
+<li>AWS API key permissions: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html">https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-permissions.html</a></li>
+<li>AWS Projects: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/projects.html">https://docs.aws.amazon.com/bedrock/latest/userguide/projects.html</a></li>
+<li>AWS endpoint availability by model: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-endpoint-availability.html">https://docs.aws.amazon.com/bedrock/latest/userguide/models-endpoint-availability.html</a></li>
+<li>AWS regional availability by model: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html">https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html</a></li>
+<li>AWS Mantle quotas: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html">https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-mantle.html</a></li>
+<li>AWS Runtime quotas: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html">https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html</a></li>
+<li>AWS scaling and throughput: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/scaling-throughput-best-practices.html">https://docs.aws.amazon.com/bedrock/latest/userguide/scaling-throughput-best-practices.html</a></li>
+<li>AWS data retention: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html">https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html</a></li>
+<li>AWS data protection: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html">https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html</a></li>
+<li>AWS GPT-5.5 model card: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html">https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html</a></li>
+<li>AWS Mantle IAM service authorization: <a href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html">https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockpoweredbyawsmantle.html</a></li>
+<li>AWS Bedrock IAM service authorization: <a href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html">https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html</a></li>
+<li>AWS Mantle CloudWatch metrics: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-mantle-metrics.html">https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-mantle-metrics.html</a></li>
+<li>AWS Mantle zero operator access blog: <a href="https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/">https://aws.amazon.com/blogs/machine-learning/exploring-the-zero-operator-access-design-of-mantle/</a></li>
+<li>LiteLLM Bedrock Mantle provider: <a href="https://docs.litellm.ai/docs/providers/bedrock_mantle">https://docs.litellm.ai/docs/providers/bedrock_mantle</a></li>
+<li>LiteLLM repository: <a href="https://github.com/BerriAI/litellm">https://github.com/BerriAI/litellm</a></li>
+<li>LiteLLM issue 29463: <a href="https://github.com/BerriAI/litellm/issues/29463">https://github.com/BerriAI/litellm/issues/29463</a></li>
+<li>LiteLLM issue 29665: <a href="https://github.com/BerriAI/litellm/issues/29665">https://github.com/BerriAI/litellm/issues/29665</a></li>
+<li>LiteLLM issue 31113: <a href="https://github.com/BerriAI/litellm/issues/31113">https://github.com/BerriAI/litellm/issues/31113</a></li>
+<li>LiteLLM issue 31475: <a href="https://github.com/BerriAI/litellm/issues/31475">https://github.com/BerriAI/litellm/issues/31475</a></li>
+<li>LiteLLM issue 31925: <a href="https://github.com/BerriAI/litellm/issues/31925">https://github.com/BerriAI/litellm/issues/31925</a></li>
+<li>LiteLLM issue 31947: <a href="https://github.com/BerriAI/litellm/issues/31947">https://github.com/BerriAI/litellm/issues/31947</a></li>
 </ul></article></main>
   </div>
 </body>
