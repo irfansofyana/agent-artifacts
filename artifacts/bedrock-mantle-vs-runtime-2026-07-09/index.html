@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Amazon Bedrock Mantle vs Runtime / Agent Artifacts</title>
-  <meta name="description" content="Deep research comparing Amazon Bedrock Mantle and Bedrock Runtime: APIs, IAM, quotas, data residency, Projects, and LiteLLM integration.">
+  <meta name="description" content="Deep research comparing Amazon Bedrock Mantle and Bedrock Runtime: APIs, IAM, quotas, data residency, Projects, Terraform, and LiteLLM integration.">
   <style>
     :root { color-scheme: light; --ink:#17202a; --muted:#5f6b7a; --line:#d9e1ea; --soft:#f6f8fb; --accent:#245f8f; --accent2:#0f9f8f; --code:#101820; }
     * { box-sizing: border-box; }
@@ -37,7 +37,7 @@
     <header>
       <p class="eyebrow">Research Artifact</p>
       <h1>Amazon Bedrock Mantle vs Runtime</h1>
-      <p class="lede">A technical comparison of AWS Bedrock's classic runtime endpoint and the newer Mantle endpoint, with practical guidance for IAM, API keys, model availability, quotas, data residency, Projects, model-level app access, and LiteLLM.</p>
+      <p class="lede">A technical comparison of AWS Bedrock's classic runtime endpoint and the newer Mantle endpoint, with practical guidance for IAM, API keys, model availability, quotas, data residency, Projects, Terraform, app model access, and LiteLLM.</p>
       <div class="meta"><span class="pill">Research date: 2026-07-09</span><span class="pill">Author: Jax</span><span class="pill">Source-first technical brief</span></div>
     </header>
     <main><article><h1 id="amazon-bedrock-mantle-vs-bedrock-runtime">Amazon Bedrock Mantle vs Bedrock Runtime</h1>
@@ -422,6 +422,183 @@ export OPENAI_BASE_URL=&quot;https://bedrock-mantle.us-east-2.api.aws/openai/v1&
 </tr>
 </tbody>
 </table>
+<h2 id="terraform-support-for-bedrock-mantle">Terraform Support for Bedrock Mantle</h2>
+<p>Current Terraform picture:</p>
+<ul>
+<li>The native <code>hashicorp/aws</code> provider has many Bedrock and Bedrock AgentCore resources, but no native Mantle Project resource was visible in the provider docs/repository at research time.</li>
+<li>A public <code>hashicorp/terraform-provider-aws</code> GitHub issue requested native Terraform resources for Bedrock AgentCore Registry and Bedrock Mantle Project in June 2026. AgentCore Registry now appears in provider docs, but Mantle Project still does not appear as a native <code>hashicorp/aws</code> resource.</li>
+<li>The <code>hashicorp/awscc</code> provider does expose <code>awscc_bedrockmantle_project</code>, because CloudFormation supports <code>AWS::BedrockMantle::Project</code>.</li>
+<li>IAM roles and IAM policies for app access are managed with ordinary Terraform AWS IAM resources, such as <code>aws_iam_role</code>, <code>aws_iam_policy</code>, and <code>aws_iam_role_policy_attachment</code>.</li>
+</ul>
+<p>Sources:
+- <a href="https://github.com/hashicorp/terraform-provider-aws/issues/48381">https://github.com/hashicorp/terraform-provider-aws/issues/48381</a>
+- <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs">https://registry.terraform.io/providers/hashicorp/aws/latest/docs</a>
+- <a href="https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrockmantle_project">https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrockmantle_project</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/cloudformation-projects.html">https://docs.aws.amazon.com/bedrock/latest/userguide/cloudformation-projects.html</a>
+- <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/cfn-mantle-resources.html">https://docs.aws.amazon.com/bedrock/latest/userguide/cfn-mantle-resources.html</a></p>
+<h3 id="creating-a-mantle-project-with-terraform">Creating a Mantle Project with Terraform</h3>
+<p>Use the AWS Cloud Control (<code>awscc</code>) provider:</p>
+<pre><code class="language-hcl">terraform {
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 6.0&quot;
+    }
+    awscc = {
+      source  = &quot;hashicorp/awscc&quot;
+      version = &quot;~&gt; 1.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;us-east-1&quot;
+}
+
+provider &quot;awscc&quot; {
+  region = &quot;us-east-1&quot;
+}
+
+resource &quot;awscc_bedrockmantle_project&quot; &quot;aml_prod&quot; {
+  name = &quot;aml-case-assistant-prod&quot;
+
+  tags = [
+    {
+      key   = &quot;Environment&quot;
+      value = &quot;prod&quot;
+    },
+    {
+      key   = &quot;App&quot;
+      value = &quot;aml-case-assistant&quot;
+    },
+    {
+      key   = &quot;CostCenter&quot;
+      value = &quot;fintrust&quot;
+    }
+  ]
+}
+</code></pre>
+<p>The AWSCC resource exports:</p>
+<ul>
+<li><code>arn</code></li>
+<li><code>project_id</code></li>
+<li><code>created_at</code></li>
+<li><code>id</code></li>
+</ul>
+<p>Those outputs can feed IAM policies and app configuration.</p>
+<h3 id="creating-an-app-iam-role-and-restricting-mantle-models">Creating an App IAM Role and Restricting Mantle Models</h3>
+<p>Terraform can manage app-level Mantle access through normal IAM resources:</p>
+<pre><code class="language-hcl">data &quot;aws_caller_identity&quot; &quot;current&quot; {}
+
+resource &quot;aws_iam_role&quot; &quot;aml_app&quot; {
+  name = &quot;aml-case-assistant-prod&quot;
+
+  assume_role_policy = jsonencode({
+    Version = &quot;2012-10-17&quot;
+    Statement = [
+      {
+        Effect = &quot;Allow&quot;
+        Principal = {
+          Service = &quot;ecs-tasks.amazonaws.com&quot;
+        }
+        Action = &quot;sts:AssumeRole&quot;
+      }
+    ]
+  })
+}
+
+resource &quot;aws_iam_policy&quot; &quot;aml_mantle_inference&quot; {
+  name = &quot;aml-case-assistant-prod-mantle-inference&quot;
+
+  policy = jsonencode({
+    Version = &quot;2012-10-17&quot;
+    Statement = [
+      {
+        Sid    = &quot;AllowSpecificMantleModelsInProject&quot;
+        Effect = &quot;Allow&quot;
+        Action = [
+          &quot;bedrock-mantle:CreateInference&quot;,
+          &quot;bedrock-mantle:GetInference&quot;,
+          &quot;bedrock-mantle:ListModels&quot;
+        ]
+        Resource = &quot;*&quot;
+        Condition = {
+          StringEquals = {
+            &quot;bedrock-mantle:ProjectArn&quot; = awscc_bedrockmantle_project.aml_prod.arn
+            &quot;bedrock-mantle:Model&quot; = [
+              &quot;openai.gpt-oss-120b&quot;,
+              &quot;anthropic.claude-sonnet-4-6&quot;
+            ]
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource &quot;aws_iam_role_policy_attachment&quot; &quot;aml_mantle_inference&quot; {
+  role       = aws_iam_role.aml_app.name
+  policy_arn = aws_iam_policy.aml_mantle_inference.arn
+}
+</code></pre>
+<p>For EKS, swap the trust policy for IRSA or EKS Pod Identity. For Lambda, use <code>lambda.amazonaws.com</code>. For EC2, use an instance profile.</p>
+<h3 id="if-the-app-uses-bedrock-api-keys">If the App Uses Bedrock API Keys</h3>
+<p>Terraform can grant the IAM permission required for bearer-token calls:</p>
+<pre><code class="language-hcl">resource &quot;aws_iam_policy&quot; &quot;aml_mantle_bearer&quot; {
+  name = &quot;aml-case-assistant-prod-mantle-bearer&quot;
+
+  policy = jsonencode({
+    Version = &quot;2012-10-17&quot;
+    Statement = [
+      {
+        Sid      = &quot;AllowMantleBearerTokenCalls&quot;
+        Effect   = &quot;Allow&quot;
+        Action   = &quot;bedrock-mantle:CallWithBearerToken&quot;
+        Resource = &quot;*&quot;
+      }
+    ]
+  })
+}
+</code></pre>
+<p>But Terraform provider support for creating Bedrock API keys themselves was not visible in the native AWS provider or AWSCC provider at research time. Treat API keys as secret material managed outside Terraform unless/until AWS exposes a supported IaC resource.</p>
+<p>Recommended split:</p>
+<ul>
+<li>Terraform: Project, IAM role, IAM policy, tags, workload identity, outputs.</li>
+<li>Secret manager / runtime bootstrap: short-term Bedrock API key generation if bearer auth is needed.</li>
+<li>App config: Mantle endpoint URL, model ID, Project ID/header, and auth path.</li>
+</ul>
+<h3 id="passing-project-identity-to-apps">Passing Project Identity to Apps</h3>
+<p>Expose the Project values as Terraform outputs:</p>
+<pre><code class="language-hcl">output &quot;mantle_project_arn&quot; {
+  value = awscc_bedrockmantle_project.aml_prod.arn
+}
+
+output &quot;mantle_project_id&quot; {
+  value = awscc_bedrockmantle_project.aml_prod.project_id
+}
+
+output &quot;mantle_endpoint&quot; {
+  value = &quot;https://bedrock-mantle.us-east-1.api.aws/v1&quot;
+}
+</code></pre>
+<p>Then pass those into ECS task definitions, Helm values, Parameter Store, Secrets Manager, or a platform model catalog.</p>
+<p>For OpenAI-compatible clients, the runtime request still needs the correct project header. Terraform creates the Project and policy; the app or gateway still has to send the right Project ID/header at inference time.</p>
+<h3 id="terraform-recommendation">Terraform Recommendation</h3>
+<p>Use this pattern now:</p>
+<ol>
+<li>Use <code>awscc_bedrockmantle_project</code> to create Projects.</li>
+<li>Use normal <code>aws_iam_*</code> resources for roles and policies.</li>
+<li>Use IAM condition keys such as <code>bedrock-mantle:ProjectArn</code> and <code>bedrock-mantle:Model</code> for app/model restrictions.</li>
+<li>Feed Project IDs into LiteLLM or the app gateway as configuration.</li>
+<li>Keep a small abstraction module, because native <code>hashicorp/aws</code> provider support may arrive later and you will want to swap implementation without rewriting every app.</li>
+</ol>
+<p>Avoid this pattern:</p>
+<ul>
+<li>Using only API keys with no app IAM boundary.</li>
+<li>Giving broad <code>bedrock-mantle:*</code> access to shared platform roles.</li>
+<li>Assuming a Mantle Project alone is enough to restrict model access.</li>
+<li>Assuming Terraform support for runtime Bedrock resources automatically means Mantle Project support exists in the same provider.</li>
+</ul>
 <h2 id="projects-in-bedrock-mantle">Projects in Bedrock Mantle</h2>
 <p>Projects are application-level boundaries for OpenAI-compatible workloads on Mantle.</p>
 <p>Use Projects when you need:</p>
