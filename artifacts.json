@@ -35,7 +35,7 @@
     {
       "title": "Amazon Bedrock Mantle vs Runtime",
       "slug": "bedrock-mantle-vs-runtime-2026-07-09",
-      "description": "Deep research comparing Bedrock Mantle and Bedrock Runtime across APIs, IAM, model access, Terraform, quotas, Projects, data residency, and LiteLLM.",
+      "description": "Deep research comparing Bedrock Mantle and Bedrock Runtime across APIs, IAM, production auth, model access, Terraform, quotas, Projects, data residency, and LiteLLM.",
       "createdAt": "2026-07-09",
       "type": "html",
       "url": "artifacts/bedrock-mantle-vs-runtime-2026-07-09/"
