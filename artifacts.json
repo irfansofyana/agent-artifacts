@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Goal & Loop Engineering",
+      "slug": "goal-loop-engineering",
+      "description": "Deep field guide to goals, loops, agent harnesses, verification, failure modes, and production design, with 24 annotated sources.",
+      "createdAt": "2026-07-12",
+      "type": "html",
+      "url": "artifacts/goal-loop-engineering/"
+    },
+    {
       "title": "Headroom + LiteLLM on EKS Runbook",
       "slug": "headroom-litellm-eks-runbook",
       "description": "Runbook for adding Headroom prompt compression to LiteLLM on AWS EKS, including Helm rollout guidance.",
