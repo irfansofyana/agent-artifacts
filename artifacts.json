@@ -3,7 +3,7 @@
     {
       "title": "Goal & Loop Engineering",
       "slug": "goal-loop-engineering",
-      "description": "Deep field guide and hands-on playbook for goal and loop engineering with Claude Code, Codex, and Pi, including decision criteria, examples, safety, and 36 annotated sources.",
+      "description": "Deep field guide explaining goal versus loop engineering, when to use each, and practical patterns for Claude Code, Codex, and Pi.",
       "createdAt": "2026-07-12",
       "type": "html",
       "url": "artifacts/goal-loop-engineering/"
