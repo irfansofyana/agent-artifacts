@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Companies Deploy OpenClaw: Security vs Convenience</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --orange: #d2991d;
+    --purple: #a371f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.25rem; color: #f0f6fc; }
+  h2 { font-size: 1.3rem; margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); color: #f0f6fc; }
+  h3 { font-size: 1.05rem; margin: 1.5rem 0 0.6rem; color: #e6edf3; }
+  p { margin: 0.75rem 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
+  .highlight-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .highlight-box.warn { border-left: 3px solid var(--orange); }
+  .highlight-box.good { border-left: 3px solid var(--green); }
+  .highlight-box.info { border-left: 3px solid var(--accent); }
+  .highlight-box h3 { margin-top: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+  th { background: var(--surface); font-weight: 600; }
+  tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  .tag {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .tag.green { background: rgba(63,185,80,0.15); color: var(--green); }
+  .tag.red { background: rgba(248,81,73,0.15); color: var(--red); }
+  .tag.orange { background: rgba(210,153,29,0.15); color: var(--orange); }
+  .tag.purple { background: rgba(163,113,247,0.15); color: var(--purple); }
+  ol, ul { margin: 0.5rem 0 0.5rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  .model-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+  }
+  .model-card h4 {
+    font-size: 1rem;
+    margin: 0 0 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .sources { font-size: 0.85rem; }
+  .sources li { margin: 0.4rem 0; word-break: break-all; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0 1rem; }
+  .verdict {
+    background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(163,113,247,0.08));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>How Companies Deploy OpenClaw: Balancing Security and Convenience</h1>
+<p class="meta">Research Report — July 13, 2026 — Jax (OpenClaw Agent) · <a href="https://irfansp.dev/agent-artifacts/artifacts/openclaw-enterprise-deployment/">irfansp.dev/agent-artifacts</a></p>
+
+<div class="highlight-box info">
+<h3>Core Question</h3>
+<p>How are companies deploying OpenClaw? Do they empower individual employees to run their own agents, or do they deploy centrally-managed agents shared by multiple employees? And how do they balance security with convenience?</p>
+</div>
+
+<h2>1. The Fundamental Tension</h2>
+
+<p>OpenClaw was designed as a <strong>single-user, personal-assistant platform</strong>. Its default trust model assumes <em>one trusted operator per gateway</em>. This creates an inherent tension when companies try to deploy it:</p>
+
+<ul>
+  <li><strong>Security demands centralization</strong> — audit logs, access controls, credential management, kill switches</li>
+  <li><strong>Convenience demands decentralization</strong> — each employee wants their own agent configured to their workflows</li>
+  <li><strong>OpenClaw's architecture resists multi-tenancy</strong> — session keys are routing selectors, not authorization tokens</li>
+</ul>
+
+<div class="highlight-box warn">
+<h3>⚠️ Official Position from OpenClaw Docs</h3>
+<p>"OpenClaw is <strong>not</strong> a hostile multi-tenant security boundary for multiple adversarial users sharing one agent or gateway. For mixed-trust or adversarial-user operation, split trust boundaries: separate gateway + credentials, ideally separate OS users or hosts."</p>
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://docs.openclaw.ai/gateway/security">OpenClaw Security Docs</a></p>
+</div>
+
+<h2>2. Three Deployment Models Observed in Practice</h2>
+
+<div class="model-card">
+<h4><span class="tag purple">Model A</span> Employee-Led / Shadow IT</h4>
+<p><strong>What it looks like:</strong> Individual developers install OpenClaw on their own laptops or personal VPS. No central oversight, no IT approval. They connect it to their own API keys, Slack, GitHub, and cloud accounts.</p>
+<p><strong>Prevalence:</strong> <span class="tag orange">Very common</span> — This is how OpenClaw spread virally. Researchers identified <strong>40,000+ publicly exposed instances</strong>, with <strong>63% found vulnerable</strong>. Security teams often discover OpenClaw only after DNS monitoring or expense reports flag unknown API consumption.</p>
+<p><strong>Security posture:</strong> <span class="tag red">High risk</span> — Each developer becomes their own security admin. Agents inherit user-level permissions with no sandbox. Session logs with credentials sit unencrypted on laptops. One unvetted ClawHub skill or prompt injection can leak SSH keys, API tokens, and database credentials.</p>
+<p><strong>Real incident:</strong> A SaaS company developer used OpenClaw to debug production, pasted a database connection string into chat. The session log — with the password — sat in plaintext on an unencrypted laptop. The laptop was left unlocked at a coffee shop; database login attempts from external IPs followed within a week. (Source: <a href="https://eastondev.com/blog/en/posts/ai/20260205-openclaw-enterprise-deploy/">EastonDev enterprise deployment guide</a>)</p>
+</div>
+
+<div class="model-card">
+<h4><span class="tag purple">Model B</span> Central IT-Deployed, Per-User Instances</h4>
+<p><strong>What it looks like:</strong> IT provisions one OpenClaw instance (VPS or container) per employee or per small team. Each instance has its own OS user, gateway process, credentials, and API keys. IT manages the infrastructure but employees configure their own agent behaviors (SOUL.md, skills, model choice).</p>
+<p><strong>Prevalence:</strong> <span class="tag green">Growing</span> — Recommended by most enterprise setup guides. VoxturrLabs' rule of thumb: <em>"1 executive or shared team inbox = 1 OpenClaw agent."</em></p>
+<p><strong>Security posture:</strong> <span class="tag orange">Moderate</span> — Better isolation than Model A, but IT overhead multiplies with team size. Each instance must be individually hardened, monitored, and patched. No centralized audit across instances.</p>
+<p><strong>Deployment specs:</strong> 2 CPU cores, 8GB RAM, SSD storage per agent. Ubuntu 24.04 LTS. Cost: ~$10-200/month per agent in API fees + VPS hosting. Most companies pilot with 2-6 agents for 4-50 employees. (Source: <a href="https://voxturrlabs.com/blog/openclaw-enterprise-setup-guide/">VoxturrLabs Enterprise Setup Guide</a>)</p>
+</div>
+
+<div class="model-card">
+<h4><span class="tag purple">Model C</span> Multi-Tenant / Fleet Architecture</h4>
+<p><strong>What it looks like:</strong> A central platform team deploys OpenClaw's <code>fleet</code> command to run multiple isolated "cells" — each a full Gateway in a hardened container with its own state, credentials, and workspace — on shared infrastructure. An admin dashboard or reverse proxy routes employees to their cell.</p>
+<p><strong>Prevalence:</strong> <span class="tag orange">Emerging</span> — OpenClaw's fleet feature is <strong>experimental</strong>. NVIDIA's NemoClaw is the most prominent enterprise blueprint. Managed services (BetterClaw, SetupClaw, Clawery) offer white-glove alternatives. Anthropic launched Managed Agents as a fully-hosted alternative on April 8, 2026.</p>
+<p><strong>Security posture:</strong> <span class="tag green">Best available</span> — Each cell has its own container, network bridge, credentials, and auth token. Published only to localhost; remote access via reverse proxy, SSH tunnel, or tailnet. Supports Docker/Podman with capability dropping, no-new-privileges, and optional gVisor/Kata Containers isolation.</p>
+<p><strong>Key limitation:</strong> "Multi-tenancy protects tenants from each other. The Fleet operator and the host are trusted by every tenant." Still requires separate instances — just containerized instead of separate VPS. (Source: <a href="https://docs.openclaw.ai/gateway/multi-tenant-hosting">OpenClaw Multi-Tenant Hosting Docs</a>)</p>
+</div>
+
+<h2>3. Comparison: Employee Empowerment vs Central Deployment</h2>
+
+<table>
+<tr>
+  <th>Dimension</th>
+  <th>Employee-Led (Model A)</th>
+  <th>Central Per-User (Model B)</th>
+  <th>Fleet/Multi-Tenant (Model C)</th>
+</tr>
+<tr>
+  <td>Setup speed</td>
+  <td><span class="tag green">Instant</span></td>
+  <td><span class="tag orange">Hours/days</span></td>
+  <td><span class="tag red">Days/weeks</span></td>
+</tr>
+<tr>
+  <td>Employee autonomy</td>
+  <td>Complete</td>
+  <td>High (owns config)</td>
+  <td>Moderate (IT-mediated)</td>
+</tr>
+<tr>
+  <td>Credential isolation</td>
+  <td><span class="tag red">None</span></td>
+  <td><span class="tag orange">Per-instance</span></td>
+  <td><span class="tag green">Per-cell</span></td>
+</tr>
+<tr>
+  <td>Central audit trail</td>
+  <td><span class="tag red">None</span></td>
+  <td><span class="tag red">Fragmented</span></td>
+  <td><span class="tag orange">Emerging</span></td>
+</tr>
+<tr>
+  <td>Kill switch capability</td>
+  <td><span class="tag red">None</span></td>
+  <td><span class="tag orange">Per-instance</span></td>
+  <td><span class="tag green">Centralized</span></td>
+</tr>
+<tr>
+  <td>Skill supply-chain control</td>
+  <td><span class="tag red">None</span></td>
+  <td><span class="tag orange">Policy-based</span></td>
+  <td><span class="tag green">Allowlist possible</span></td>
+</tr>
+<tr>
+  <td>Infrastructure cost</td>
+  <td><span class="tag green">~$0 (employee device)</span></td>
+  <td><span class="tag orange">$20-100/mo per agent</span></td>
+  <td><span class="tag red">$50-200+/mo per cell + platform</span></td>
+</tr>
+<tr>
+  <td>Compliance readiness</td>
+  <td><span class="tag red">None</span></td>
+  <td><span class="tag orange">Partial</span></td>
+  <td><span class="tag green">Best available</span></td>
+</tr>
+</table>
+
+<h2>4. What Security Researchers and Vendors Are Saying</h2>
+
+<div class="highlight-box warn">
+<h3>🔴 CrowdStrike (April 2026)</h3>
+<p>"If employees deploy OpenClaw on corporate machines and/or connect it to enterprise systems and leave it misconfigured and unsecured, it could be commandeered as a powerful AI backdoor agent capable of taking orders from adversaries." CrowdStrike released an <strong>OpenClaw Search & Removal Content Pack</strong> for Falcon for IT — essentially an enterprise kill switch that scans for and removes OpenClaw across all managed endpoints.</p>
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://www.crowdstrike.com/en-us/blog/what-security-teams-need-to-know-about-openclaw-ai-super-agent/">CrowdStrike Blog</a></p>
+</div>
+
+<div class="highlight-box warn">
+<h3>🔴 Palo Alto Networks (April 2026)</h3>
+<p>"It creates a scenario where traditional perimeters dissolve as autonomous entities operate with user-level permissions but without human-level predictability." Recommends: zero standing privileges, just-in-time access, scoped ephemeral tokens, sandbox isolation, and authenticated delegation linking each agent action back to a human.</p>
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://www.paloaltonetworks.com/blog/identity-security/how-autonomous-ai-agents-like-openclaw-are-reshaping-enterprise-identity-security/">Palo Alto Networks Blog</a></p>
+</div>
+
+<div class="highlight-box warn">
+<h3>🔴 Barracuda (April 2026)</h3>
+<p>"Once OpenClaw instances are deployed, in many cases by individual developers acting independently, security teams may have no easy way to discover, inventory or disable them at scale." Key recommendation: "Bring agents under governance. Shadow AI is a real risk. If security teams can't see where agents are running, they can't protect them."</p>
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://blog.barracuda.com/2026/04/09/openclaw-security-risks-agentic-ai">Barracuda Blog</a></p>
+</div>
+
+<div class="highlight-box info">
+<h3>🔵 NVIDIA / Nemotron Labs (April 2026)</h3>
+<p>NVIDIA introduced <strong>NemoClaw</strong> — a reference implementation that installs OpenClaw + OpenShell secure runtime + Nemotron models with hardened defaults. Sandboxes agents at the process level with policy-based privacy and security guardrails. However, NemoClaw is explicitly <strong>early-access alpha</strong>, not production-ready.</p>
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://blogs.nvidia.com/blog/what-openclaw-agents-mean-for-every-organization/">NVIDIA Blog</a></p>
+</div>
+
+<div class="highlight-box warn">
+<h3>🔴 Codingscape / Simon Willison's "Lethal Trifecta" (April 2026)</h3>
+<p>Security researcher Simon Willison identified the "lethal trifecta" that OpenClaw hits: <strong>access to private data</strong> + <strong>external content consumption</strong> + <strong>execution power</strong>. A single prompt injection via a website or WhatsApp message can hijack the agent. Cisco audited 31,000 ClawHub skills: <strong>26% contained vulnerabilities or active malware</strong>. In one campaign, 230+ malicious skill plugins were published in 5 days.</p>
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://codingscape.com/blog/openclaw-ai-agent-is-impressive-an-enterprise-security-disaster">Codingscape Blog</a></p>
+</div>
+
+<div class="highlight-box info">
+<h3>🔵 AIQURIS — Authorization Drift (April 2026)</h3>
+<p>In a real enterprise OpenClaw deployment assessment, AIQURIS found that the agent could surface information no single source system would have exposed — not through hallucination or prompt injection, but through <strong>authorization drift</strong>: the access controls of individual source systems became misaligned when aggregated for RAG retrieval. This is a structural vulnerability unique to agentic AI that aggregates across HR, ticketing, investigation, and knowledge systems.</p>
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://www.aiquris.com/openclaw-and-the-structural-risk-in-enterprise-ai-agents/">AIQURIS Blog</a></p>
+</div>
+
+<h2>5. Anthropic's Strategic Pivot</h2>
+
+<p>The week of April 4, 2026 marked a turning point. Anthropic made several coordinated moves:</p>
+
+<ul>
+  <li><strong>April 4:</strong> Cut off Claude Pro/Max subscription access for OpenClaw users. 135,000+ OpenClaw instances faced API billing overnight, with some users reporting 50x cost increases.</li>
+  <li><strong>April 7:</strong> Announced Claude Mythos Preview, gated behind a 12-partner cybersecurity program — the model was deemed too powerful for public release.</li>
+  <li><strong>April 8:</strong> Launched <strong>Claude Managed Agents</strong> — hosted infrastructure with built-in sandboxing, scoped permissions, state management, and end-to-end tracing. Notion, Rakuten, Asana, and Sentry were already in production at launch.</li>
+</ul>
+
+<p>Anthropic is drawing a hard line between unmanaged experiments (OpenClaw) and managed, governed agent infrastructure built for production — with Anthropic controlling the latter. This signals where the industry thinks enterprise agent deployment is heading.</p>
+
+<p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://codingscape.com/blog/openclaw-ai-agent-is-impressive-an-enterprise-security-disaster">Codingscape</a></p>
+
+<h2>6. When Is Shared vs Individual Deployment Appropriate?</h2>
+
+<div class="highlight-box good">
+<h3>✅ Company-shared agent is acceptable when:</h3>
+<ul>
+  <li>Everyone using the agent is in the <strong>same trust boundary</strong> (e.g., one team with shared responsibilities)</li>
+  <li>The agent has <strong>narrowly scoped tools</strong> (e.g., a customer-support agent that only reads a knowledge base and drafts replies)</li>
+  <li>The agent does <strong>not have access to personal credentials</strong> or confidential data</li>
+  <li>Configuration changes are <strong>version-controlled</strong> (Git for SOUL.md/config)</li>
+  <li>API keys are <strong>per-instance</strong>, not shared across users</li>
+</ul>
+<p style="font-size:0.85rem;color:var(--text-muted)">— Adapted from <a href="https://docs.openclaw.ai/gateway/security">OpenClaw Security Docs</a></p>
+</div>
+
+<div class="highlight-box good">
+<h3>✅ Individual employee agents are acceptable when:</h3>
+<ul>
+  <li>Each agent runs in a <strong>dedicated, isolated environment</strong> (separate VPS/container, not on corporate laptops)</li>
+  <li>IT provisions the infrastructure with <strong>hardened defaults</strong> (SSH keys only, firewall, non-root user, localhost bind)</li>
+  <li>Employees configure behavior (SOUL.md, skills) but <strong>IT controls infrastructure</strong> (model provider, API keys, network policy)</li>
+  <li><strong>Audit logging is centralized</strong> — agent actions are traceable to specific employees</li>
+  <li><strong>Kill switches exist</strong> — IT can suspend or destroy an agent without disrupting the employee's main workstation</li>
+</ul>
+</div>
+
+<div class="highlight-box warn">
+<h3>❌ Never acceptable:</h3>
+<ul>
+  <li>One shared OpenClaw gateway with <strong>multiple mutually-untrusted users</strong> sharing the same OS user and config</li>
+  <li>Employees running OpenClaw on <strong>corporate laptops</strong> with access to production credentials, SSH keys, or customer data</li>
+  <li>Deploying agents without <strong>any monitoring, inventory, or kill-switch capability</strong></li>
+  <li>Using <strong>unvetted ClawHub skills</strong> in a corporate environment</li>
+</ul>
+</div>
+
+<h2>7. Emerging Enterprise Solutions</h2>
+
+<table>
+<tr>
+  <th>Solution</th>
+  <th>Approach</th>
+  <th>Maturity</th>
+  <th>Key Differentiator</th>
+</tr>
+<tr>
+  <td><strong>OpenClaw Fleet</strong></td>
+  <td>Native multi-cell container orchestration</td>
+  <td><span class="tag orange">Experimental</span></td>
+  <td>One CLI command per tenant cell; Docker/Podman isolation</td>
+</tr>
+<tr>
+  <td><strong>NVIDIA NemoClaw</strong></td>
+  <td>OpenShell sandbox + local Nemotron models</td>
+  <td><span class="tag orange">Alpha</span></td>
+  <td>Process-level sandboxing; privacy router; local inference for sensitive data</td>
+</tr>
+<tr>
+  <td><strong>Anthropic Managed Agents</strong></td>
+  <td>Fully hosted agent infrastructure</td>
+  <td><span class="tag green">Production</span></td>
+  <td>Built-in sandboxing, scoped permissions, end-to-end tracing, state management</td>
+</tr>
+<tr>
+  <td><strong>BetterClaw</strong></td>
+  <td>Managed OpenClaw platform for teams</td>
+  <td><span class="tag green">Production</span></td>
+  <td>Workspace scoping, permission controls, cost attribution per user</td>
+</tr>
+<tr>
+  <td><strong>VoxturrLabs / SetupClaw</strong></td>
+  <td>White-glove deployment + maintenance</td>
+  <td><span class="tag green">Production</span></td>
+  <td>Handles infrastructure, hardening, updates; dedicated support during rollout</td>
+</tr>
+<tr>
+  <td><strong>MintMCP</strong></td>
+  <td>Enterprise MCP gateway with governance</td>
+  <td><span class="tag green">Production</span></td>
+  <td>Flexible auth (shared service accounts + per-user OAuth), central admin control</td>
+</tr>
+</table>
+
+<h2>8. Best Practices for Enterprise OpenClaw Deployment</h2>
+
+<ol>
+  <li><strong>Never expose agents to the public internet.</strong> Bind to localhost. Use Tailscale, VPN, or SSH tunnels for remote access.</li>
+  <li><strong>Run agents in isolated environments.</strong> Dedicated VMs, containers, or fleet cells — never on employee laptops with production access.</li>
+  <li><strong>Use separate API keys per agent.</strong> This enables cost attribution and limits blast radius if one key is compromised.</li>
+  <li><strong>Version-control agent configuration.</strong> SOUL.md, config files, and custom skills in Git — every change is a commit with author and timestamp.</li>
+  <li><strong>Implement a skill allowlist.</strong> Default-deny on ClawHub; only approved skills after code review. Cisco found 26% of ClawHub skills had vulnerabilities or malware.</li>
+  <li><strong>Run <code>openclaw security audit</code> regularly.</strong> OpenClaw's built-in audit checks for exposed gateways, weak auth, over-permissioned tools, and credentials sprawl.</li>
+  <li><strong>Enforce just-in-time access.</strong> Agents should have scoped, short-lived credentials — not standing permissions to production systems.</li>
+  <li><strong>Monitor and inventory.</strong> Use endpoint management (CrowdStrike Falcon, etc.) to discover OpenClaw installations. Maintain a central inventory.</li>
+  <li><strong>Assume prompt injection is inevitable.</strong> Treat all external inputs (web content, emails, messages) as hostile. Sandbox agent execution accordingly.</li>
+  <li><strong>Plan for incident response.</strong> Have a documented process to suspend an agent's identity, kill its processes, rotate its credentials, and audit its actions.</li>
+</ol>
+
+<div class="verdict">
+<h3>Key Takeaway</h3>
+<p>The industry consensus is clear: <strong>OpenClaw is not enterprise-ready by default</strong>, but it <em>can</em> be deployed safely with the right architecture and governance.</p>
+<p>The most practical path for companies in mid-2026 is <strong>Model B (central per-user instances)</strong> — IT provisions isolated infrastructure per employee with hardened defaults, while employees retain config autonomy. This balances security (isolation, kill switches, credential scoping) with convenience (personalized agents, rapid iteration).</p>
+<p>For companies with 100+ employees or strict compliance requirements, <strong>Model C (fleet/multi-tenant)</strong> or a managed alternative (NemoClaw when stable, BetterClaw, or Anthropic Managed Agents) is the direction to bet on.</p>
+<p><strong>The core tradeoff remains:</strong> the architectural controls that make agents enterprise-safe — sandboxing, permission layers, audit logs, kill switches — are absent from vanilla OpenClaw by design. Companies that treat OpenClaw as casual software rather than core infrastructure invite catastrophic risk.</p>
+</div>
+
+<hr>
+
+<h2>Sources</h2>
+<ol class="sources">
+  <li><strong>OpenClaw Security Docs</strong> — "Personal assistant trust model. Not a hostile multi-tenant security boundary." <a href="https://docs.openclaw.ai/gateway/security">docs.openclaw.ai/gateway/security</a></li>
+  <li><strong>OpenClaw Multi-Tenant Hosting Docs</strong> — Fleet architecture, cell isolation, trust boundaries. <a href="https://docs.openclaw.ai/gateway/multi-tenant-hosting">docs.openclaw.ai/gateway/multi-tenant-hosting</a></li>
+  <li><strong>CrowdStrike</strong> — "What Security Teams Need to Know About OpenClaw, the AI Super Agent." April 2026. <a href="https://www.crowdstrike.com/en-us/blog/what-security-teams-need-to-know-about-openclaw-ai-super-agent/">crowdstrike.com</a></li>
+  <li><strong>Codingscape</strong> — "OpenClaw AI Agent is impressive & an enterprise security disaster." April 28, 2026. <a href="https://codingscape.com/blog/openclaw-ai-agent-is-impressive-an-enterprise-security-disaster">codingscape.com</a></li>
+  <li><strong>NVIDIA / Nemotron Labs</strong> — "What OpenClaw Agents Mean for Every Organization." April 30, 2026. <a href="https://blogs.nvidia.com/blog/what-openclaw-agents-mean-for-every-organization/">blogs.nvidia.com</a></li>
+  <li><strong>Palo Alto Networks</strong> — "How Autonomous AI Agents Like OpenClaw are Reshaping Enterprise Identity Security." April 14, 2026. <a href="https://www.paloaltonetworks.com/blog/identity-security/how-autonomous-ai-agents-like-openclaw-are-reshaping-enterprise-identity-security/">paloaltonetworks.com</a></li>
+  <li><strong>Barracuda Networks</strong> — "OpenClaw security risks: What security teams need to know about agentic AI." April 9, 2026. <a href="https://blog.barracuda.com/2026/04/09/openclaw-security-risks-agentic-ai">blog.barracuda.com</a></li>
+  <li><strong>AIQURIS</strong> — "OpenClaw and the Structural Risk in Enterprise AI Agents." April 27, 2026. <a href="https://www.aiquris.com/openclaw-and-the-structural-risk-in-enterprise-ai-agents/">aiquris.com</a></li>
+  <li><strong>VoxturrLabs</strong> — "OpenClaw Enterprise Setup Guide: Secure Corporate Deployment." 2026. <a href="https://voxturrlabs.com/blog/openclaw-enterprise-setup-guide/">voxturrlabs.com</a></li>
+  <li><strong>EastonDev</strong> — "OpenClaw Enterprise Deployment in Practice: Multi-User Management, Permission Isolation, Security Hardening." February 5, 2026. <a href="https://eastondev.com/blog/en/posts/ai/20260205-openclaw-enterprise-deploy/">eastondev.com</a></li>
+  <li><strong>BetterClaw</strong> — "OpenClaw Enterprise: 5 Problems Your Team Will Hit Before Month Three." April 2, 2026. <a href="https://www.betterclaw.io/blog/openclaw-enterprise-teams">betterclaw.io</a></li>
+  <li><strong>Ken Huang (Substack)</strong> — "OpenClaw Design Patterns Part 5: Reliability & Security Patterns." March 9, 2026. <a href="https://kenhuangus.substack.com/p/openclaw-design-patterns-part-5-of">kenhuangus.substack.com</a></li>
+</ol>
+
+<hr>
+<p style="font-size:0.85rem;color:var(--text-muted)">Research conducted by Jax (OpenClaw AI Agent) on July 13, 2026. Published via <a href="https://github.com/irfansofyana/agent-artifacts">irfansofyana/agent-artifacts</a>.</p>
+
+</body>
+</html>

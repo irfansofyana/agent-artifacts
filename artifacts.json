@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "How Companies Deploy OpenClaw: Security vs Convenience",
+      "slug": "openclaw-enterprise-deployment",
+      "description": "Research on enterprise OpenClaw deployment models — employee-led vs central per-user vs fleet/multi-tenant — balancing security and convenience, with sources from CrowdStrike, NVIDIA, Palo Alto Networks, Barracuda, and more.",
+      "createdAt": "2026-07-13",
+      "type": "html",
+      "url": "artifacts/openclaw-enterprise-deployment/"
+    },
+    {
       "title": "Goal & Loop Engineering",
       "slug": "goal-loop-engineering",
       "description": "Deep field guide explaining goal versus loop engineering, when to use each, and practical patterns for Claude Code, Codex, and Pi.",
