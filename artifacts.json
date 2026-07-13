@@ -9,6 +9,14 @@
       "url": "artifacts/openclaw-enterprise-deployment/"
     },
     {
+      "title": "OpenClaw at Work — A Secure Employee-Agent Operating Model",
+      "slug": "openclaw-enterprise-operating-model",
+      "description": "A practical operating model for balancing employee agent autonomy with enterprise isolation, identity, approvals, and governance.",
+      "createdAt": "2026-07-13",
+      "type": "html",
+      "url": "artifacts/openclaw-enterprise-operating-model/"
+    },
+    {
       "title": "Goal & Loop Engineering",
       "slug": "goal-loop-engineering",
       "description": "Deep field guide explaining goal versus loop engineering, when to use each, and practical patterns for Claude Code, Codex, and Pi.",
