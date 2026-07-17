@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A risk-first, six-week forex day-trading starter course for Indonesian beginners using locally regulated brokers and demo accounts.">
+  <title>Forex Day Trading — A Risk-First Starter Course for Indonesia</title>
+  <style>
+    :root {
+      --paper: #f4f0e7;
+      --surface: #fffdf8;
+      --ink: #17221d;
+      --muted: #5e6b64;
+      --line: #c9d0c8;
+      --green: #1e6244;
+      --green-dark: #104832;
+      --lime: #d7e85b;
+      --amber: #b96318;
+      --red: #a6382c;
+      --code: #e5e9df;
+      --shadow: 0 12px 34px rgba(30, 48, 38, .09);
+      --radius: 6px;
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Aptos", "Segoe UI", Arial, sans-serif;
+      line-height: 1.58;
+    }
+    a { color: var(--green-dark); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--amber); }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+    .topline { height: 8px; background: var(--green); }
+    .shell { width: min(var(--max), calc(100% - 36px)); margin: 0 auto; }
+    nav {
+      display: flex; align-items: center; justify-content: space-between; gap: 22px;
+      min-height: 68px; border-bottom: 1px solid var(--line);
+    }
+    .brand { font-weight: 900; letter-spacing: .12em; font-size: .78rem; text-decoration: none; color: var(--ink); }
+    .navlinks { display: flex; gap: 18px; flex-wrap: wrap; font-size: .87rem; }
+    .navlinks a { text-decoration: none; }
+    .hero {
+      display: grid; grid-template-columns: 1.35fr .65fr; gap: 48px;
+      padding: 82px 0 70px; align-items: end;
+    }
+    .eyebrow { color: var(--green); text-transform: uppercase; font-weight: 800; letter-spacing: .16em; font-size: .77rem; }
+    h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; line-height: 1.08; margin: 0; }
+    h1 { font-size: clamp(3.4rem, 8vw, 7.7rem); letter-spacing: -.055em; max-width: 900px; }
+    h1 em { color: var(--green); font-weight: 400; }
+    .hero-copy { font-size: 1.15rem; margin: 26px 0 0; max-width: 710px; color: #344039; }
+    .edition { border-top: 4px solid var(--ink); padding-top: 18px; font-size: .92rem; }
+    .edition strong { display: block; font-size: 1.15rem; margin-bottom: 8px; }
+    .warning {
+      background: var(--ink); color: #f7f3e9; padding: 30px 0;
+    }
+    .warning-grid { display: grid; grid-template-columns: .7fr 1.3fr; gap: 34px; align-items: start; }
+    .warning h2 { color: var(--lime); font-size: clamp(1.6rem, 3vw, 2.4rem); }
+    .warning p { margin: 0; font-size: 1.05rem; }
+    section { padding: 76px 0; border-bottom: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 260px 1fr; gap: 42px; margin-bottom: 42px; }
+    .section-no { font: 800 .77rem/1.2 "Aptos", sans-serif; color: var(--green); letter-spacing: .16em; text-transform: uppercase; }
+    h2 { font-size: clamp(2.2rem, 4vw, 4.4rem); letter-spacing: -.035em; }
+    h3 { font-size: 1.6rem; letter-spacing: -.02em; }
+    .lead { font-size: 1.12rem; color: #39463f; max-width: 800px; }
+    .truth-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+    .truth { padding: 28px 26px 10px 0; border-right: 1px solid var(--line); }
+    .truth + .truth { padding-left: 26px; }
+    .truth:last-child { border-right: 0; }
+    .truth b { display: block; font-size: 2.4rem; color: var(--green); font-family: Georgia, serif; }
+    .truth p { margin: 8px 0; color: var(--muted); }
+    .recommend {
+      background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+      display: grid; grid-template-columns: 1fr 1.6fr;
+    }
+    .recommend-title { padding: 34px; background: var(--green); color: white; }
+    .recommend-title .tag { color: var(--lime); }
+    .recommend-title h3 { font-size: 2.5rem; margin-top: 14px; }
+    .recommend-body { padding: 34px; }
+    .tag { text-transform: uppercase; font-size: .72rem; letter-spacing: .14em; font-weight: 850; }
+    .checkline { display: flex; gap: 11px; margin: 11px 0; }
+    .checkline::before { content: "✓"; color: var(--green); font-weight: 900; }
+    table { width: 100%; border-collapse: collapse; margin-top: 34px; background: rgba(255,255,255,.3); }
+    th, td { padding: 16px 13px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+    td:first-child { font-weight: 800; }
+    .note { color: var(--muted); font-size: .88rem; }
+    .steps { counter-reset: step; display: grid; grid-template-columns: 1fr 1fr; gap: 0 48px; }
+    .step { counter-increment: step; display: grid; grid-template-columns: 52px 1fr; gap: 18px; padding: 26px 0; border-top: 1px solid var(--line); }
+    .step::before { content: counter(step, decimal-leading-zero); font: 850 1rem/1 "Aptos", sans-serif; color: var(--green); padding-top: 5px; }
+    .step p { margin: 7px 0 0; color: var(--muted); }
+    .glossary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    details { background: var(--surface); border: 1px solid var(--line); padding: 0 19px; }
+    summary { cursor: pointer; font-weight: 800; min-height: 54px; display: flex; align-items: center; }
+    details p { color: var(--muted); margin-top: 0; }
+    .calculator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .calculator { background: var(--surface); border: 1px solid var(--line); padding: 28px; }
+    .calculator h3 { margin-bottom: 19px; }
+    label { display: block; color: var(--muted); font-size: .8rem; font-weight: 750; margin: 13px 0 5px; }
+    input[type="number"] { width: 100%; min-height: 46px; padding: 9px 11px; border: 1px solid #aeb7ae; background: white; color: var(--ink); }
+    .result { margin-top: 20px; padding-top: 18px; border-top: 2px solid var(--ink); display: grid; gap: 7px; }
+    .result-row { display: flex; justify-content: space-between; gap: 15px; }
+    .result strong { font-variant-numeric: tabular-nums; }
+    .status { margin-top: 14px; padding: 9px 11px; background: var(--code); font-weight: 800; }
+    .status.good { background: #d8ead9; color: #184f32; }
+    .status.bad { background: #f2d8d2; color: #7a241d; }
+    .playbook { display: grid; grid-template-columns: 1fr 1fr; background: var(--ink); color: white; }
+    .playbook > div { padding: 36px; }
+    .playbook > div:first-child { border-right: 1px solid #566059; }
+    .playbook h3 { color: var(--lime); }
+    .rule-list { padding: 0; margin: 22px 0 0; list-style: none; }
+    .rule-list li { border-top: 1px solid #4a564f; padding: 13px 0; }
+    .rule-list b { color: var(--lime); }
+    .week-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .week { background: var(--surface); border: 1px solid var(--line); padding: 24px; min-height: 250px; }
+    .week .week-no { font-weight: 900; color: var(--green); font-size: .78rem; letter-spacing: .11em; }
+    .week h3 { margin: 16px 0 12px; }
+    .week ul { padding-left: 19px; margin: 0; color: var(--muted); }
+    .gate { margin-top: 24px; border: 3px solid var(--green); padding: 28px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 30px; }
+    .gate h3 { font-size: 2rem; }
+    .tracker { background: var(--surface); border: 1px solid var(--line); padding: 26px; }
+    .tracker-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 15px; }
+    .progress { height: 10px; background: #dfe2da; margin-bottom: 18px; overflow: hidden; }
+    .progress > span { display: block; height: 100%; width: 0; background: var(--green); transition: width .2s ease; }
+    .task { display: flex; gap: 12px; padding: 13px 0; border-top: 1px solid var(--line); align-items: start; }
+    .task input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--green); }
+    .task label { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 600; cursor: pointer; }
+    .routine { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid var(--line); }
+    .routine > div { padding: 26px; border-right: 1px solid var(--line); }
+    .routine > div:last-child { border-right: 0; }
+    .routine .time { color: var(--green); font-weight: 900; font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; }
+    .routine ol { padding-left: 19px; color: var(--muted); }
+    .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .btn { border: 1px solid var(--ink); background: var(--ink); color: white; padding: 11px 16px; min-height: 46px; cursor: pointer; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn:hover { background: var(--green); color: white; }
+    .btn.secondary { background: transparent; color: var(--ink); }
+    .btn.secondary:hover { background: var(--code); }
+    .redflags { columns: 2; column-gap: 42px; padding-left: 20px; }
+    .redflags li { break-inside: avoid; margin: 0 0 10px; }
+    .sources { font-size: .92rem; }
+    .sources li { margin-bottom: 10px; }
+    footer { background: var(--green-dark); color: #e9ede4; padding: 46px 0; }
+    footer .shell { display: flex; justify-content: space-between; gap: 30px; align-items: end; }
+    footer h2 { color: var(--lime); font-size: 2rem; }
+    footer p { max-width: 610px; margin-bottom: 0; }
+    .back { color: white; }
+    .hide-print { display: initial; }
+    @media (max-width: 850px) {
+      .hero, .warning-grid, .section-head, .recommend, .calculator-grid, .playbook, .gate { grid-template-columns: 1fr; }
+      .hero { padding-top: 54px; }
+      .section-head { gap: 12px; }
+      .truth-grid, .week-grid { grid-template-columns: 1fr; }
+      .truth { border-right: 0; border-bottom: 1px solid var(--line); padding-left: 0 !important; }
+      .steps { grid-template-columns: 1fr; }
+      .glossary { grid-template-columns: 1fr; }
+      .routine { grid-template-columns: 1fr; }
+      .routine > div { border-right: 0; border-bottom: 1px solid var(--line); }
+      .playbook > div:first-child { border-right: 0; border-bottom: 1px solid #566059; }
+      .navlinks { display: none; }
+      .redflags { columns: 1; }
+      footer .shell { display: block; }
+    }
+    @media print {
+      body { background: white; font-size: 11pt; }
+      .topline, nav, .button-row, .tracker .progress, footer { display: none !important; }
+      .shell { width: 100%; }
+      section { padding: 28px 0; break-inside: avoid; }
+      .hero { padding: 30px 0; }
+      h1 { font-size: 44pt; }
+      .week, .calculator, .recommend { box-shadow: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="topline"></div>
+  <header class="shell">
+    <nav aria-label="Primary navigation">
+      <a class="brand" href="#top">KAI / FIELD GUIDE 01</a>
+      <div class="navlinks">
+        <a href="#broker">Start safely</a><a href="#course">6-week course</a><a href="#playbook">Playbook</a><a href="#gate">Go-live gate</a>
+      </div>
+    </nav>
+    <div class="hero" id="top">
+      <div>
+        <div class="eyebrow">Beginner → disciplined demo trader → tiny live account</div>
+        <h1>Forex<br><em>without the fantasy.</em></h1>
+        <p class="hero-copy">A practical, risk-first day-trading course for an Indonesian beginner. Learn the mechanics, use a locally regulated demo account, test one simple setup, and earn the right to risk real money.</p>
+      </div>
+      <aside class="edition">
+        <strong>Indonesia edition</strong>
+        Verified against Bappebti's broker registry on 17 July 2026.<br><br>
+        Estimated study load: <b>45–60 minutes/day for six weeks.</b>
+      </aside>
+    </div>
+  </header>
+
+  <div class="warning">
+    <div class="shell warning-grid">
+      <h2>Your first goal is not daily profit.</h2>
+      <p>Markets do not owe you a paycheck every day. A daily-profit target pushes beginners toward overtrading, oversized leverage, and revenge trades. Your real first goal is to execute a tested process with small, predefined losses. A legitimate trading day may end positive, negative, flat—or with no trade at all.</p>
+    </div>
+  </div>
+
+  <main>
+    <section id="mindset">
+      <div class="shell">
+        <div class="section-head">
+          <div class="section-no">01 / Reset the goal</div>
+          <div><h2>Measure decisions, not today’s money.</h2><p class="lead">Profit is a noisy outcome. Process quality is trainable. For the first six weeks, score yourself on rule-following and data collection.</p></div>
+        </div>
+        <div class="truth-grid">
+          <div class="truth"><b>0</b><h3>Guaranteed days</h3><p>No strategy wins every day. Anyone promising guaranteed returns is selling a fantasy or a scam.</p></div>
+          <div class="truth"><b>1</b><h3>Setup to master</h3><p>Do not collect indicators. Trade one pair, one session, one repeatable setup.</p></div>
+          <div class="truth"><b>40+</b><h3>Demo trades first</h3><p>A small sample is not proof, but it is enough to expose whether you can follow your own rules.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="broker">
+      <div class="shell">
+        <div class="section-head">
+          <div class="section-no">02 / Start legally</div>
+          <div><h2>Use a licensed Indonesian broker’s demo.</h2><p class="lead">Install only from the broker's official website link. Before depositing, search the exact legal company name in Bappebti’s live registry again—licenses and app listings can change.</p></div>
+        </div>
+        <div class="recommend">
+          <div class="recommend-title">
+            <div class="tag">Default starting point</div>
+            <h3>MIFX demo</h3>
+            <p>One clear starting platform reduces decision noise. This is a practical starting recommendation, not an endorsement or claim that it is the cheapest broker.</p>
+          </div>
+          <div class="recommend-body">
+            <div class="checkline"><span><b>Legal entity:</b> PT Monex Investindo Futures.</span></div>
+            <div class="checkline"><span><b>Bappebti license:</b> 178/BAPPEBTI/SI/I/2003, shown in the regulator registry.</span></div>
+            <div class="checkline"><span><b>Demo:</b> official page states USD 10,000 virtual funds and ongoing access.</span></div>
+            <div class="checkline"><span><b>Platform:</b> the official demo registration page offers MetaTrader 5.</span></div>
+            <div class="button-row"><a class="btn" href="https://mifx.com/open-demo-account" target="_blank" rel="noopener">Open official demo page</a><a class="btn secondary" href="https://bappebti.go.id/pialang_berjangka" target="_blank" rel="noopener">Verify at Bappebti</a></div>
+          </div>
+        </div>
+
+        <table aria-label="Regulated broker alternatives">
+          <thead><tr><th>Brand / legal entity</th><th>Bappebti registry license</th><th>Why consider it</th><th>Official link</th></tr></thead>
+          <tbody>
+            <tr><td>MIFX<br><span class="note">PT Monex Investindo Futures</span></td><td>178/BAPPEBTI/SI/I/2003</td><td>Official demo page, virtual funds, MT5 selection, education content.</td><td><a href="https://mifx.com/open-demo-account" target="_blank" rel="noopener">Demo</a></td></tr>
+            <tr><td>HSB Investasi<br><span class="note">PT Handal Semesta Berjangka</span></td><td>001/BAPPEBTI/SI/5/2018</td><td>Official demo account and a broker-built app; useful if its interface fits you better.</td><td><a href="https://www.hsb.co.id/akun-demo" target="_blank" rel="noopener">Demo</a></td></tr>
+            <tr><td>Finex<br><span class="note">PT Finex Bisnis Solusi Futures</span></td><td>47/BAPPEBTI/SI/04/2013</td><td>Official help center documents demo access; compare costs and sizing before choosing.</td><td><a href="https://finex.co.id/helpcenter/area_personal_web/saya-ingin-mencoba-akun-demo" target="_blank" rel="noopener">Demo help</a></td></tr>
+          </tbody>
+        </table>
+        <p class="note"><b>Not a ranking.</b> Regulation lowers counterparty and conduct risk; it does not make leveraged trading safe or profitable. Compare spread, commission, swap, minimum trade size, execution, withdrawals, and customer support using the broker’s current official terms.</p>
+      </div>
+    </section>
+
+    <section id="setup">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">03 / First setup</div><div><h2>Set up a clean training environment.</h2><p class="lead">You need a demo account, a journal, and one chart. Nothing else. Do not buy signals, robots, VIP groups, or a funded-account challenge.</p></div></div>
+        <div class="steps">
+          <div class="step"><div><h3>Verify the company</h3><p>Match brand, legal company name, and license in the live Bappebti registry. Avoid APK files and links sent through chat.</p></div></div>
+          <div class="step"><div><h3>Create demo only</h3><p>Do not deposit yet. Use your own email, strong password, and official app-store link from the broker website.</p></div></div>
+          <div class="step"><div><h3>Choose EUR/USD</h3><p>Start with one major pair. It is widely followed and usually more liquid than exotic pairs, but costs still vary by broker and time.</p></div></div>
+          <div class="step"><div><h3>Use two chart frames</h3><p>H1 for direction and M15 for the entry. Add only 20 EMA and 50 EMA as visual trend guides.</p></div></div>
+          <div class="step"><div><h3>Fix one session</h3><p>Trade a consistent 60–90 minute window during London or London/New York overlap. Session times shift with daylight saving; check your platform clock.</p></div></div>
+          <div class="step"><div><h3>Open the journal</h3><p>Record the plan before entry, screenshot before/after, risk in R, result in R, rule adherence, and emotional state.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="language">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">04 / Market language</div><div><h2>Know what can hurt you.</h2><p class="lead">Learn these before placing even a demo order. Tap each term to expand it.</p></div></div>
+        <div class="glossary">
+          <details><summary>Currency pair</summary><p>EUR/USD quotes euros in US dollars. Buying means you expect EUR to strengthen relative to USD; selling means the opposite.</p></details>
+          <details><summary>Pip</summary><p>A standard unit of price movement, commonly the fourth decimal place for many pairs. Pip value depends on pair, trade size, price, and account currency.</p></details>
+          <details><summary>Lot / position size</summary><p>The quantity you trade. The broker's minimum increment matters. Position size—not confidence—is how you control financial risk.</p></details>
+          <details><summary>Leverage and margin</summary><p>Leverage lets a small margin control a larger position. It magnifies losses as efficiently as gains. Margin is collateral, not the maximum you can lose.</p></details>
+          <details><summary>Spread, commission, swap</summary><p>Spread is the bid/ask gap; commission may be charged separately; swap is overnight financing. Your strategy must beat all trading costs.</p></details>
+          <details><summary>Slippage</summary><p>Your fill can differ from the requested price, especially around news or thin liquidity. A stop is risk control, not a guaranteed exact fill.</p></details>
+          <details><summary>Market, limit, stop orders</summary><p>Market orders prioritize execution; limit orders seek a better price; stop orders activate after a trigger. Learn entry and protective-stop behavior in demo.</p></details>
+          <details><summary>R-multiple</summary><p>R is your predefined risk. Lose the planned amount = −1R. Make 1.5 times that amount = +1.5R. This normalizes results across account sizes.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="risk">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">05 / Risk engine</div><div><h2>Survival is the strategy underneath the strategy.</h2><p class="lead">For learning, cap risk at <b>0.25%–0.50% per trade</b>, stop after <b>−1.5% in a day</b>, and stop for the week at <b>−3%</b>. Limits are ceilings, not targets.</p></div></div>
+        <div class="calculator-grid">
+          <div class="calculator">
+            <h3>Risk budget calculator</h3>
+            <label for="balance">Account balance (IDR)</label><input id="balance" type="number" min="0" step="100000" value="5000000">
+            <label for="riskPct">Risk per trade (%)</label><input id="riskPct" type="number" min="0.01" max="1" step="0.05" value="0.5">
+            <label for="dailyPct">Daily stop (%)</label><input id="dailyPct" type="number" min="0.1" max="3" step="0.1" value="1.5">
+            <label for="weeklyPct">Weekly stop (%)</label><input id="weeklyPct" type="number" min="0.1" max="6" step="0.1" value="3">
+            <div class="result">
+              <div class="result-row"><span>Maximum risk / trade</span><strong id="riskAmount">—</strong></div>
+              <div class="result-row"><span>Daily loss stop</span><strong id="dailyAmount">—</strong></div>
+              <div class="result-row"><span>Weekly loss stop</span><strong id="weeklyAmount">—</strong></div>
+            </div>
+            <p class="note">This calculates your cash-risk budget—not lot size. Use the broker’s current position-size calculator with pair, entry, stop distance, account currency, and contract specification.</p>
+          </div>
+          <div class="calculator">
+            <h3>Expectancy calculator</h3>
+            <label for="winRate">Win rate (%)</label><input id="winRate" type="number" min="0" max="100" step="1" value="45">
+            <label for="avgWin">Average winning trade (R)</label><input id="avgWin" type="number" min="0" step="0.1" value="1.5">
+            <label for="avgLoss">Average losing trade (R)</label><input id="avgLoss" type="number" min="0" step="0.1" value="1">
+            <div class="result">
+              <div class="result-row"><span>Expected value / trade</span><strong id="expectancy">—</strong></div>
+              <div class="result-row"><span>Projected over 40 trades</span><strong id="fortyTrades">—</strong></div>
+            </div>
+            <div class="status" id="expectancyStatus">Enter your journal statistics.</div>
+            <p class="note">Formula: (win rate × average win) − (loss rate × average loss). Historical expectancy can disappear when conditions or costs change.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="playbook">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">06 / One playbook</div><div><h2>Trend pullback, not prediction.</h2><p class="lead">This is a training hypothesis to test—not a magic strategy. Use it unchanged for at least 40 valid demo trades before judging it.</p></div></div>
+        <div class="playbook">
+          <div>
+            <h3>Long setup</h3>
+            <ul class="rule-list">
+              <li><b>Context:</b> H1 20 EMA above 50 EMA; price structure shows higher highs and higher lows.</li>
+              <li><b>Location:</b> On M15, price pulls back toward recent support or the EMA area without breaking the H1 structure.</li>
+              <li><b>Trigger:</b> A bullish M15 candle closes back in the trend direction. Enter only after the candle closes.</li>
+              <li><b>Stop:</b> Below the pullback swing low, at a level that proves the setup wrong.</li>
+              <li><b>Target:</b> Next resistance with at least 1.5R potential. Skip if space is insufficient.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Short setup</h3>
+            <ul class="rule-list">
+              <li><b>Context:</b> H1 20 EMA below 50 EMA; price structure shows lower highs and lower lows.</li>
+              <li><b>Location:</b> On M15, price pulls back toward recent resistance or the EMA area without breaking H1 structure.</li>
+              <li><b>Trigger:</b> A bearish M15 candle closes back in the trend direction. Enter only after the candle closes.</li>
+              <li><b>Stop:</b> Above the pullback swing high, where the setup is invalidated.</li>
+              <li><b>Target:</b> Next support with at least 1.5R potential. Skip if the chart is cramped.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="gate" style="margin-top:18px">
+          <div><h3>Hard filters</h3><p>These reduce bad decisions; they do not guarantee good outcomes.</p></div>
+          <div><b>No trade if:</b> high-impact EUR or USD news is near; spread is abnormal; you missed the planned entry; target offers less than 1.5R; you have already lost two trades; you are tired, angry, rushing, or trying to recover money.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="course">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">07 / Six-week course</div><div><h2>Learn in the right order.</h2><p class="lead">Do not compress this into a weekend. Familiarity is not competence.</p></div></div>
+        <div class="week-grid">
+          <article class="week"><div class="week-no">WEEK 01</div><h3>Mechanics</h3><ul><li>Complete broker demo onboarding</li><li>Learn pair, pip, lot, spread, margin</li><li>Practice market/limit/stop orders</li><li>Place 10 no-stakes practice orders</li></ul></article>
+          <article class="week"><div class="week-no">WEEK 02</div><h3>Charts & risk</h3><ul><li>Mark trend and swing structure</li><li>Calculate R and risk budget</li><li>Place stop before target</li><li>Never move stop farther away</li></ul></article>
+          <article class="week"><div class="week-no">WEEK 03</div><h3>Replay</h3><ul><li>Study 20 historical examples</li><li>Screenshot valid and invalid setups</li><li>Apply the same checklist</li><li>Ignore P&amp;L; score rule clarity</li></ul></article>
+          <article class="week"><div class="week-no">WEEK 04</div><h3>Demo execution</h3><ul><li>Trade one fixed session</li><li>Maximum two trades/day</li><li>Record every valid and skipped trade</li><li>Stop at daily loss limit</li></ul></article>
+          <article class="week"><div class="week-no">WEEK 05</div><h3>Build evidence</h3><ul><li>Continue toward 40 valid trades</li><li>Calculate win rate and expectancy</li><li>Tag every rule violation</li><li>Do not change rules mid-sample</li></ul></article>
+          <article class="week"><div class="week-no">WEEK 06</div><h3>Audit</h3><ul><li>Review screenshots in batches</li><li>Separate strategy loss from mistake</li><li>Check drawdown and costs</li><li>Pass—or repeat—the graduation gate</li></ul></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="tracker-section">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">08 / Progress tracker</div><div><h2>Earn your next step.</h2><p class="lead">Progress is saved locally in this browser. Checking a box is a commitment, not decoration.</p></div></div>
+        <div class="tracker">
+          <div class="tracker-head"><h3>Beginner milestones</h3><strong id="progressText">0 / 12 complete</strong></div>
+          <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+          <div id="tasks">
+            <div class="task"><input type="checkbox" id="t1"><label for="t1">I verified my chosen broker’s exact legal entity in the live Bappebti registry.</label></div>
+            <div class="task"><input type="checkbox" id="t2"><label for="t2">I opened a demo account only and installed the app through an official link.</label></div>
+            <div class="task"><input type="checkbox" id="t3"><label for="t3">I can explain pip, lot, leverage, margin, spread, swap, and slippage.</label></div>
+            <div class="task"><input type="checkbox" id="t4"><label for="t4">I practiced market, limit, stop, stop-loss, and take-profit orders.</label></div>
+            <div class="task"><input type="checkbox" id="t5"><label for="t5">I wrote down my per-trade, daily, and weekly risk limits.</label></div>
+            <div class="task"><input type="checkbox" id="t6"><label for="t6">I fixed one pair and one 60–90 minute trading window.</label></div>
+            <div class="task"><input type="checkbox" id="t7"><label for="t7">I collected 20 annotated historical setup examples.</label></div>
+            <div class="task"><input type="checkbox" id="t8"><label for="t8">I completed at least 40 valid demo trades with screenshots and journal entries.</label></div>
+            <div class="task"><input type="checkbox" id="t9"><label for="t9">My 40-trade expectancy is positive after estimated trading costs.</label></div>
+            <div class="task"><input type="checkbox" id="t10"><label for="t10">I followed every risk limit for at least 10 consecutive trading days.</label></div>
+            <div class="task"><input type="checkbox" id="t11"><label for="t11">I can stop after a loss without revenge trading or moving my stop.</label></div>
+            <div class="task"><input type="checkbox" id="t12"><label for="t12">Any future live deposit is disposable learning capital, not emergency or borrowed money.</label></div>
+          </div>
+          <div class="button-row"><button class="btn secondary" id="resetProgress" type="button">Reset tracker</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="routine-section">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">09 / Daily operating system</div><div><h2>Trade less. Review more.</h2><p class="lead">A routine prevents each candle from renegotiating your rules.</p></div></div>
+        <div class="routine">
+          <div><div class="time">Before / 15 min</div><h3>Prepare</h3><ol><li>Check high-impact calendar events.</li><li>Mark H1 trend, support, resistance.</li><li>Write allowed setup and invalidation.</li><li>Set today’s loss limit.</li></ol></div>
+          <div><div class="time">During / 60–90 min</div><h3>Execute</h3><ol><li>Wait for a closed-candle trigger.</li><li>Calculate size from stop distance.</li><li>Maximum two trades.</li><li>No moving stop farther; no adding to loss.</li></ol></div>
+          <div><div class="time">After / 15 min</div><h3>Debrief</h3><ol><li>Save before/after screenshots.</li><li>Record result in R.</li><li>Score every rule yes/no.</li><li>Write one lesson—no strategy edits today.</li></ol></div>
+        </div>
+        <div class="button-row"><button class="btn" id="downloadJournal" type="button">Download journal CSV template</button><button class="btn secondary" onclick="window.print()" type="button">Print / save as PDF</button></div>
+      </div>
+    </section>
+
+    <section id="gate">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">10 / Go-live gate</div><div><h2>Real money is a privilege, not week seven.</h2><p class="lead">If any gate fails, continue demo. There is no deadline and no shame in repeating the course.</p></div></div>
+        <div class="gate">
+          <div><h3>All six must be true</h3><p>Passing does not mean you will profit. It means you have a minimally defensible process.</p></div>
+          <div>
+            <ol>
+              <li>At least 40 valid, fully journaled demo trades.</li>
+              <li>Positive expectancy after realistic spread/commission/slippage assumptions.</li>
+              <li>No risk-limit violation for 10 consecutive trading days.</li>
+              <li>Maximum drawdown is understood and emotionally tolerable.</li>
+              <li>No martingale, averaging down, borrowed money, or money needed within 12 months.</li>
+              <li>You will start at the broker’s smallest practical size and accept that no-trade days are normal.</li>
+            </ol>
+          </div>
+        </div>
+        <h3 style="margin-top:38px">Immediate stop signs</h3>
+        <ul class="redflags">
+          <li>You need trading to pay this month’s bills.</li><li>You hide losses or deposits from family.</li><li>You increase size after a loss.</li><li>You cannot sleep because of an open position.</li><li>You follow anonymous signal groups.</li><li>You move stops to avoid being wrong.</li><li>You deposit through a personal bank account.</li><li>You are promised fixed or guaranteed returns.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="shell">
+        <div class="section-head"><div class="section-no">Sources / verification</div><div><h2>Check the source, not the logo.</h2><p class="lead">Broker details were checked against first-party regulator and broker pages on 17 July 2026. Recheck before opening or funding an account.</p></div></div>
+        <ol class="sources">
+          <li><a href="https://bappebti.go.id/pialang_berjangka" target="_blank" rel="noopener">Bappebti — Pialang Berjangka registry</a>. Searches returned PT Monex Investindo Futures (178/BAPPEBTI/SI/I/2003), PT Handal Semesta Berjangka (001/BAPPEBTI/SI/5/2018), and PT Finex Bisnis Solusi Futures (47/BAPPEBTI/SI/04/2013).</li>
+          <li><a href="https://ceklegalitas.bappebti.go.id/" target="_blank" rel="noopener">Bappebti — Cek Legalitas portal</a>.</li>
+          <li><a href="https://mifx.com/open-demo-account" target="_blank" rel="noopener">MIFX — official demo account page</a>: virtual USD 10,000, educational access, and MT5 selection shown at verification time.</li>
+          <li><a href="https://www.hsb.co.id/akun-demo" target="_blank" rel="noopener">HSB Investasi — official demo account page</a>.</li>
+          <li><a href="https://finex.co.id/helpcenter/area_personal_web/saya-ingin-mencoba-akun-demo" target="_blank" rel="noopener">Finex — official demo account help page</a>.</li>
+        </ol>
+        <p class="note">Educational material only, not personalized financial advice. Leveraged derivatives can lose money rapidly. Product terms, regulation, trading costs, and availability may change after publication.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <div><h2>Consistency before capital.</h2><p>The mature goal is not “make money today.” It is “make only decisions my tested plan allows today.”</p></div>
+      <a class="back" href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script>
+    const idr = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
+    const val = id => Number(document.getElementById(id).value || 0);
+    function updateRisk() {
+      const balance = val('balance');
+      document.getElementById('riskAmount').textContent = idr.format(balance * val('riskPct') / 100);
+      document.getElementById('dailyAmount').textContent = idr.format(balance * val('dailyPct') / 100);
+      document.getElementById('weeklyAmount').textContent = idr.format(balance * val('weeklyPct') / 100);
+    }
+    function updateExpectancy() {
+      const win = val('winRate') / 100, avgWin = val('avgWin'), avgLoss = val('avgLoss');
+      const e = (win * avgWin) - ((1 - win) * avgLoss);
+      document.getElementById('expectancy').textContent = `${e >= 0 ? '+' : ''}${e.toFixed(2)}R`;
+      document.getElementById('fortyTrades').textContent = `${e * 40 >= 0 ? '+' : ''}${(e * 40).toFixed(1)}R`;
+      const status = document.getElementById('expectancyStatus');
+      if (e > 0) { status.textContent = 'Positive historical expectancy — still not a guarantee.'; status.className = 'status good'; }
+      else if (e < 0) { status.textContent = 'Negative expectancy — do not move to live trading.'; status.className = 'status bad'; }
+      else { status.textContent = 'Break-even before costs — likely negative after costs.'; status.className = 'status'; }
+    }
+    ['balance','riskPct','dailyPct','weeklyPct'].forEach(id => document.getElementById(id).addEventListener('input', updateRisk));
+    ['winRate','avgWin','avgLoss'].forEach(id => document.getElementById(id).addEventListener('input', updateExpectancy));
+    updateRisk(); updateExpectancy();
+
+    const boxes = [...document.querySelectorAll('#tasks input[type="checkbox"]')];
+    function updateProgress() {
+      const done = boxes.filter(x => x.checked).length;
+      document.getElementById('progressText').textContent = `${done} / ${boxes.length} complete`;
+      document.getElementById('progressBar').style.width = `${done / boxes.length * 100}%`;
+      localStorage.setItem('forexStarterProgress', JSON.stringify(boxes.map(x => x.checked)));
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem('forexStarterProgress') || '[]');
+      boxes.forEach((box, i) => box.checked = Boolean(saved[i]));
+    } catch (_) {}
+    boxes.forEach(box => box.addEventListener('change', updateProgress));
+    document.getElementById('resetProgress').addEventListener('click', () => { boxes.forEach(x => x.checked = false); updateProgress(); });
+    updateProgress();
+
+    document.getElementById('downloadJournal').addEventListener('click', () => {
+      const header = ['Date','Pair','Session','Direction','H1 context','Entry','Stop','Target','Planned risk IDR','Planned R:R','Exit','Result R','Spread/commission','Setup valid Y/N','Rules followed Y/N','Emotion before','Emotion after','Screenshot before','Screenshot after','Lesson'];
+      const sample = ['YYYY-MM-DD','EUR/USD','London','Long','','','','','','','','','','','','','','','',''];
+      const csv = [header, sample].map(row => row.map(cell => `"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'forex-trading-journal-template.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

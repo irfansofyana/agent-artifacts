@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Forex Day Trading — A Risk-First Starter Course for Indonesia",
+      "slug": "forex-day-trading-starter",
+      "description": "An interactive six-week beginner course for learning forex day trading with locally regulated Indonesian broker demos, strict risk controls, a testable playbook, calculators, and a go-live gate.",
+      "createdAt": "2026-07-17",
+      "type": "html",
+      "url": "artifacts/forex-day-trading-starter/"
+    },
+    {
       "title": "How Companies Deploy OpenClaw: Security vs Convenience",
       "slug": "openclaw-enterprise-deployment",
       "description": "Research on enterprise OpenClaw deployment models — employee-led vs central per-user vs fleet/multi-tenant — balancing security and convenience, with sources from CrowdStrike, NVIDIA, Palo Alto Networks, Barracuda, and more.",
