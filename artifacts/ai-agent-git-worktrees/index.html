@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A practical field manual for running Pi, Codex CLI, and Claude Code concurrently in isolated Git worktrees.">
+  <title>Parallel AI Coding with Git Worktrees — Pi, Codex & Claude Code</title>
+  <style>
+    :root {
+      --bg:#0c100f; --panel:#141a18; --panel2:#19211e; --ink:#edf2ec; --muted:#9eaaa3;
+      --line:#313b36; --acid:#c7f36a; --cyan:#70d6cf; --orange:#ff9a5c; --red:#ff746c;
+      --paper:#f1f2eb; --dark:#18201c; --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+      --sans:"IBM Plex Sans","Aptos","Segoe UI",Arial,sans-serif; --serif:Georgia,"Times New Roman",serif;
+      --max:1220px; --radius:7px;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55}
+    a{color:var(--cyan);text-underline-offset:3px} a:hover{color:var(--acid)} button,input,select{font:inherit}
+    button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acid);outline-offset:3px}
+    .shell{width:min(var(--max),calc(100% - 38px));margin:auto}.topbar{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(12,16,15,.96);z-index:20}
+    nav{height:64px;display:flex;justify-content:space-between;align-items:center;gap:24px}.brand{color:var(--ink);text-decoration:none;font:800 .76rem var(--mono);letter-spacing:.14em}.navlinks{display:flex;gap:18px;font-size:.82rem}.navlinks a{text-decoration:none;color:var(--muted)}
+    .hero{padding:76px 0 62px;display:grid;grid-template-columns:1.35fr .65fr;gap:52px;align-items:end}.kicker{font:800 .72rem var(--mono);color:var(--acid);letter-spacing:.14em;text-transform:uppercase;margin-bottom:22px}
+    h1,h2,h3{margin:0;line-height:1.06}h1{font:700 clamp(3.2rem,7.2vw,7.4rem)/.94 var(--serif);letter-spacing:-.055em}h1 span{color:var(--acid);font-style:italic;font-weight:400}
+    .hero p{font-size:1.1rem;color:#c5cec8;max-width:760px;margin:27px 0 0}.hero-side{border-top:4px solid var(--acid);padding-top:18px;color:var(--muted)}.hero-side b{color:var(--ink)}
+    .principle{background:var(--acid);color:#132016;padding:27px 0}.principle .shell{display:grid;grid-template-columns:240px 1fr;gap:34px;align-items:center}.principle strong{font:900 .8rem var(--mono);letter-spacing:.13em;text-transform:uppercase}.principle p{font:700 clamp(1.2rem,2.5vw,2rem) var(--serif);margin:0}
+    main section{padding:72px 0;border-bottom:1px solid var(--line)}.section-head{display:grid;grid-template-columns:210px 1fr;gap:42px;margin-bottom:40px}.section-no{font:800 .72rem var(--mono);letter-spacing:.14em;color:var(--acid);text-transform:uppercase;padding-top:8px}
+    h2{font:650 clamp(2.1rem,4.2vw,4.3rem) var(--serif);letter-spacing:-.035em}.lead{color:var(--muted);font-size:1.08rem;max-width:780px;margin:18px 0 0}h3{font:650 1.5rem var(--serif);letter-spacing:-.015em}
+    .diagram{display:grid;grid-template-columns:1fr 48px 1fr 48px 1fr;align-items:stretch}.node{border:1px solid var(--line);background:var(--panel);padding:25px;min-height:185px}.node.coordinator{border-color:var(--acid)}.arrow{display:grid;place-items:center;color:var(--acid);font:900 1.4rem var(--mono)}.mono{font-family:var(--mono)}.dim{color:var(--muted)}
+    .rule-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:30px}.rule{background:var(--panel);padding:25px}.rule b{display:block;color:var(--acid);font:800 .75rem var(--mono);letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px}.rule p{margin:0;color:var(--muted)}
+    .code-card{background:#080b0a;border:1px solid var(--line);margin:20px 0}.code-head{height:46px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 13px 0 17px;color:var(--muted);font:700 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase}.copy{border:1px solid #46534c;background:transparent;color:var(--ink);padding:6px 10px;cursor:pointer;font:700 .72rem var(--mono);min-height:32px}.copy:hover{border-color:var(--acid);color:var(--acid)}
+    pre{margin:0;padding:20px;overflow:auto;font:13.5px/1.65 var(--mono);color:#dfe8e1;tab-size:2}.comment{color:#78857e}.cmd{color:var(--acid)}.var{color:var(--cyan)}
+    .callout{border:1px solid var(--orange);padding:22px 24px;margin:24px 0;color:#ffd7bd;background:#201811}.callout strong{color:var(--orange)}.danger{border-color:var(--red);background:#211211;color:#ffd0cd}.danger strong{color:var(--red)}
+    .builder{background:var(--paper);color:var(--dark);padding:30px;border-radius:var(--radius)}.builder-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px}.builder label{font:800 .73rem var(--mono);text-transform:uppercase;letter-spacing:.07em}.builder input,.builder select{display:block;width:100%;min-height:47px;margin-top:6px;border:1px solid #aeb8af;background:white;padding:9px 11px;color:#152019}.builder .code-card{margin-bottom:0}.builder .code-head{color:#a9b5ad}.builder-note{color:#5b685f;font-size:.88rem;margin:13px 0 0}
+    .tool-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:26px}.tab{border:0;border-right:1px solid var(--line);background:var(--panel);color:var(--muted);padding:13px 20px;cursor:pointer;font-weight:800;min-height:48px}.tab[aria-selected="true"]{background:var(--acid);color:#142017}.tabpanel{display:none}.tabpanel.active{display:block}
+    .tool-layout{display:grid;grid-template-columns:250px 1fr;gap:34px}.tool-facts{border-top:3px solid var(--cyan);padding-top:16px}.tool-facts dl{margin:12px 0}.tool-facts dt{font:800 .7rem var(--mono);text-transform:uppercase;color:var(--muted);margin-top:14px}.tool-facts dd{margin:3px 0;color:var(--ink)}
+    table{width:100%;border-collapse:collapse;background:var(--panel);font-size:.92rem}th,td{padding:15px 13px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{font:800 .7rem var(--mono);letter-spacing:.08em;color:var(--acid);text-transform:uppercase}td:first-child{font-weight:750}
+    .prompt{background:var(--paper);color:#182019;padding:30px;display:grid;grid-template-columns:260px 1fr;gap:28px}.prompt h3{font-size:2rem}.prompt pre{background:#18201c;color:#e6eee8;border:0}.prompt .copy{border-color:#68766e;color:var(--dark)}.prompt .copy:hover{color:#173d28;border-color:#173d28}.prompt p{color:#5a675f}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;counter-reset:flow}.flow-step{counter-increment:flow;border-top:3px solid var(--acid);background:var(--panel);padding:20px;min-height:180px}.flow-step:before{content:"0" counter(flow);font:900 .75rem var(--mono);color:var(--acid)}.flow-step h3{font-size:1.25rem;margin:16px 0 8px}.flow-step p{font-size:.9rem;color:var(--muted);margin:0}
+    .example-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.checklist{list-style:none;padding:0;margin:0}.checklist li{border-top:1px solid var(--line);padding:13px 0 13px 31px;position:relative}.checklist li:before{content:"□";position:absolute;left:3px;color:var(--acid);font:900 1.1rem var(--mono)}
+    details{border:1px solid var(--line);background:var(--panel);padding:0 20px;margin:10px 0}summary{cursor:pointer;min-height:56px;display:flex;align-items:center;font-weight:800}details p,details ul{color:var(--muted)}
+    .sources{font-size:.92rem;color:var(--muted)}.sources li{margin:10px 0}.badge{display:inline-block;border:1px solid var(--line);padding:4px 8px;font:750 .68rem var(--mono);color:var(--cyan);text-transform:uppercase;margin-right:6px}
+    footer{padding:42px 0;background:#070908}.footer-grid{display:flex;justify-content:space-between;gap:30px;align-items:end}footer h2{font-size:2rem;color:var(--acid)}footer p{color:var(--muted);max-width:660px}.back{color:var(--ink)}
+    @media(max-width:900px){.hero,.section-head,.principle .shell,.tool-layout,.prompt{grid-template-columns:1fr}.diagram{grid-template-columns:1fr}.arrow{height:42px;transform:rotate(90deg)}.flow{grid-template-columns:1fr 1fr}.builder-grid,.example-grid{grid-template-columns:1fr}.navlinks{display:none}.rule-grid{grid-template-columns:1fr}.hero{padding-top:48px}}
+    @media(max-width:560px){.flow{grid-template-columns:1fr}.tool-tabs{overflow:auto}.tab{white-space:nowrap}.shell{width:min(var(--max),calc(100% - 24px))}pre{font-size:12px}.footer-grid{display:block}}
+    @media print{.topbar,.copy,.builder,footer{display:none!important}body{background:white;color:#111;font-size:10.5pt}main section{padding:28px 0;border-color:#bbb}.shell{width:100%}.node,.rule,.flow-step,.code-card,table,details{background:white;color:#111;border-color:#bbb}pre{white-space:pre-wrap;color:#111;background:#f3f3f3}.section-no,.rule b,th,.flow-step:before{color:#245e36}.hero{padding:30px 0}h1{font-size:42pt}.tool-tabs{display:none}.tabpanel{display:block!important;margin-bottom:30px}.prompt{border:1px solid #bbb}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <header class="topbar"><nav class="shell" aria-label="Primary"><a class="brand" href="#top">KAI / ENGINEERING FIELD MANUAL</a><div class="navlinks"><a href="#setup">Setup</a><a href="#agents">Agent commands</a><a href="#example">Worked example</a><a href="#integrate">Integrate</a><a href="#cleanup">Cleanup</a></div></nav></header>
+  <div class="shell hero" id="top">
+    <div><div class="kicker">Git worktrees × AI coding agents</div><h1>Parallel work.<br><span>Without collisions.</span></h1><p>A copy-ready operating guide for running Pi, Codex CLI, and Claude Code on multiple tasks in one repository—each isolated, reviewable, and easy to remove.</p></div>
+    <aside class="hero-side"><b>Verified 19 July 2026</b><br>Against local CLI help for Pi 0.80.10, Codex CLI 0.144.1, Claude Code 2.1.207, plus first-party Git and vendor documentation.</aside>
+  </div>
+  <div class="principle"><div class="shell"><strong>The whole model</strong><p>One task → one branch → one worktree → one agent session.</p></div></div>
+
+  <main>
+    <section id="model"><div class="shell">
+      <div class="section-head"><div class="section-no">01 / Mental model</div><div><h2>Share Git history. Isolate files.</h2><p class="lead">A worktree is another checkout of the same repository. Every worktree has its own working files, index, branch, and agent context—but shares objects, refs, remotes, and repository history.</p></div></div>
+      <div class="diagram">
+        <article class="node coordinator"><span class="badge">Coordinator</span><h3>Main checkout</h3><p class="dim">Read, review, fetch, inspect PRs. Keep it boring and preferably clean.</p><code class="mono">~/src/acme</code></article><div class="arrow">→</div>
+        <article class="node"><span class="badge">Pi</span><h3>Auth worktree</h3><p class="dim">Branch <code>ai/auth</code>. Pi owns only auth scope.</p><code class="mono">~/src/acme-wt/auth</code></article><div class="arrow">+</div>
+        <article class="node"><span class="badge">Codex / Claude</span><h3>Other worktrees</h3><p class="dim">Branches <code>ai/api</code> and <code>ai/ui</code>. Independent files, tests, commits.</p><code class="mono">~/src/acme-wt/{api,ui}</code></article>
+      </div>
+      <div class="rule-grid">
+        <div class="rule"><b>Do</b><p>Give every task a distinct branch and directory. Name the agent session after the task.</p></div>
+        <div class="rule"><b>Do not</b><p>Run two write-capable agents in the same checkout. They will overwrite context and edits.</p></div>
+        <div class="rule"><b>Parallelize</b><p>Tasks with disjoint ownership: UI, API endpoint, tests, docs, separate services.</p></div>
+        <div class="rule"><b>Serialize</b><p>Two tasks that rewrite the same core file, schema, lockfile, or migration chain.</p></div>
+      </div>
+    </div></section>
+
+    <section id="setup"><div class="shell">
+      <div class="section-head"><div class="section-no">02 / Manual setup</div><div><h2>Create sibling worktrees from a known base.</h2><p class="lead">Sibling directories keep agent checkouts out of your main repository’s untracked-file view. Branch from <code>origin/main</code> when tasks should start clean and independently.</p></div></div>
+      <div class="code-card"><div class="code-head"><span>Run from the main checkout</span><button class="copy" data-copy="setup-code">Copy</button></div><pre id="setup-code"><span class="comment"># Confirm where you are and inspect current state</span>
+<span class="cmd">git</span> rev-parse --show-toplevel
+<span class="cmd">git</span> status --short
+<span class="cmd">git</span> fetch origin
+
+<span class="comment"># Choose a sibling worktree home</span>
+ROOT="$(git rev-parse --show-toplevel)"
+PROJECT="$(basename "$ROOT")"
+WT_HOME="$(dirname "$ROOT")/${PROJECT}-worktrees"
+mkdir -p "$WT_HOME"
+
+<span class="comment"># One branch + directory per task</span>
+<span class="cmd">git</span> worktree add -b ai/auth "$WT_HOME/auth" origin/main
+<span class="cmd">git</span> worktree add -b ai/api  "$WT_HOME/api"  origin/main
+<span class="cmd">git</span> worktree add -b ai/ui   "$WT_HOME/ui"   origin/main
+
+<span class="cmd">git</span> worktree list</pre></div>
+      <div class="callout"><strong>Branch rule:</strong> Git will not let the same local branch be checked out in two worktrees. That is protection, not inconvenience. Create a separate branch even when two agents are trying alternative implementations.</div>
+
+      <div class="builder">
+        <h3>Command generator</h3><p class="builder-note">Generate one worktree command. Paths are shell-quoted; nothing is executed here.</p>
+        <div class="builder-grid"><label>Repository path<input id="repoPath" value="/home/you/src/acme"></label><label>Task slug<input id="taskSlug" value="auth-passkeys"></label><label>Base ref<select id="baseRef"><option>origin/main</option><option>main</option><option>HEAD</option></select></label></div>
+        <div class="code-card"><div class="code-head"><span>Generated command</span><button class="copy" data-copy="generated">Copy</button></div><pre id="generated"></pre></div>
+      </div>
+
+      <h3 style="margin-top:38px">Initialize each fresh checkout</h3>
+      <div class="code-card"><div class="code-head"><span>Example: Node project</span><button class="copy" data-copy="deps-code">Copy</button></div><pre id="deps-code"><span class="cmd">cd</span> "$WT_HOME/auth"
+<span class="cmd">npm</span> ci                 <span class="comment"># or pnpm install --frozen-lockfile</span>
+<span class="cmd">npm</span> test -- --runInBand <span class="comment"># establish a clean baseline before edits</span></pre></div>
+      <p class="dim">Tracked files appear automatically. Gitignored files do not. Copy only the exact local config the task needs; never give every agent your whole secrets directory. Claude Code’s native worktrees support a project-level <code>.worktreeinclude</code> for explicitly selected gitignored files.</p>
+    </div></section>
+
+    <section id="agents"><div class="shell">
+      <div class="section-head"><div class="section-no">03 / Launch agents</div><div><h2>Same isolation. Different launch ergonomics.</h2><p class="lead">Pi and Codex CLI use worktrees you create with Git. Claude Code can use those too, or create its own with <code>--worktree</code>.</p></div></div>
+      <div class="tool-tabs" role="tablist" aria-label="Agent tools"><button class="tab" role="tab" aria-selected="true" data-tab="pi">Pi</button><button class="tab" role="tab" aria-selected="false" data-tab="codex">Codex CLI</button><button class="tab" role="tab" aria-selected="false" data-tab="claude">Claude Code</button></div>
+
+      <div class="tabpanel active" id="panel-pi" role="tabpanel">
+        <div class="tool-layout"><aside class="tool-facts"><h3>Pi</h3><dl><dt>Worktree support</dt><dd>Manual Git worktree</dd><dt>Interactive</dt><dd><code>pi --name …</code></dd><dt>One-shot</dt><dd><code>pi -p …</code></dd><dt>Project context</dt><dd>AGENTS.md / CLAUDE.md</dd></dl></aside><div>
+          <div class="code-card"><div class="code-head"><span>Interactive Pi session</span><button class="copy" data-copy="pi-interactive">Copy</button></div><pre id="pi-interactive"><span class="cmd">cd</span> "$WT_HOME/auth"
+<span class="cmd">pi</span> --name "auth-passkeys" \
+  "Implement the auth-passkeys task using the task contract in this prompt."</pre></div>
+          <div class="code-card"><div class="code-head"><span>Non-interactive Pi</span><button class="copy" data-copy="pi-print">Copy</button></div><pre id="pi-print"><span class="cmd">pi</span> -p --name "auth-passkeys" \
+  --tools read,bash,edit,write \
+  "Implement passkey enrollment. Run focused tests. Do not push or merge."</pre></div>
+          <p class="dim">Pi sessions are organized by working directory, so keeping one task per worktree also keeps <code>--continue</code> and <code>--resume</code> context aligned with that task. Use <code>pi -c</code> from the same worktree to continue its latest session.</p>
+        </div></div>
+      </div>
+
+      <div class="tabpanel" id="panel-codex" role="tabpanel">
+        <div class="tool-layout"><aside class="tool-facts"><h3>Codex CLI</h3><dl><dt>Worktree support</dt><dd>Manual Git worktree for CLI</dd><dt>Interactive</dt><dd><code>codex -C …</code></dd><dt>One-shot</dt><dd><code>codex exec -C …</code></dd><dt>Recommended sandbox</dt><dd>workspace-write</dd></dl></aside><div>
+          <div class="code-card"><div class="code-head"><span>Interactive Codex</span><button class="copy" data-copy="codex-interactive">Copy</button></div><pre id="codex-interactive"><span class="cmd">codex</span> -C "$WT_HOME/api" \
+  --sandbox workspace-write \
+  --ask-for-approval on-request \
+  "Add the customer export endpoint. Stay inside this worktree."</pre></div>
+          <div class="code-card"><div class="code-head"><span>Non-interactive Codex</span><button class="copy" data-copy="codex-exec">Copy</button></div><pre id="codex-exec"><span class="cmd">codex</span> exec -C "$WT_HOME/api" \
+  --sandbox workspace-write \
+  "Implement the export endpoint, run focused tests, and summarize changed files. Do not push or merge."</pre></div>
+          <p class="dim">The Codex desktop app has built-in worktree flows; the CLI pattern here deliberately uses standard <code>git worktree</code> plus <code>-C</code>. Avoid <code>--dangerously-bypass-approvals-and-sandbox</code> unless the entire process is already isolated by a disposable external sandbox.</p>
+        </div></div>
+      </div>
+
+      <div class="tabpanel" id="panel-claude" role="tabpanel">
+        <div class="tool-layout"><aside class="tool-facts"><h3>Claude Code</h3><dl><dt>Worktree support</dt><dd>Native <code>-w</code> or manual</dd><dt>Native path</dt><dd>.claude/worktrees/name</dd><dt>Native branch</dt><dd>worktree-name</dd><dt>Parallel terminal</dt><dd><code>--tmux</code></dd></dl></aside><div>
+          <div class="code-card"><div class="code-head"><span>Native Claude worktree</span><button class="copy" data-copy="claude-native">Copy</button></div><pre id="claude-native"><span class="comment"># Run from the repository; Claude creates and enters the worktree</span>
+<span class="cmd">claude</span> --worktree ui-settings --tmux
+
+<span class="comment"># Equivalent short form</span>
+<span class="cmd">claude</span> -w ui-settings --tmux</pre></div>
+          <div class="code-card"><div class="code-head"><span>Claude in a manually created worktree</span><button class="copy" data-copy="claude-manual">Copy</button></div><pre id="claude-manual"><span class="cmd">cd</span> "$WT_HOME/ui"
+<span class="cmd">claude</span> --name "ui-settings" \
+  "Build the settings UI. Run tests. Do not push or merge."</pre></div>
+          <div class="code-card"><div class="code-head"><span>Non-interactive native worktree</span><button class="copy" data-copy="claude-print">Copy</button></div><pre id="claude-print"><span class="cmd">claude</span> -p -w ui-settings \
+  --permission-mode acceptEdits \
+  --max-turns 15 \
+  "Implement settings UI, run focused tests, and report changed files. Do not push or merge."</pre></div>
+          <p class="dim">Add <code>.claude/worktrees/</code> to <code>.gitignore</code>. Named interactive worktrees prompt before cleanup. Print-mode worktrees are not auto-removed; clean them manually after review.</p>
+        </div></div>
+      </div>
+    </div></section>
+
+    <section id="contract"><div class="shell">
+      <div class="section-head"><div class="section-no">04 / Task contract</div><div><h2>Give boundaries, not vibes.</h2><p class="lead">Parallel agents fail less from Git than from ambiguous ownership. Every launch prompt should define scope, acceptance, validation, and forbidden actions.</p></div></div>
+      <div class="prompt"><div><h3>Reusable prompt</h3><p>Paste this into Pi, Codex, or Claude. Replace the bracketed fields.</p><button class="copy" data-copy="prompt-template">Copy template</button></div><pre id="prompt-template">TASK: [one concrete outcome]
+
+OWNERSHIP
+- You own: [directories/files/components]
+- Do not modify: [shared or agent-owned areas]
+- Base branch: [origin/main or dependency branch]
+
+ACCEPTANCE
+- [observable behavior 1]
+- [observable behavior 2]
+- No unrelated refactors or dependency upgrades
+
+VALIDATION
+- Run: [focused test command]
+- Run: [lint/typecheck command]
+- Report exact commands and results
+
+GIT / SAFETY
+- Stay inside the current worktree
+- Never push, merge, rebase, force-push, or delete branches
+- Do not rewrite tests merely to make them pass
+- Stop and report if the task requires an out-of-scope shared-file change
+
+FINISH
+- Summarize changed files, tests, assumptions, and remaining risk
+- Leave changes ready for human review</pre></div>
+    </div></section>
+
+    <section id="example"><div class="shell">
+      <div class="section-head"><div class="section-no">05 / Worked example</div><div><h2>Three tasks. Three tools. One repository.</h2><p class="lead">Pi handles auth, Codex builds an API endpoint, and Claude builds UI. The main checkout coordinates; no agent touches another agent’s files.</p></div></div>
+      <div class="code-card"><div class="code-head"><span>1. Create all worktrees</span><button class="copy" data-copy="example-create">Copy</button></div><pre id="example-create"><span class="cmd">git</span> fetch origin
+<span class="cmd">git</span> worktree add -b ai/auth-passkeys ../acme-wt-auth origin/main
+<span class="cmd">git</span> worktree add -b ai/export-api    ../acme-wt-api  origin/main
+<span class="cmd">git</span> worktree add -b ai/settings-ui   ../acme-wt-ui   origin/main</pre></div>
+      <div class="code-card"><div class="code-head"><span>2. Launch in three terminals</span><button class="copy" data-copy="example-launch">Copy</button></div><pre id="example-launch"><span class="comment"># Terminal A — Pi</span>
+<span class="cmd">cd</span> ../acme-wt-auth && <span class="cmd">pi</span> --name auth-passkeys "Implement passkey enrollment per the task contract."
+
+<span class="comment"># Terminal B — Codex</span>
+<span class="cmd">codex</span> exec -C ../acme-wt-api --sandbox workspace-write \
+  "Add customer export API per the task contract. Run focused tests."
+
+<span class="comment"># Terminal C — Claude Code</span>
+<span class="cmd">cd</span> ../acme-wt-ui && <span class="cmd">claude</span> --name settings-ui \
+  "Build the settings UI per the task contract. Run focused tests."</pre></div>
+      <div class="example-grid">
+        <div><h3>Monitor without entering</h3><div class="code-card"><div class="code-head"><span>Coordinator commands</span><button class="copy" data-copy="monitor-code">Copy</button></div><pre id="monitor-code"><span class="cmd">git</span> worktree list --porcelain
+<span class="cmd">git</span> -C ../acme-wt-auth status --short
+<span class="cmd">git</span> -C ../acme-wt-api diff --stat
+<span class="cmd">git</span> -C ../acme-wt-ui log -3 --oneline</pre></div></div>
+        <div><h3>Keep runtime state separate</h3><ul class="checklist"><li>Assign ports: UI 3101, API 8102, auth test server 8103.</li><li>Use separate test databases or schemas.</li><li>Do not run competing migration writers.</li><li>Expect duplicate dependency directories; share package caches, not <code>node_modules</code>.</li><li>Keep generated files and local config gitignored.</li></ul></div>
+      </div>
+    </div></section>
+
+    <section id="integrate"><div class="shell">
+      <div class="section-head"><div class="section-no">06 / Review & integrate</div><div><h2>Agents produce branches. You decide what lands.</h2><p class="lead">Review each worktree independently. Prefer one PR per task. Merge the lowest-level dependency first, then update dependent branches from the new main.</p></div></div>
+      <div class="flow"><div class="flow-step"><h3>Inspect</h3><p>Status, diff, generated files, dependency changes.</p></div><div class="flow-step"><h3>Test</h3><p>Run focused tests, then the relevant integration suite.</p></div><div class="flow-step"><h3>Commit</h3><p>Stage intentionally. One task-shaped commit or small series.</p></div><div class="flow-step"><h3>Push + PR</h3><p>Never push from the coordinator’s main branch.</p></div><div class="flow-step"><h3>Merge + rebase</h3><p>Merge independent PRs; refresh dependent worktrees.</p></div></div>
+      <div class="code-card"><div class="code-head"><span>Review, commit, push, open PR</span><button class="copy" data-copy="integrate-code">Copy</button></div><pre id="integrate-code"><span class="comment"># Review from anywhere</span>
+<span class="cmd">git</span> -C ../acme-wt-auth status --short
+<span class="cmd">git</span> -C ../acme-wt-auth diff
+
+<span class="comment"># Run the real project checks inside that worktree</span>
+<span class="cmd">git</span> -C ../acme-wt-auth diff --check
+<span class="cmd">cd</span> ../acme-wt-auth && npm test
+
+<span class="comment"># Stage deliberately; inspect staged diff before commit</span>
+<span class="cmd">git</span> -C ../acme-wt-auth add -p
+<span class="cmd">git</span> -C ../acme-wt-auth diff --cached
+<span class="cmd">git</span> -C ../acme-wt-auth commit -m "feat(auth): add passkey enrollment"
+
+<span class="cmd">git</span> -C ../acme-wt-auth push -u origin ai/auth-passkeys
+<span class="cmd">gh</span> pr create --head ai/auth-passkeys --base main \
+  --title "feat(auth): add passkey enrollment" \
+  --body "Implements passkey enrollment with focused tests."</pre></div>
+      <div class="callout"><strong>Integration order:</strong> if the UI depends on a new API contract, merge the API first. Then run <code>git -C ../acme-wt-ui fetch origin</code> and <code>git -C ../acme-wt-ui rebase origin/main</code>. Resolve conflicts in the affected worktree, with one human or agent owning the resolution—not three agents racing.</div>
+      <div class="danger callout"><strong>Do not merge worktrees into one another by copying files.</strong> Use commits, PRs, rebases, merges, or cherry-picks. Copy/paste destroys provenance and makes conflict handling worse.</div>
+    </div></section>
+
+    <section id="cleanup"><div class="shell">
+      <div class="section-head"><div class="section-no">07 / Safe cleanup</div><div><h2>Remove the checkout only after the work is durable.</h2><p class="lead">A normal worktree removal refuses dirty state. That friction protects you. Confirm the branch is pushed or merged before deleting anything.</p></div></div>
+      <div class="code-card"><div class="code-head"><span>Cleanup sequence</span><button class="copy" data-copy="cleanup-code">Copy</button></div><pre id="cleanup-code"><span class="comment"># 1. Inspect before removal</span>
+<span class="cmd">git</span> -C ../acme-wt-auth status --short
+<span class="cmd">git</span> -C ../acme-wt-auth log --oneline origin/main..HEAD
+
+<span class="comment"># 2. Remove checkout (refuses unsafe dirty removal)</span>
+<span class="cmd">git</span> worktree remove ../acme-wt-auth
+
+<span class="comment"># 3. Delete local branch only after merge</span>
+<span class="cmd">git</span> branch -d ai/auth-passkeys
+
+<span class="comment"># 4. Inspect stale metadata before pruning</span>
+<span class="cmd">git</span> worktree prune --dry-run
+<span class="cmd">git</span> worktree prune
+<span class="cmd">git</span> worktree list</pre></div>
+      <div class="danger callout"><strong>Avoid <code>git worktree remove --force</code>.</strong> It can discard uncommitted files. If a worktree directory disappeared manually, committed work still exists on its branch; recreate it with <code>git worktree add ../recovery ai/auth-passkeys</code>.</div>
+    </div></section>
+
+    <section id="failure"><div class="shell">
+      <div class="section-head"><div class="section-no">08 / Failure modes</div><div><h2>The collisions Git cannot prevent.</h2><p class="lead">Worktrees isolate files. They do not isolate architecture, remote branches, databases, ports, package registries, cloud resources, or your attention.</p></div></div>
+      <details><summary>Two agents need the same shared file</summary><p>Do not pretend this is parallel. Extract and merge the shared contract first, then branch the dependent tasks from that commit. Alternatively give one agent ownership and make the second wait.</p></details>
+      <details><summary>Both agents modify the lockfile</summary><p>Prefer merging the dependency-changing task first. Rebase the other branch and regenerate the lockfile with the canonical package manager; do not hand-merge lockfile conflict markers.</p></details>
+      <details><summary>Local services fight over ports or databases</summary><p>Assign per-worktree ports and database names through local environment files. For destructive migrations, run only one migration-owning task at a time.</p></details>
+      <details><summary>An agent pushes or rebases unexpectedly</summary><p>Prompts are not security boundaries. Use tool permissions/sandboxing, branch protection, least-privilege tokens, and review gates. Tell agents not to push, but also configure credentials so a mistaken push cannot bypass protected branches.</p></details>
+      <details><summary>The main checkout is dirty</summary><p>You can still create worktrees from <code>origin/main</code>, but the coordinator becomes harder to reason about. Commit, stash, or move the unrelated work to its own worktree before orchestrating parallel agents.</p></details>
+      <details><summary>The worktree has no .env or dependencies</summary><p>That is normal: it is a fresh checkout. Install dependencies per worktree and provision only the minimum local config. Claude Code can copy explicitly listed, gitignored files via <code>.worktreeinclude</code>; manual Git worktrees need your own setup step.</p></details>
+    </div></section>
+
+    <section id="cheatsheet"><div class="shell">
+      <div class="section-head"><div class="section-no">09 / Cheat sheet</div><div><h2>Commands worth remembering.</h2></div></div>
+      <table><thead><tr><th>Intent</th><th>Command</th><th>Notes</th></tr></thead><tbody>
+        <tr><td>Create new task</td><td><code>git worktree add -b ai/task ../repo-wt-task origin/main</code></td><td>New branch from clean remote base.</td></tr>
+        <tr><td>Use existing branch</td><td><code>git worktree add ../repo-wt-task ai/task</code></td><td>Branch cannot already be checked out elsewhere.</td></tr>
+        <tr><td>List</td><td><code>git worktree list --porcelain</code></td><td>Machine-friendly paths, branches, lock state.</td></tr>
+        <tr><td>Inspect any task</td><td><code>git -C ../repo-wt-task status --short</code></td><td>No need to change directories.</td></tr>
+        <tr><td>Protect long-lived tree</td><td><code>git worktree lock --reason "agent running" ../repo-wt-task</code></td><td>Prevents prune/move/removal accidents.</td></tr>
+        <tr><td>Move</td><td><code>git worktree move ../old ../new</code></td><td>Use Git; do not drag the directory manually.</td></tr>
+        <tr><td>Remove</td><td><code>git worktree remove ../repo-wt-task</code></td><td>Refuses dirty removal by default.</td></tr>
+        <tr><td>Repair metadata</td><td><code>git worktree repair</code></td><td>Useful after linked paths were moved improperly.</td></tr>
+        <tr><td>Dry-run prune</td><td><code>git worktree prune --dry-run</code></td><td>Inspect before deleting stale metadata.</td></tr>
+      </tbody></table>
+    </div></section>
+
+    <section id="sources"><div class="shell">
+      <div class="section-head"><div class="section-no">Sources</div><div><h2>First-party references.</h2><p class="lead">Tool behavior changes. Use these pages and each installed CLI’s <code>--help</code> as the source of truth.</p></div></div>
+      <ol class="sources">
+        <li><a href="https://git-scm.com/docs/git-worktree" target="_blank" rel="noopener">Git — git-worktree documentation</a>: add, list, lock, move, remove, prune, repair, and shared-repository behavior.</li>
+        <li><a href="https://code.claude.com/docs/en/worktrees" target="_blank" rel="noopener">Claude Code — Run parallel sessions with worktrees</a>: <code>--worktree</code>, <code>--tmux</code>, default paths/branches, cleanup, resume, subagent isolation, and <code>.worktreeinclude</code>.</li>
+        <li><a href="https://developers.openai.com/codex/cli/reference" target="_blank" rel="noopener">OpenAI Codex CLI reference</a>: interactive/exec modes, <code>-C</code>, sandbox, and approval flags.</li>
+        <li><a href="https://developers.openai.com/codex/app/worktrees" target="_blank" rel="noopener">OpenAI Codex app — Worktrees</a>: built-in desktop-app worktree model, distinct from the manual CLI flow used here.</li>
+        <li><a href="https://pi.dev/" target="_blank" rel="noopener">Pi Coding Agent</a>: interactive and print modes, working-directory session organization, project context, and session controls.</li>
+        <li><a href="https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/sessions.md" target="_blank" rel="noopener">Pi — session documentation</a>: named sessions, continue, resume, and per-working-directory storage.</li>
+      </ol>
+    </div></section>
+  </main>
+
+  <footer><div class="shell footer-grid"><div><h2>Isolation first. Autonomy second.</h2><p>Worktrees make parallel agents practical because every change has an owner, a branch, a filesystem boundary, and a clean path to review.</p></div><a class="back" href="#top">Back to top ↑</a></div></footer>
+
+  <script>
+    const plain = el => el.innerText.replace(/\u00a0/g,' ');
+    document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', async () => {
+      const target = document.getElementById(btn.dataset.copy); if (!target) return;
+      try { await navigator.clipboard.writeText(plain(target)); const old=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=old,1200); }
+      catch { btn.textContent='Select manually'; }
+    }));
+    const tabs=[...document.querySelectorAll('.tab')];
+    tabs.forEach(tab=>tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.setAttribute('aria-selected','false')); tab.setAttribute('aria-selected','true');
+      document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+    }));
+    function shq(s){ return "'" + String(s).replaceAll("'", "'\\''") + "'"; }
+    function updateGenerated(){
+      const repo=document.getElementById('repoPath').value.trim()||'~/src/acme';
+      const slug=(document.getElementById('taskSlug').value.trim()||'task').toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-|-$/g,'');
+      const base=document.getElementById('baseRef').value;
+      const project=repo.replace(/\/$/,'').split('/').pop()||'repo';
+      const parent=repo.includes('/')?repo.replace(/\/$/,'').split('/').slice(0,-1).join('/')||'.':'.';
+      const path=`${parent}/${project}-worktrees/${slug}`;
+      document.getElementById('generated').textContent=`git fetch origin\ngit worktree add -b ${shq('ai/'+slug)} ${shq(path)} ${shq(base)}\ngit -C ${shq(path)} status --short`;
+    }
+    ['repoPath','taskSlug','baseRef'].forEach(id=>document.getElementById(id).addEventListener('input',updateGenerated)); updateGenerated();
+  </script>
+</body>
+</html>

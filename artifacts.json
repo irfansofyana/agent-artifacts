@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Parallel AI Coding with Git Worktrees — Pi, Codex & Claude Code",
+      "slug": "ai-agent-git-worktrees",
+      "description": "A practical field manual for running multiple AI coding tasks safely in one repository using isolated Git worktrees, with copy-ready Pi, Codex CLI, and Claude Code commands.",
+      "createdAt": "2026-07-19",
+      "type": "html",
+      "url": "artifacts/ai-agent-git-worktrees/"
+    },
+    {
       "title": "Forex Day Trading — A Risk-First Starter Course for Indonesia",
       "slug": "forex-day-trading-starter",
       "description": "An interactive six-week beginner course for learning forex day trading with locally regulated Indonesian broker demos, strict risk controls, a testable playbook, calculators, and a go-live gate.",
