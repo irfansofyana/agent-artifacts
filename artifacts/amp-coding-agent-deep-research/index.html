@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amp Coding Agent — Deep Research: Design Philosophy, Oracle, Subagents & Competitive Landscape</title>
+<style>
+  :root {
+    --purple: #6C47FF;
+    --purple-dark: #4A2FCC;
+    --purple-light: #f0ecff;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-600: #6c757d;
+    --gray-800: #343a40;
+    --text: #1a1a2e;
+    --bg: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px; line-height: 1.7; color: var(--text); background: var(--bg);
+    max-width: 860px; margin: 0 auto; padding: 24px 20px 60px;
+  }
+  h1 { font-size: 2rem; color: var(--purple); border-bottom: 3px solid var(--purple); padding-bottom: 12px; margin: 8px 0 4px; letter-spacing: -0.5px; }
+  h2 { font-size: 1.35rem; color: var(--purple-dark); margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-200); }
+  h3 { font-size: 1.1rem; color: #333; margin: 28px 0 10px; }
+  .subtitle { color: var(--gray-600); font-size: 0.9rem; margin-bottom: 28px; }
+  p { margin: 12px 0; }
+  a { color: var(--purple); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+  a:hover { border-bottom-color: var(--purple); }
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
+  th { background: var(--purple); color: white; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--gray-200); }
+  tr:nth-child(even) td { background: #f8f6ff; }
+  .highlight { background: var(--purple-light); border-left: 4px solid var(--purple); padding: 16px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+  .highlight strong { color: var(--purple-dark); }
+  blockquote { font-style: italic; color: var(--gray-600); border-left: 3px solid #aaa; padding: 2px 0 2px 18px; margin: 14px 0; }
+  ul, ol { margin: 10px 0; padding-left: 26px; }
+  li { margin: 6px 0; }
+  code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.88em; font-family: 'SF Mono', 'Fira Code', monospace; }
+  strong { color: #333; }
+  .section-intro { color: var(--gray-600); font-size: 0.95rem; margin-bottom: 14px; }
+  .toc { background: var(--gray-100); padding: 20px 24px; border-radius: 8px; margin: 24px 0; }
+  .toc h3 { margin-top: 0; }
+  .toc ol { columns: 2; column-gap: 32px; }
+  .toc li { margin: 4px 0; }
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--gray-200); font-size: 0.85rem; color: var(--gray-600); }
+  .footer a { color: var(--gray-600); }
+  .badge { display: inline-block; background: var(--purple-light); color: var(--purple-dark); padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+  @media (max-width: 600px) {
+    .toc ol { columns: 1; }
+    body { font-size: 15px; padding: 16px; }
+    table { font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>⚡ Amp Coding Agent — Deep Research</h1>
+<p class="subtitle">Design Philosophy, Architecture, Built-in Agents (Oracle, Librarian, Subagents), and Competitive Landscape — July 2026</p>
+
+<div class="toc">
+<h3>Table of Contents</h3>
+<ol>
+  <li><a href="#executive-summary">Executive Summary</a></li>
+  <li><a href="#design-philosophy">Design Philosophy</a></li>
+  <li><a href="#technical-architecture">Technical Architecture</a></li>
+  <li><a href="#built-in-agents">Built-in Agents &amp; Tools</a></li>
+  <li><a href="#distinctive-features">Distinctive Features</a></li>
+  <li><a href="#competitive-comparison">Competitive Comparison</a></li>
+  <li><a href="#pricing">Pricing Model</a></li>
+  <li><a href="#limitations">Limitations</a></li>
+  <li><a href="#key-takeaways">Key Takeaways</a></li>
+  <li><a href="#sources">Sources</a></li>
+</ol>
+</div>
+
+<h2 id="executive-summary">1. Executive Summary</h2>
+<p><a href="https://ampcode.com/">Amp</a> is a frontier autonomous coding agent built by <strong>Sourcegraph</strong>. It represents a paradigm shift from AI code assistants to genuinely autonomous agents that plan, execute, and iterate on multi-step development tasks across entire codebases. As of early 2026, over <strong>40,000 development teams</strong> have adopted Amp as their primary agentic coding workflow.</p>
+
+<div class="highlight">
+<strong>Bottom line:</strong> Amp is not an autocomplete tool or IDE plugin — it's a semi-autonomous developer that reasons about your codebase, spawns parallel subagents, runs tests, interprets output, and iterates until the job is done.
+</div>
+
+<h2 id="design-philosophy">2. Design Philosophy</h2>
+
+<h3>2.1 Core Principles</h3>
+<p>Amp's design philosophy rests on six foundational beliefs:</p>
+
+<ol>
+  <li><strong>Code First, Chat Second.</strong> Amp reverses the typical AI priority. Chat interfaces are for brainstorming; Amp is for when you need to refactor authentication across 87 microservices. The agent is designed to write, execute, and iterate on code autonomously, with conversation as a supporting mechanism rather than the primary interface.</li>
+
+  <li><strong>Human Intelligence Guides AI Capability, Doesn't Gate It.</strong> Amp is built on the premise that humans should steer strategy while the agent handles execution. Rather than requiring human approval at every step, Amp operates with explicit permissions and only pauses when it genuinely needs direction. Every tool call outside of Amp requires your approval.</li>
+
+  <li><strong>Speed and Iteration Over Traditional Stability.</strong> The core Amp team (approximately 8 people) adopted a "push to main, ship 15 times a day" mentality. No formal code reviews, no extensive planning cycles. In an environment where new models and techniques emerge weekly, the ability to iterate quickly is more valuable than the ability to scale reliably.</li>
+
+  <li><strong>Opinionated About Model Use and Workflow Shape.</strong> Amp abstracts model selection — it picks the right model for each task rather than making the user manage providers. Their philosophy: "We tune the prompts and the tools to get the best performance for each model." If the team doesn't use and love a feature, they kill it.</li>
+
+  <li><strong>On the Frontier, Always.</strong> Amp goes where the models take it. No backcompat, no legacy features. This means they can incorporate new model capabilities within hours of release rather than months later.</li>
+
+  <li><strong>Threads as Version Control for Thought.</strong> Every interaction is a persistent, shareable thread. "You wouldn't code without version control — would you?" Amp applies the same philosophy to AI reasoning.</li>
+</ol>
+
+<blockquote>
+"A product that ships 15 times a day can incorporate new model capabilities within hours of their release. A product that follows traditional release cycles will be months behind."
+</blockquote>
+
+<h3>2.2 Why Sourcegraph Started Fresh (Not Cody 2.0)</h3>
+<p>Sourcegraph made the bold decision to launch Amp as a completely new product rather than incrementally improving Cody. The reasoning reveals a crucial insight about AI-era product development:</p>
+<ul>
+  <li>A chat-based assistant like Cody operates on fundamentally different computational economics than a tool-calling agent. You cannot make a $20 subscription model work for autonomous agents that reason, execute tools, and iterate autonomously.</li>
+  <li>Tight integration with the Sourcegraph platform meant Cody was bound by platform release cycles. Amp needed to ship 15 times a day, not follow enterprise release schedules.</li>
+  <li>By creating a separate brand, Sourcegraph could reset customer expectations: "This is not Cody 2.0. This is a completely different thing."</li>
+</ul>
+
+<h2 id="technical-architecture">3. Technical Architecture</h2>
+
+<h3>3.1 Multi-Model Routing Layer</h3>
+<p>Amp's most distinctive technical feature is its multi-model orchestration. The routing engine determines which model handles each part of a task automatically:</p>
+
+<table>
+  <tr><th>Model</th><th>Primary Role</th><th>Strengths</th></tr>
+  <tr><td>Claude Opus 4.5</td><td>UI, frontend, polished output</td><td>Instruction following, clean code, documentation</td></tr>
+  <tr><td>Gemini 3</td><td>Core code generation</td><td>Speed, large-scale generation, throughput</td></tr>
+  <tr><td>GPT-5 / o3 (Oracle)</td><td>Deep reasoning, architecture, review</td><td>Complex analysis, debugging, architectural decisions</td></tr>
+</table>
+
+<p>For a request like "refactor the authentication module and update the API documentation," the routing engine may simultaneously run the refactor through Gemini 3 while channeling the documentation rewrite through Claude Opus 4.5. This architecture is a direct response to the reality that <strong>no single model dominates every dimension of software development</strong>.</p>
+
+<h3>3.2 Four Agent Modes</h3>
+<table>
+  <tr><th>Mode</th><th>Purpose</th><th>Use Case</th></tr>
+  <tr><td><strong>Low</strong></td><td>Fast, low-cost</td><td>Small, well-defined tasks</td></tr>
+  <tr><td><strong>Medium</strong></td><td>Balanced intelligence</td><td>Most day-to-day tasks</td></tr>
+  <tr><td><strong>High</strong></td><td>Deep reasoning</td><td>Hard, complex problems</td></tr>
+  <tr><td><strong>Ultra</strong></td><td>Maximum capability</td><td>Hard, open-ended tasks</td></tr>
+</table>
+
+<h3>3.3 Context Window: 200K Tokens</h3>
+<p>Amp operates with a 200K token context window across all three model backends, meaning it can hold an entire service's worth of code in working memory simultaneously. Context coherence is preserved even as different models handle different slices of the work.</p>
+
+<h3>3.4 Integration Surface</h3>
+<ul>
+  <li><strong>CLI:</strong> Full terminal UI with command palette (Ctrl+O)</li>
+  <li><strong>VS Code Extension:</strong> Full in-editor support, multi-file edits, real-time reasoning inspection</li>
+  <li><strong>JetBrains:</strong> CLI integration for IntelliJ, WebStorm, GoLand, PyCharm</li>
+  <li><strong>Neovim:</strong> Native plugin (<a href="https://github.com/ampcode/amp.nvim">amp.nvim</a>)</li>
+  <li><strong>Zed:</strong> CLI-based integration</li>
+  <li><strong>Orbs:</strong> Remote machines that run Amp threads so your laptop can do something else</li>
+  <li><strong>Runners:</strong> Headless Amp instances for remote thread creation</li>
+  <li><strong>TypeScript SDK:</strong> Programmatic invocation, CI/CD integration</li>
+</ul>
+
+<h2 id="built-in-agents">4. Built-in Agents &amp; Specialized Tools</h2>
+
+<h3>4.1 🧠 Oracle — The Reasoning Powerhouse</h3>
+<div class="highlight">
+<strong>What it is:</strong> A read-only subagent powered by <strong>OpenAI's o3</strong> — one of the most capable reasoning models available. It's available as a tool that the main agent can consult for complex reasoning tasks.
+</div>
+
+<p><strong>Design decision:</strong> The Amp team deliberately did not push the Oracle too hard in the system prompt, to avoid unnecessarily increasing costs. Instead, developers explicitly instruct the agent to "use the oracle" when needed. This is a conscious cost-conscious design choice.</p>
+
+<p><strong>When to use the Oracle:</strong></p>
+<ul>
+  <li>Reviewing commits for subtle logic changes</li>
+  <li>Analyzing complex function relationships and suggesting refactors</li>
+  <li>Debugging hard-to-find bugs with deep reasoning</li>
+  <li>Architectural analysis and design review</li>
+  <li>Code review at the architectural level</li>
+</ul>
+
+<p><strong>Example prompts from the Amp team:</strong></p>
+<ul>
+  <li><em>"Use the oracle to review the last commit's changes. I want to make sure the actual logic for when an idle or requires-user-input notification sound plays has not changed."</em></li>
+  <li><em>"Analyze how the functions foobar and barfoo are used. Then I want you to work a lot with the oracle to figure out how we can refactor the duplication between them while keeping changes backwards compatible."</em></li>
+  <li><em>"I have a bug in these files. Help me fix this bug. Use the oracle as much as possible, since it's smart."</em></li>
+</ul>
+
+<p><strong>Oracle Mode vs Amp Tab:</strong> Together they cover both the micro (cursor-level completions) and macro (architectural reasoning) of software development in a single tool — a pairing more notable than either feature in isolation.</p>
+
+<h3>4.2 📚 Librarian — The Code Searcher</h3>
+<div class="highlight">
+<strong>What it is:</strong> A specialized subagent built for searching remote codebases — all public GitHub code plus your private repositories.
+</div>
+
+<p><strong>Purpose:</strong> The Librarian aggressively searches through repositories and documentation sites to gather context. It primes the main agent with the information it needs before coding begins — especially valuable for newer libraries or private codebases where context isn't in training data.</p>
+
+<p><strong>When to use the Librarian:</strong></p>
+<ul>
+  <li>Reading framework/library source code to understand implementation details</li>
+  <li>Finding examples of patterns in open-source code</li>
+  <li>Connecting the dots between your code and its dependencies</li>
+  <li>Searching documentation across multiple repositories</li>
+</ul>
+
+<p><strong>Example prompts:</strong></p>
+<ul>
+  <li><em>"Use the Librarian to lookup how React's useEffect cleanup function is implemented."</em></li>
+  <li><em>"Explain how new versions of our documentation are deployed when we release. Search our docs and infra repositories."</em></li>
+  <li><em>"Ask the Librarian to explain why we're getting this error from Zod and show me the validation logic causing it."</em></li>
+</ul>
+
+<p>Requires a GitHub connection configured in Amp settings.</p>
+
+<h3>4.3 🔀 Parallel Subagents — The Execution Engine</h3>
+<div class="highlight">
+<strong>What it is:</strong> Amp can spawn multiple independent subagents, each with its own isolated context window, shell access, and file editing tools. The orchestration layer handles dependency resolution and scheduling.
+</div>
+
+<p><strong>Real-world benchmark:</strong> In a refactor of a <strong>180,000-line Go codebase</strong>, Amp spawned <strong>7 parallel subagents</strong> that simultaneously updated interface definitions, adjusted call sites, rewrote unit tests, and regenerated mocks — completing in <strong>11 minutes</strong> what a single-threaded agent would have needed over an hour to process sequentially.</p>
+
+<p><strong>Dependency tracking:</strong> If subagent 3 needs the output of subagent 1 before it can proceed, the scheduler waits for the prerequisite before dispatching the dependent task. Best results come when tasks are genuinely independent.</p>
+
+<p>This is the feature that most convincingly separates Amp from tools that describe themselves as "agentic" without running genuinely concurrent work.</p>
+
+<h3>4.4 ⌨️ Amp Tab — Free Autocomplete Engine</h3>
+<p>A free, compiler-error-aware autocomplete that reads the compiler/linter's current error state, factors in imports and surrounding type context, and generates completions that are already syntactically and semantically valid. In 2026 benchmarks, it ranked as the most accurate compiler-error-aware autocomplete engine among free-tier offerings, beating GitHub Copilot Free and Cody Lite.</p>
+
+<h3>4.5 🧰 Toolboxes — Simple Extensibility</h3>
+<p>Like Claude Code skills but with less abstraction. Write simple executables in any language that describe themselves and handle inputs. When Amp starts, it runs each executable with <code>TOOLBOX_ACTION=describe</code> and the tool writes its description to stdout. When the agent decides to use the tool, it runs it again with <code>TOOLBOX_ACTION=execute</code>. No complex SDKs required.</p>
+
+<h2 id="distinctive-features">5. Distinctive Features</h2>
+
+<h3>5.1 Persistent Threads &amp; Thread Sharing</h3>
+<p>All interactions are stored as persistent threads on Amp's servers. Threads have visibility levels (public, unlisted, workspace-shared, private) and can be shared with teammates. This enables:</p>
+<ul>
+  <li>Resuming work across devices (laptop → server → phone)</li>
+  <li>Reading teammates' threads to understand their approaches</li>
+  <li>Referencing past threads with @-mentions or URLs</li>
+  <li>Code review with full reasoning traces (not just diffs)</li>
+  <li>Search across threads by keyword, file path, repository, author, or date</li>
+</ul>
+
+<h3>5.2 Handoff — Smart Context Transitions</h3>
+<p>A superior alternative to Claude Code's <code>/compact</code>. Handoff generates a new thread prompt with summarized context that you can edit before starting fresh. This strikes a balance between automation and control — you guide the transition rather than letting the agent guess what matters.</p>
+
+<h3>5.3 Message Queueing</h3>
+<p>Send messages that queue for execution after the agent finishes its current turn — without interrupting ongoing work. Use Cmd-Shift-Enter (macOS) or Ctrl-Shift-Enter (Windows/Linux).</p>
+
+<h3>5.4 Scoped Instructions (Glob-based Guidance)</h3>
+<p>Create instruction files with YAML front matter that only apply to specific file patterns. For example, TypeScript conventions only apply when working with <code>.ts</code>/<code>.tsx</code> files, frontend guidance only in <code>src/components/</code>, backend only in <code>server/</code> and <code>api/</code>. This enables subagent specialization — different guidance automatically applies based on the files being worked on.</p>
+
+<h3>5.5 Editing, Reverting &amp; Forking Messages</h3>
+<p>Press up arrow in the CLI to edit prior messages, delete and restore (reverts changes), or fork (creates a new thread from that point).</p>
+
+<h3>5.6 AGENTS.md Compatibility</h3>
+<p>Amp falls back to <code>CLAUDE.md</code> when no <code>AGENTS.md</code> exists, enabling the same rules files across both Amp and Claude Code. Also supports Cursor's <code>.cursorrules</code> via symbolic links. Pragmatic interoperability with the ecosystem.</p>
+
+<h3>5.7 Orbs — Remote Execution</h3>
+<p>Remote machines that run Amp threads so your laptop can be freed up. Think of them as dedicated compute for your agent workflows.</p>
+
+<h2 id="competitive-comparison">6. Competitive Comparison</h2>
+
+<h3>6.1 Amp vs Claude Code vs Cursor</h3>
+<table>
+  <tr><th>Dimension</th><th>Amp</th><th>Claude Code</th><th>Cursor</th></tr>
+  <tr><td><strong>Developer</strong></td><td>Sourcegraph (now independent)</td><td>Anthropic</td><td>Cursor Inc</td></tr>
+  <tr><td><strong>Interface</strong></td><td>CLI + VS Code extension</td><td>CLI (terminal-first)</td><td>Full IDE (VS Code fork)</td></tr>
+  <tr><td><strong>Models</strong></td><td>Multi-model (Claude, Gemini, GPT-5)</td><td>Claude Sonnet/Opus only</td><td>Multiple (Sonnet, GPT-5)</td></tr>
+  <tr><td><strong>Context Window</strong></td><td>Up to 200K tokens</td><td>Large (model-dependent)</td><td>Enhanced via local RAG</td></tr>
+  <tr><td><strong>Key Strength</strong></td><td>Parallel subagents + unconstrained tokens</td><td>Deep single-model reasoning + CI/CD</td><td>Polished IDE + visual diff review</td></tr>
+  <tr><td><strong>Team Features</strong></td><td>Thread sharing, leaderboards, public profiles</td><td>Project folders, .claude configs</td><td>Background agents, BugBot PR reviews</td></tr>
+  <tr><td><strong>Pricing</strong></td><td>Free (ad-supported) or Smart Mode (pay-as-you-go, no API markup)</td><td>Claude Pro ($20) / Max ($200)</td><td>$20/mo Pro, $100–200/mo Max</td></tr>
+  <tr><td><strong>Token Limits</strong></td><td><strong>No hard caps</strong> on any tier</td><td>Model-dependent limits</td><td>Daily/monthly caps</td></tr>
+  <tr><td><strong>Autonomous Execution</strong></td><td>Excellent — handles ambiguity gracefully</td><td>Excellent — best SWE-bench (72.5%)</td><td>Moderate — stalls at ambiguous points</td></tr>
+  <tr><td><strong>Parallel Work</strong></td><td><strong>Native subagent parallelism</strong></td><td>Sequential only</td><td>Limited</td></tr>
+  <tr><td><strong>Best For</strong></td><td>Teams, large refactors, multi-file migrations</td><td>Solo devs, terminal-first, CI/CD automation</td><td>Interactive coding, IDE lovers, UI iteration</td></tr>
+</table>
+
+<h3>6.2 Amp vs Codex CLI</h3>
+<table>
+  <tr><th>Dimension</th><th>Amp</th><th>Codex CLI</th></tr>
+  <tr><td><strong>Developer</strong></td><td>Sourcegraph</td><td>OpenAI</td></tr>
+  <tr><td><strong>Models</strong></td><td>Multi-provider (Claude, Gemini, GPT-5)</td><td>OpenAI models only</td></tr>
+  <tr><td><strong>Benchmark</strong></td><td>Strong on multi-file, parallel tasks</td><td>Terminal-Bench 2.1 leader (83.4%)</td></tr>
+  <tr><td><strong>Team Features</strong></td><td>Thread sharing, leaderboards, public profiles</td><td>Limited team features</td></tr>
+  <tr><td><strong>Oracle/Analysis</strong></td><td>Built-in Oracle (o3 reasoning)</td><td>Relies on model reasoning depth</td></tr>
+  <tr><td><strong>Global Codebase Understanding</strong></td><td>Excellent via multi-model routing</td><td>Consistently shows better global understanding than Claude Code</td></tr>
+</table>
+
+<h3>6.3 Benchmark Performance (2026)</h3>
+<table>
+  <tr><th>Agent</th><th>SWE-bench Verified</th><th>Terminal-Bench 2.1</th><th>Notes</th></tr>
+  <tr><td>Claude Code (Opus 4.8)</td><td>72.5%</td><td>78.9%</td><td>Highest single-model reasoning depth</td></tr>
+  <tr><td>Codex CLI (GPT-5.5)</td><td>—</td><td><strong>83.4%</strong></td><td>Terminal-Bench leader</td></tr>
+  <tr><td>Cursor Composer 2</td><td>73.7 (Multilingual)</td><td>—</td><td>Best IDE experience; stalls unattended</td></tr>
+  <tr><td>Amp</td><td colspan="2">Not yet in public benchmarks</td><td>Excels in parallel workloads; multi-model advantage</td></tr>
+</table>
+
+<h3>6.4 When to Choose Which</h3>
+<table>
+  <tr><th>Scenario</th><th>Best Choice</th><th>Why</th></tr>
+  <tr><td>Large-scale refactor across monorepo</td><td><strong>Amp</strong></td><td>Parallel subagents; 200K context; multi-model routing</td></tr>
+  <tr><td>Solo dev, terminal-native, CI/CD workflows</td><td><strong>Claude Code</strong></td><td>Deepest skills ecosystem; GitHub Actions; scheduled tasks</td></tr>
+  <tr><td>Quick UI iteration, visual diff review</td><td><strong>Cursor</strong></td><td>Best IDE experience; visual checkpoints; inline completions</td></tr>
+  <tr><td>Highest raw single-task capability</td><td><strong>Codex CLI</strong></td><td>Terminal-Bench leader; excellent global codebase understanding</td></tr>
+  <tr><td>Team collaboration, shared context</td><td><strong>Amp</strong></td><td>Thread sharing; leaderboards; AGENTS.md project rules; no token caps</td></tr>
+  <tr><td>Architecture review &amp; complex analysis</td><td><strong>Amp (Oracle)</strong></td><td>Dedicated o3 reasoning subagent for architectural analysis</td></tr>
+  <tr><td>Budget-conscious exploration</td><td><strong>Amp (Free Tier)</strong></td><td>No hard token caps; Amp Tab free autocomplete; ad-supported</td></tr>
+</table>
+
+<h2 id="pricing">7. Pricing Model</h2>
+<table>
+  <tr><th>Tier</th><th>Cost</th><th>What You Get</th></tr>
+  <tr><td><strong>Free</strong></td><td>$0</td><td>Amp Tab autocomplete, core agent with <strong>no hard token caps</strong>, thread sharing, ad-supported (minimal in code contexts)</td></tr>
+  <tr><td><strong>Smart Mode</strong></td><td>Pay-as-you-go credits</td><td>Zero data sharing, full Oracle Mode reasoning depth, priority routing, higher subagent parallelism, <strong>zero markup on provider API pricing</strong></td></tr>
+  <tr><td><strong>Enterprise</strong></td><td>Custom</td><td>Data residency, audit logging, SSO, workspace controls</td></tr>
+</table>
+<p><strong>Key differentiator:</strong> The absence of hard token caps on any tier is unusual. Sourcegraph's commitment to zero markup on provider API pricing means teams pay the same rate they'd pay with direct API contracts with Anthropic, Google, and OpenAI.</p>
+
+<h2 id="limitations">8. Limitations &amp; Considerations</h2>
+<ul>
+  <li><strong>Cost can accumulate:</strong> Pay-per-token with premium models means complex multi-step tasks can be expensive. Not cheap compared to fixed-price subscriptions.</li>
+  <li><strong>CLI performance:</strong> Lag occurs with long threads or large repos.</li>
+  <li><strong>Resource usage:</strong> CPU and RAM spikes during multi-agent workflows.</li>
+  <li><strong>Free mode constraints:</strong> Limited context; best for small projects or experimentation.</li>
+  <li><strong>No BYOK:</strong> No support for bring-your-own-key with enterprise-hosted models.</li>
+  <li><strong>Subagent dependency tracking:</strong> Solid but not infallible — review execution plans on tightly coupled codebases.</li>
+  <li><strong>Young product:</strong> Rapid iteration means features change quickly and documentation may lag.</li>
+</ul>
+
+<h2 id="key-takeaways">9. Key Takeaways</h2>
+
+<h3>What Makes Amp Great</h3>
+<ol>
+  <li><strong>Parallel subagent execution</strong> — The single feature that most convincingly separates it from "agentic" tools. 7 subagents doing in 11 minutes what takes 1+ hour sequentially.</li>
+  <li><strong>Multi-model routing</strong> — No single model is best at everything. Amp picks the right model per subtask automatically.</li>
+  <li><strong>Unconstrained tokens</strong> — No artificial limits. The agent uses what it needs for quality results.</li>
+  <li><strong>Persistent thread memory</strong> — Threads as version control for AI reasoning. Resumable, shareable, searchable.</li>
+  <li><strong>Oracle + Librarian</strong> — Specialized built-in agents for deep reasoning and codebase search that the main agent can delegate to.</li>
+  <li><strong>Team-first design</strong> — Thread sharing, leaderboards, AGENTS.md, and workspace features built for engineering organizations.</li>
+  <li><strong>Frontier speed</strong> — Small team (~8 people), 15 ships/day, no legacy drag. Incorporates new model capabilities within hours.</li>
+  <li><strong>CLAUDE.md compatibility</strong> — Pragmatic interoperability with the second-most-popular agent. Same rules files work across both.</li>
+</ol>
+
+<div class="highlight">
+<strong>Amp's Design Philosophy in One Sentence:</strong><br>
+"Build for the frontier, not for stability. Ship fast, iterate constantly, let the models lead, and give developers the tools to orchestrate autonomous work rather than manually supervise every step."
+</div>
+
+<h2 id="sources">10. Sources</h2>
+<ul>
+  <li><a href="https://ampcode.com/">Amp Official Site</a> — Product homepage</li>
+  <li><a href="https://ampcode.com/manual">Amp Owner's Manual</a> — Official documentation</li>
+  <li><a href="https://ampcode.com/news/oracle">Amp: Oracle</a> — Official Oracle announcement</li>
+  <li><a href="https://ampcode.com/news/librarian">Amp: The Librarian</a> — Official Librarian announcement</li>
+  <li><a href="https://hamel.dev/notes/coding-agents/amp.html">Hamel's Blog: Amp</a> — Deep feature analysis by Hamel Husain</li>
+  <li><a href="https://www.secondtalent.com/resources/amp-ai-review/">Second Talent: Amp Review 2026</a> — Comprehensive autonomous agent review</li>
+  <li><a href="https://baeseokjae.github.io/posts/amp-code-review-2026/">Amp Code Review 2026</a> — Technical deep-dive from RockB</li>
+  <li><a href="https://www.flowhunt.io/blog/amp-ai-coding-agents-disrupting-developer-tools/">FlowHunt: AMP Disrupting Developer Tools</a> — Philosophy and business strategy analysis</li>
+  <li><a href="https://peterwarnock.com/blog/posts/amp-coding-agent-features/">Peter Warnock: Amp Features That Stand Out</a> — Feature breakdown</li>
+  <li><a href="https://www.agensi.io/learn/amp-code-vs-claude-code-vs-cursor-2026">Agensi: Amp vs Claude Code vs Cursor 2026</a> — Three-way comparison</li>
+  <li><a href="https://artificialanalysis.ai/agents/coding">Artificial Analysis: Coding Agents Comparison</a> — Quantitative agent comparison</li>
+  <li><a href="https://www.morphllm.com/ai-coding-agent">Morphllm: Best AI Coding Agent 2026</a> — Ranked by benchmarks, price, and source</li>
+  <li><a href="https://securityboulevard.com/2026/06/12-ai-coding-agents-compared-in-2026-claude-code-vs-antigravity-vs-codex-vs-cursor-vs-opencode-vs-hermes/">Security Boulevard: 12 AI Coding Agents Compared</a> — Broad competitive analysis</li>
+  <li><a href="https://www.bitdoze.com/amp-code-free-ai-coding-agent/">Bitdoze: Amp Code Free</a> — Free tier overview</li>
+  <li><a href="https://medium.com/@jonathanaraney/7-truths-about-amp-as-an-enterprise-ai-coding-agent-aa8ecbf61087">Jonathan Raney: 7 Truths About Amp</a> — Enterprise perspective</li>
+  <li><a href="https://medium.com/@jonathanaraney/the-future-of-coding-is-here-f1cbb2c3c77d">Jonathan Raney: The Future of Coding is Here</a> — Amp deep dive</li>
+  <li><a href="https://aiagentstore.ai/ai-agent/amp">AI Agent Store: Amp</a> — Agent capability profile</li>
+  <li><a href="https://realpython.com/ref/ai-coding-tools/amp-code/">Real Python: Amp Code</a> — Python developer perspective</li>
+  <li><a href="https://parallel.ai/blog/case-study-amp">Parallel: Amp Case Study</a> — Parallel Search integration</li>
+  <li><a href="https://hboon.com/what-coding-agent-should-you-use/">Hwee-Boon Yar: What Coding Agent Should You Use</a> — Practical comparison guide</li>
+</ul>
+
+<div class="footer">
+  <p>Research compiled July 2026 by <strong>Jax</strong> — Irfan's AI Research Agent. Published via <a href="https://irfansp.dev/agent-artifacts/">Irfan's Agent Artifacts</a>.</p>
+  <p>This page is a research artifact. All cited sources are external and linked above.</p>
+</div>
+
+</body>
+</html>

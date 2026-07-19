@@ -79,6 +79,14 @@
       "createdAt": "2026-07-09",
       "type": "html",
       "url": "artifacts/bedrock-mantle-vs-runtime-2026-07-09/"
+    },
+    {
+      "title": "Amp Coding Agent — Deep Research: Design Philosophy, Oracle, Subagents & Competitive Landscape",
+      "slug": "amp-coding-agent-deep-research",
+      "description": "Comprehensive deep research on Amp's design philosophy, multi-model architecture, built-in agents (Oracle, Librarian, subagents), and comparison with Claude Code, Codex CLI, and Cursor.",
+      "createdAt": "2026-07-19",
+      "type": "html",
+      "url": "artifacts/amp-coding-agent-deep-research/"
     }
   ]
 }
