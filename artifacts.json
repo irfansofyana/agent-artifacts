@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Agent Engineer Fieldbook — LangChain Learning Lab",
+      "slug": "langchain-agent-engineer-fieldbook",
+      "description": "An interactive, production-minded course covering LangChain, LangGraph, Deep Agents, LangSmith, the Stripe Kai architecture, and preparation for the LangChain Certified Agent Engineer exam.",
+      "createdAt": "2026-08-04",
+      "type": "html",
+      "url": "artifacts/langchain-agent-engineer-fieldbook/"
+    },
+    {
       "title": "Parallel AI Coding with Git Worktrees — Pi, Codex & Claude Code",
       "slug": "ai-agent-git-worktrees",
       "description": "A practical field manual for running multiple AI coding tasks safely in one repository using isolated Git worktrees, with copy-ready Pi, Codex CLI, and Claude Code commands.",
