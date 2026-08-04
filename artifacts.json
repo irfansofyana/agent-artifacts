@@ -95,6 +95,14 @@
       "createdAt": "2026-07-19",
       "type": "html",
       "url": "artifacts/amp-coding-agent-deep-research/"
+    },
+    {
+      "title": "LLM Model Evaluation & Auto-Routing Playbook",
+      "slug": "litellm-bedrock-model-evaluation-playbook-2026-08-04",
+      "description": "A practical playbook for evaluating Amazon Bedrock models and turning quality, latency, reliability, and cost evidence into a defensible LiteLLM auto-routing policy.",
+      "createdAt": "2026-08-04",
+      "type": "html",
+      "url": "artifacts/litellm-bedrock-model-evaluation-playbook-2026-08-04/"
     }
   ]
 }

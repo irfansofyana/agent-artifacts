@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A practical playbook for evaluating foundation models on Amazon Bedrock and turning the results into a defensible LiteLLM auto-routing policy.">
+  <title>LLM Model Evaluation &amp; Auto-Routing Playbook / Agent Artifacts</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f1e8;
+      --surface: #fffdf7;
+      --ink: #19201e;
+      --muted: #66706c;
+      --line: #d7d1c4;
+      --teal: #086f68;
+      --teal-soft: #dcefeb;
+      --orange: #d05b2a;
+      --orange-soft: #f9e4d6;
+      --navy: #17324d;
+      --code: #14211f;
+      --shadow: 0 18px 44px rgba(34, 42, 38, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(8,111,104,.10), transparent 29rem),
+        linear-gradient(180deg, #f8f5ed 0, var(--paper) 42rem);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.62;
+    }
+
+    a { color: var(--teal); text-underline-offset: .18em; text-decoration-thickness: .08em; }
+    a:hover { color: var(--orange); }
+    code { font-family: "SFMono-Regular", Consolas, monospace; font-size: .9em; }
+    .shell { width: min(1160px, calc(100% - 32px)); margin: 0 auto; }
+
+    header { padding: 64px 0 34px; }
+    .topline { display: flex; justify-content: space-between; gap: 20px; align-items: center; margin-bottom: 46px; }
+    .brand { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--teal); }
+    .date { font-size: 13px; color: var(--muted); }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .72fr); gap: 44px; align-items: end; }
+    .kicker { margin: 0 0 14px; color: var(--orange); font-size: 13px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 0; max-width: 860px; font-size: clamp(42px, 7.5vw, 86px); line-height: .97; letter-spacing: -.055em; }
+    .lede { margin: 24px 0 0; max-width: 760px; font-size: clamp(18px, 2vw, 23px); line-height: 1.48; color: #48534f; }
+    .verdict { padding: 24px; border: 1px solid #b8d8d2; background: rgba(255,253,247,.78); box-shadow: var(--shadow); }
+    .verdict strong { display: block; margin-bottom: 8px; color: var(--teal); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+    .verdict p { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 21px; line-height: 1.42; }
+
+    .nav-wrap { position: sticky; top: 0; z-index: 10; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(244,241,232,.92); backdrop-filter: blur(12px); }
+    nav { display: flex; gap: 24px; overflow-x: auto; padding: 12px 0; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    nav a { flex: none; color: #44504b; font-size: 13px; font-weight: 750; text-decoration: none; }
+
+    main { padding: 48px 0 90px; }
+    section { scroll-margin-top: 68px; margin-top: 68px; }
+    section:first-child { margin-top: 0; }
+    .section-head { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 24px; align-items: start; margin-bottom: 28px; }
+    .section-no { padding-top: 9px; color: var(--orange); font: 800 12px/1 ui-monospace, monospace; letter-spacing: .12em; }
+    h2 { margin: 0; font-size: clamp(30px, 4.5vw, 51px); line-height: 1.03; letter-spacing: -.04em; }
+    h3 { margin: 28px 0 10px; font-size: 21px; letter-spacing: -.015em; }
+    p { margin: 0 0 16px; }
+    .body-copy { max-width: 880px; margin-left: 114px; }
+    .body-copy > p:first-child { font-size: 18px; color: #46514d; }
+
+    .three-up, .four-up { display: grid; gap: 16px; margin: 26px 0; }
+    .three-up { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .four-up { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { min-height: 100%; padding: 22px; border: 1px solid var(--line); background: rgba(255,253,247,.72); }
+    .card .label { color: var(--teal); font-size: 11px; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
+    .card h3 { margin: 8px 0 7px; font-size: 19px; }
+    .card p { margin: 0; color: #58635f; font-size: 14px; }
+    .card.warn { border-color: #e1b398; background: var(--orange-soft); }
+
+    .callout { margin: 30px 0; padding: 22px 24px; border-left: 5px solid var(--orange); background: var(--orange-soft); }
+    .callout p { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 22px; line-height: 1.42; }
+
+    table { width: 100%; border-collapse: collapse; margin: 22px 0 30px; background: var(--surface); font-size: 14px; }
+    th { background: var(--navy); color: white; text-align: left; font-size: 12px; letter-spacing: .035em; text-transform: uppercase; }
+    th, td { padding: 12px 14px; border: 1px solid var(--line); vertical-align: top; }
+    td:first-child { font-weight: 750; }
+    tr:nth-child(even) td { background: #faf8f1; }
+
+    .formula { margin: 28px 0; padding: 26px; border: 1px solid #9dcac3; background: var(--teal-soft); text-align: center; }
+    .formula span { display: block; color: var(--teal); font-size: 12px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+    .formula strong { display: block; margin-top: 10px; font: 700 clamp(21px, 3vw, 30px)/1.3 Georgia, serif; }
+
+    .workflow { counter-reset: step; margin: 28px 0; border-top: 1px solid var(--line); }
+    .step { display: grid; grid-template-columns: 60px 200px minmax(0,1fr); gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .step::before { counter-increment: step; content: "0" counter(step); color: var(--orange); font: 800 12px/1.5 ui-monospace, monospace; }
+    .step strong { font-size: 16px; }
+    .step p { margin: 0; color: #56615d; font-size: 15px; }
+
+    pre { margin: 20px 0 28px; padding: 20px; overflow-x: auto; border-radius: 2px; background: var(--code); color: #eaf4ef; box-shadow: var(--shadow); line-height: 1.55; }
+    pre code { font-size: 13px; }
+    .checklist { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 28px; padding: 0; list-style: none; }
+    .checklist li { position: relative; padding: 9px 0 9px 29px; border-bottom: 1px solid var(--line); }
+    .checklist li::before { content: "□"; position: absolute; left: 0; color: var(--teal); font-weight: 900; }
+
+    .sources { margin-top: 76px; padding: 30px; border: 1px solid var(--line); background: rgba(255,253,247,.7); }
+    .sources h2 { font-size: 26px; letter-spacing: -.02em; }
+    .sources ul { margin: 18px 0 0; padding-left: 20px; }
+    .sources li { margin: 8px 0; }
+    footer { padding: 28px 0 50px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 860px) {
+      .hero-grid, .three-up, .four-up { grid-template-columns: 1fr; }
+      .hero-grid { gap: 28px; }
+      .section-head { grid-template-columns: 54px minmax(0,1fr); gap: 12px; }
+      .body-copy { margin-left: 66px; }
+      .step { grid-template-columns: 45px minmax(0,1fr); }
+      .step p { grid-column: 2; }
+    }
+
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 24px, 1160px); }
+      header { padding-top: 28px; }
+      .topline { margin-bottom: 30px; }
+      .section-head { display: block; }
+      .section-no { margin-bottom: 10px; }
+      .body-copy { margin-left: 0; }
+      .checklist { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; white-space: normal; }
+      th, td { min-width: 145px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <div class="topline">
+      <span class="brand">Agent Artifacts / Field Guide</span>
+      <span class="date">Published 04 Aug 2026</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <p class="kicker">LiteLLM × Amazon Bedrock</p>
+        <h1>Evaluate first.<br>Route second.</h1>
+        <p class="lede">A practical system for finding the cheapest model that reliably completes each real workload—and turning that evidence into a defensible auto-routing policy.</p>
+      </div>
+      <aside class="verdict">
+        <strong>The central idea</strong>
+        <p>An auto-router is not a model evaluator. It executes the model policy your evaluation creates.</p>
+      </aside>
+    </div>
+  </header>
+
+  <div class="nav-wrap">
+    <nav class="shell" aria-label="Page sections">
+      <a href="#router">Router reality</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#score">Scoring</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#router-eval">Router evaluation</a>
+      <a href="#tooling">Tooling</a>
+      <a href="#rollout">Rollout</a>
+    </nav>
+  </div>
+
+  <main class="shell">
+    <section id="router">
+      <div class="section-head"><span class="section-no">01 / REALITY</span><h2>Know which routing problem you are solving</h2></div>
+      <div class="body-copy">
+        <p>“Routing” is overloaded. Separating its three jobs prevents a reliable gateway from being mistaken for a quality-selection system.</p>
+        <div class="three-up">
+          <article class="card">
+            <span class="label">Infrastructure</span>
+            <h3>Load balancing &amp; fallback</h3>
+            <p>Selects deployments using health, rate limits, latency, cost, retries, or availability. It does not determine which model gives the best answer.</p>
+          </article>
+          <article class="card">
+            <span class="label">Classification</span>
+            <h3>Auto Router v2</h3>
+            <p>Classifies requests into SIMPLE, MEDIUM, COMPLEX, or REASONING, then routes to the model or pool assigned to that tier.</p>
+          </article>
+          <article class="card warn">
+            <span class="label">Learning</span>
+            <h3>Adaptive routing</h3>
+            <p>Explores candidates within a tier using feedback. Enable it only after the reward signal represents real task success.</p>
+          </article>
+        </div>
+        <p>LiteLLM’s current Auto Router v2 ships in version 1.94.x and later. It supports heuristic, keyword, semantic, and LLM-based classification; tier pools; decision-cause logs; optional session affinity; and adaptive selection inside a pool.</p>
+        <div class="callout"><p>The router can tell that a prompt looks difficult. Only your evaluation can tell which model is good enough for that difficulty.</p></div>
+      </div>
+    </section>
+
+    <section id="dataset">
+      <div class="section-head"><span class="section-no">02 / DATASET</span><h2>Benchmark the work, not the model</h2></div>
+      <div class="body-copy">
+        <p>Generic leaderboards answer generic questions. A useful evaluation dataset mirrors the actual application pipeline: system prompt, retrieval, tools, structured output, language, and conversation history included.</p>
+        <h3>Start with workload families</h3>
+        <div class="four-up">
+          <article class="card"><span class="label">01</span><h3>Extraction</h3><p>Classification, JSON, schema-constrained data, entity extraction.</p></article>
+          <article class="card"><span class="label">02</span><h3>Knowledge</h3><p>Grounded Q&amp;A, RAG, citations, summarization, synthesis.</p></article>
+          <article class="card"><span class="label">03</span><h3>Engineering</h3><p>Code, debugging, architecture, cloud and infrastructure tasks.</p></article>
+          <article class="card"><span class="label">04</span><h3>Agents</h3><p>Tool choice, argument validity, multi-step completion, recovery.</p></article>
+        </div>
+        <p>Add language and communication slices—especially Indonesian and English—when they represent production traffic.</p>
+        <h3>Build a useful first dataset</h3>
+        <table>
+          <thead><tr><th>Slice</th><th>Share</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>Normal</td><td>60%</td><td>Representative production work and dominant happy paths.</td></tr>
+            <tr><td>Hard / edge</td><td>25%</td><td>Long context, ambiguity, subtle constraints, complex tools, and near-limit inputs.</td></tr>
+            <tr><td>Adversarial / malformed</td><td>15%</td><td>Conflicting instructions, missing data, bad formats, unsafe or impossible requests.</td></tr>
+          </tbody>
+        </table>
+        <p>Begin with 50 carefully reviewed real cases. Expand to 150–250 after the first runs expose the failure modes worth preserving. Every production incident or surprising trace should become a regression case.</p>
+        <h3>Minimal dataset item</h3>
+        <pre><code>{
+  "input": { "messages": [], "context": {}, "tools": [] },
+  "expected": { "answer": null, "schema": null, "tool_calls": [] },
+  "metadata": {
+    "use_case": "tool-calling",
+    "difficulty": "medium",
+    "language": "id",
+    "risk": "high",
+    "hard_failures": ["wrong_tool", "invalid_arguments"]
+  }
+}</code></pre>
+      </div>
+    </section>
+
+    <section id="score">
+      <div class="section-head"><span class="section-no">03 / SCORE</span><h2>Measure quality, reliability, speed, and economics together</h2></div>
+      <div class="body-copy">
+        <p>Use deterministic checks wherever possible, semantic judgment only where necessary, and humans to calibrate the judge. A smooth answer that calls the wrong tool is still a failed answer.</p>
+        <table>
+          <thead><tr><th>Dimension</th><th>Best measurement</th><th>Examples</th></tr></thead>
+          <tbody>
+            <tr><td>Correctness</td><td>Code evaluator or reference rubric</td><td>Exact match, field accuracy, calculation result, domain criteria.</td></tr>
+            <tr><td>Reliability</td><td>Hard pass/fail checks</td><td>Schema validity, tool choice, argument validity, errors, timeouts.</td></tr>
+            <tr><td>Groundedness</td><td>Evidence check plus judge</td><td>Claims supported by retrieved context; citation coverage.</td></tr>
+            <tr><td>Human quality</td><td>Blind pairwise review</td><td>Helpfulness, clarity, completeness, tone, preference.</td></tr>
+            <tr><td>Latency</td><td>Trace telemetry</td><td>Time to first token, p50 and p95 end-to-end latency.</td></tr>
+            <tr><td>Economics</td><td>Usage and billing reconciliation</td><td>Cost/request, cost/success, cached and uncached token cost.</td></tr>
+            <tr><td>Stability</td><td>Repeated trials</td><td>Run stochastic, reasoning, and tool cases three times.</td></tr>
+          </tbody>
+        </table>
+        <div class="formula">
+          <span>Selection rule</span>
+          <strong>Choose the cheapest model that clears the use-case quality gate and meets the p95 latency SLA.</strong>
+        </div>
+        <p>This produces a cost–quality Pareto frontier. Avoid collapsing everything into one arbitrary weighted “model score”; weighted averages can hide hard failures and turn decision-making into spreadsheet astrology.</p>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="section-head"><span class="section-no">04 / LOOP</span><h2>Run the evaluation as a repeatable experiment</h2></div>
+      <div class="body-copy">
+        <div class="workflow">
+          <div class="step"><strong>Collect</strong><p>Sample real traces across use cases, risk levels, languages, lengths, and failure history.</p></div>
+          <div class="step"><strong>Label</strong><p>Record expected behavior, deterministic constraints, difficulty, and unacceptable outcomes.</p></div>
+          <div class="step"><strong>Replay</strong><p>Send the identical application pipeline to every candidate model with controlled settings.</p></div>
+          <div class="step"><strong>Score</strong><p>Run hard checks first, then judges, then blind human review for ambiguous or high-risk cases.</p></div>
+          <div class="step"><strong>Select</strong><p>Find the cheapest passing model for every use-case and difficulty segment.</p></div>
+          <div class="step"><strong>Regress</strong><p>Store failures and production surprises in the versioned dataset, then rerun on changes.</p></div>
+        </div>
+        <h3>Keep comparisons fair</h3>
+        <ul class="checklist">
+          <li>Same system prompt and app pipeline</li>
+          <li>Same retrieval context and tool definitions</li>
+          <li>Same output and reasoning budget where comparable</li>
+          <li>Temperature zero where supported and appropriate</li>
+          <li>Separate cached and uncached measurements</li>
+          <li>Blind model identity during human review</li>
+          <li>Track errors, refusals, and empty outputs</li>
+          <li>Reconcile LiteLLM estimates with Bedrock billing</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="router-eval">
+      <div class="section-head"><span class="section-no">05 / ROUTER</span><h2>Evaluate the routing decision, not only the response</h2></div>
+      <div class="body-copy">
+        <p>Once each workload has a cheapest passing model, that result becomes the per-request oracle. Replay the dataset through Auto Router and compare its choice with the oracle.</p>
+        <div class="three-up">
+          <article class="card warn"><span class="label">Quality risk</span><h3>Under-routing</h3><p>The router chooses a cheap model that fails the task or violates a hard requirement.</p></article>
+          <article class="card"><span class="label">Cost waste</span><h3>Over-routing</h3><p>The router chooses an expensive model when a cheaper candidate already passed.</p></article>
+          <article class="card"><span class="label">System cost</span><h3>Routing overhead</h3><p>Classifier latency, classifier tokens, embedding cost, cache disruption, and extra failures.</p></article>
+        </div>
+        <h3>Router scorecard</h3>
+        <table>
+          <thead><tr><th>Metric</th><th>Question answered</th></tr></thead>
+          <tbody>
+            <tr><td>Task success rate</td><td>Did the routed system preserve acceptable application quality?</td></tr>
+            <tr><td>Under-routing rate</td><td>How often did the policy sacrifice task success for a cheaper tier?</td></tr>
+            <tr><td>Over-routing rate</td><td>How often did the policy spend more than necessary?</td></tr>
+            <tr><td>Routing regret</td><td>How far was the chosen model from the cheapest passing model?</td></tr>
+            <tr><td>Cost per success</td><td>What did each completed task cost after retries and failures?</td></tr>
+            <tr><td>Decision-cause coverage</td><td>Can every route be explained by score, keyword, classifier, or session pin?</td></tr>
+            <tr><td>Session/cache impact</td><td>Did switching models break continuity or reduce provider cache value?</td></tr>
+          </tbody>
+        </table>
+        <p>Start with one pinned model per tier and adaptive routing disabled. Pools introduce exploration; exploration is useful only when task-success feedback reliably reaches the router.</p>
+      </div>
+    </section>
+
+    <section id="tooling">
+      <div class="section-head"><span class="section-no">06 / STACK</span><h2>A small toolchain is enough</h2></div>
+      <div class="body-copy">
+        <div class="three-up">
+          <article class="card">
+            <span class="label">System of record</span>
+            <h3>Langfuse</h3>
+            <p>Store versioned datasets, run comparable experiments, attach code or judge scores, perform annotations, and promote production failures into regression cases.</p>
+          </article>
+          <article class="card">
+            <span class="label">Fast local matrix</span>
+            <h3>Promptfoo</h3>
+            <p>Call the LiteLLM proxy, compare multiple aliases, express assertions, export results, and add regression gates to CI.</p>
+          </article>
+          <article class="card">
+            <span class="label">Managed AWS option</span>
+            <h3>Bedrock Evaluation</h3>
+            <p>Useful for AWS-governed model, RAG, prompt-router, judge-model, and human evaluation jobs. Keep application-specific telemetry in Langfuse.</p>
+          </article>
+        </div>
+        <h3>Recommended ownership</h3>
+        <table>
+          <thead><tr><th>Concern</th><th>Primary owner</th></tr></thead>
+          <tbody>
+            <tr><td>Provider access, aliases, retries, budgets, routing</td><td>LiteLLM</td></tr>
+            <tr><td>Datasets, traces, experiment comparison, online scores</td><td>Langfuse</td></tr>
+            <tr><td>Local test matrix and CI regression gate</td><td>Promptfoo or a thin Python runner</td></tr>
+            <tr><td>AWS-managed evaluation and governance workflows</td><td>Amazon Bedrock Evaluation</td></tr>
+            <tr><td>Final preference on ambiguous, high-risk work</td><td>Blind human review</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="rollout">
+      <div class="section-head"><span class="section-no">07 / SHIP</span><h2>Roll out in gates, not faith</h2></div>
+      <div class="body-copy">
+        <div class="workflow">
+          <div class="step"><strong>Baseline</strong><p>Run 50 reviewed cases against 3–5 candidates and manually calibrate the rubric.</p></div>
+          <div class="step"><strong>Tier</strong><p>Assign the cheapest passing candidate to each workload and complexity tier.</p></div>
+          <div class="step"><strong>Replay</strong><p>Evaluate the router against the oracle and tune thresholds or keyword rules.</p></div>
+          <div class="step"><strong>Shadow</strong><p>Run routing decisions without serving them; compare chosen and production outputs.</p></div>
+          <div class="step"><strong>Canary</strong><p>Route 5–10% of eligible traffic with hard fallback and live quality monitoring.</p></div>
+          <div class="step"><strong>Adapt</strong><p>Enable adaptive pools only after reward quality, sample size, and rollback controls are proven.</p></div>
+        </div>
+        <div class="callout"><p>Manual evaluation is not a primitive fallback. A blind review of 50 representative cases is often more valuable than thousands of irrelevant benchmark questions.</p></div>
+        <h3>Production dashboard</h3>
+        <ul class="checklist">
+          <li>Chosen model, tier, and routing cause</li>
+          <li>Quality score and task success</li>
+          <li>p50/p95 latency and time to first token</li>
+          <li>Input, output, and cache token counts</li>
+          <li>Estimated versus billed cost</li>
+          <li>Error, timeout, retry, and fallback rates</li>
+          <li>Under-routing and over-routing samples</li>
+          <li>Cost per successful task by use case</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="sources" aria-labelledby="sources-title">
+      <h2 id="sources-title">Primary references</h2>
+      <ul>
+        <li><a href="https://docs.litellm.ai/docs/proxy/auto_routing">LiteLLM — Auto Routing</a></li>
+        <li><a href="https://docs.litellm.ai/docs/routing">LiteLLM — Router and load balancing</a></li>
+        <li><a href="https://langfuse.com/docs/evaluation/core-concepts">Langfuse — Evaluation core concepts</a></li>
+        <li><a href="https://langfuse.com/docs/evaluation/experiments/experiments-via-sdk">Langfuse — Experiments via SDK</a></li>
+        <li><a href="https://www.promptfoo.dev/docs/providers/litellm/">Promptfoo — LiteLLM provider</a></li>
+        <li><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/evaluation.html">Amazon Bedrock — Evaluate model and RAG performance</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">Prepared by Jax · Agent Artifacts · A living playbook for evidence-based LLM operations.</div>
+  </footer>
+</body>
+</html>
