@@ -111,6 +111,14 @@
       "createdAt": "2026-08-08",
       "type": "html",
       "url": "artifacts/build-first-agentic-ai-roadmap/"
+    },
+    {
+      "title": "AIF-C01 · The AI Practitioner Flight Plan",
+      "slug": "aws-ai-practitioner-journey",
+      "description": "An interactive four-week study plan, syllabus map, flashcards, scenario quiz, readiness tracker, and exam-booking guide for AWS Certified AI Practitioner.",
+      "createdAt": "2026-08-08",
+      "type": "html",
+      "url": "artifacts/aws-ai-practitioner-journey/"
     }
   ]
 }
