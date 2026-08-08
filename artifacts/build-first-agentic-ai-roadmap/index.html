@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A six-sprint, build-first roadmap for learning LangChain, LangGraph, MCP, coding agents, RAG, and LLM evaluation.">
+  <title>Build-First Agentic AI Roadmap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f2f5f7;
+      --paper-deep: #e5ebef;
+      --ink: #14283a;
+      --muted: #5b6b78;
+      --line: #c7d2da;
+      --blue: #2e5ea8;
+      --blue-deep: #1c4278;
+      --amber: #f2b544;
+      --white: #fcfdfe;
+      --shadow: 0 18px 50px rgba(20, 40, 58, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(46, 94, 168, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(46, 94, 168, .045) 1px, transparent 1px),
+        var(--paper);
+      background-size: 28px 28px;
+      font-family: "Source Serif 4", Georgia, serif;
+      font-size: 18px;
+      line-height: 1.62;
+    }
+
+    a { color: var(--blue-deep); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--blue); }
+    a:focus-visible { outline: 3px solid var(--amber); outline-offset: 4px; border-radius: 2px; }
+
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .utility { font: 600 12px/1.4 "IBM Plex Mono", monospace; letter-spacing: .12em; text-transform: uppercase; }
+
+    header { padding: 26px 0; border-bottom: 1px solid var(--line); }
+    header .shell { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .mark { display: flex; align-items: center; gap: 10px; }
+    .mark-dot { width: 12px; height: 12px; background: var(--amber); border-radius: 50%; box-shadow: 0 0 0 5px rgba(242,181,68,.2); }
+    nav { display: flex; gap: 18px; flex-wrap: wrap; }
+    nav a { color: var(--muted); text-decoration: none; }
+
+    .hero { padding: 90px 0 68px; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr); gap: 70px; align-items: end; }
+    h1, h2, h3 { font-family: "Space Grotesk", Arial, sans-serif; line-height: 1.04; letter-spacing: -.035em; }
+    h1 { max-width: 880px; margin: 15px 0 24px; font-size: clamp(52px, 8vw, 104px); }
+    h1 span { color: var(--blue); }
+    .lede { max-width: 720px; margin: 0; color: var(--muted); font-size: clamp(21px, 2.2vw, 28px); line-height: 1.42; }
+
+    .ratio-card { background: var(--ink); color: var(--white); padding: 30px; box-shadow: var(--shadow); }
+    .ratio-card strong { display: block; color: var(--amber); font: 700 clamp(56px, 7vw, 84px)/.95 "Space Grotesk", sans-serif; letter-spacing: -.06em; }
+    .ratio-card p { margin: 12px 0 0; font-family: "Space Grotesk", sans-serif; line-height: 1.35; }
+
+    .thesis { padding: 0 0 85px; }
+    .thesis-box { display: grid; grid-template-columns: 220px 1fr; gap: 38px; background: var(--white); border-left: 7px solid var(--amber); padding: 34px 38px; box-shadow: var(--shadow); }
+    .thesis-box p { margin: 0; font-size: 24px; line-height: 1.45; }
+
+    section { padding: 78px 0; border-top: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 220px 1fr; gap: 38px; margin-bottom: 48px; }
+    h2 { margin: 0; font-size: clamp(38px, 5vw, 66px); }
+    .section-intro { max-width: 690px; margin: 12px 0 0; color: var(--muted); font-size: 21px; }
+
+    .course-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+    .course { background: rgba(252,253,254,.85); border: 1px solid var(--line); padding: 26px; transition: transform .18s ease, box-shadow .18s ease; }
+    .course:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .course .meta { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
+    .course h3 { margin: 26px 0 12px; font-size: 25px; line-height: 1.15; }
+    .course p { margin: 0; color: var(--muted); font-size: 16px; }
+    .course a { display: inline-block; margin-top: 20px; font: 600 13px "IBM Plex Mono", monospace; }
+    .badge { padding: 4px 8px; background: var(--paper-deep); color: var(--blue-deep); }
+    .badge.core { background: var(--amber); color: var(--ink); }
+
+    .roadmap { position: relative; margin-left: 28px; }
+    .roadmap::before { content: ""; position: absolute; top: 18px; bottom: 18px; left: 15px; width: 2px; background: var(--blue); }
+    .sprint { position: relative; display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 24px; padding-bottom: 38px; }
+    .sprint:last-child { padding-bottom: 0; }
+    .node { position: relative; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; margin-top: 6px; background: var(--blue); border: 5px solid var(--paper); color: white; border-radius: 50%; font: 600 11px "IBM Plex Mono", monospace; }
+    .sprint-card { background: var(--white); border: 1px solid var(--line); padding: 30px 34px; box-shadow: 0 8px 24px rgba(20,40,58,.05); }
+    .sprint-card h3 { margin: 4px 0 16px; font-size: 30px; }
+    .sprint-card p { margin: 0 0 18px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 26px; }
+    .lane { padding-top: 15px; border-top: 3px solid var(--line); }
+    .lane:nth-child(2) { border-color: var(--blue); }
+    .lane:nth-child(3) { border-color: var(--amber); }
+    .lane h4 { margin: 0 0 8px; font: 600 13px "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .08em; }
+    .lane ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 16px; }
+
+    .stack { display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; }
+    .stack-panel { background: var(--ink); color: var(--white); padding: 34px; }
+    .stack-panel h3 { color: var(--amber); margin: 0 0 24px; font-size: 28px; }
+    .stack-row { display: grid; grid-template-columns: 130px 1fr; gap: 20px; padding: 13px 0; border-top: 1px solid rgba(255,255,255,.16); }
+    .stack-row span:first-child { color: #aab9c5; font: 500 12px "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .08em; }
+    .rules { background: var(--white); border: 1px solid var(--line); padding: 34px; }
+    .rules h3 { margin: 0 0 22px; font-size: 28px; }
+    .rules ol { margin: 0; padding-left: 24px; }
+    .rules li { margin-bottom: 10px; }
+
+    .finish { background: var(--blue-deep); color: var(--white); }
+    .finish .section-head { margin-bottom: 36px; }
+    .finish .utility, .finish .section-intro { color: #becfe0; }
+    .finish h2 { color: var(--white); }
+    .check-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .check { display: flex; gap: 12px; align-items: flex-start; padding: 18px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); }
+    .check::before { content: "✓"; flex: 0 0 auto; color: var(--amber); font: 700 18px "Space Grotesk", sans-serif; }
+
+    .privacy-note { margin-top: 36px; padding: 22px 24px; border: 1px solid rgba(255,255,255,.2); color: #d7e2eb; }
+    footer { background: #0f2130; color: #9fb0bd; padding: 30px 0; }
+    footer .shell { display: flex; justify-content: space-between; gap: 20px; }
+
+    @media (max-width: 820px) {
+      .hero-grid, .thesis-box, .section-head, .stack { grid-template-columns: 1fr; gap: 24px; }
+      .course-grid, .three-col, .check-grid { grid-template-columns: 1fr; }
+      .hero { padding-top: 62px; }
+      nav { display: none; }
+      .roadmap { margin-left: 0; }
+      .sprint { grid-template-columns: 48px minmax(0, 1fr); gap: 10px; }
+      .sprint-card { padding: 24px; }
+      footer .shell { display: block; }
+    }
+
+    @media print {
+      body { background: white; font-size: 14px; }
+      header, nav { display: none; }
+      .hero, section { padding: 38px 0; }
+      .course, .sprint-card, .ratio-card { break-inside: avoid; box-shadow: none; }
+      .course:hover { transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <div class="mark utility"><span class="mark-dot"></span> AI Engineering Field Guide</div>
+      <nav class="utility" aria-label="Page sections">
+        <a href="#courses">Courses</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#stack">Stack</a>
+        <a href="#finish">Finish line</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div>
+          <div class="utility">Six build sprints · six to eight hours per week</div>
+          <h1>Build-first <span>agentic AI</span> roadmap.</h1>
+          <p class="lede">Learn LangChain, LangGraph, MCP, coding agents, RAG, and evaluation by shipping one system—not collecting disconnected certificates.</p>
+        </div>
+        <aside class="ratio-card" aria-label="Learning ratio">
+          <strong>20/80</strong>
+          <p>Twenty percent watching.<br>Eighty percent building.</p>
+        </aside>
+      </div>
+    </section>
+
+    <div class="thesis">
+      <div class="shell thesis-box">
+        <div class="utility">The capstone</div>
+        <p>An <strong>Operations Knowledge Assistant</strong> built only from public or synthetic documentation. It retrieves cited answers, chooses tools, calls a Go MCP server, requests human approval for risky actions, and proves its behavior with repeatable evaluations.</p>
+      </div>
+    </div>
+
+    <section id="courses">
+      <div class="shell">
+        <div class="section-head">
+          <div class="utility">Curated course queue</div>
+          <div>
+            <h2>Watch what unlocks the next build.</h2>
+            <p class="section-intro">Complete the short, high-signal courses. Treat longer courses as reference libraries and select only the chapters tied to the current sprint.</p>
+          </div>
+        </div>
+
+        <div class="course-grid">
+          <article class="course">
+            <div class="meta utility"><span class="badge core">Complete</span><span>1h 14m</span></div>
+            <h3>Build AI Agents and Chatbots with LangGraph</h3>
+            <p>Stateful orchestration, tools, reflection, and explicit workflow control.</p>
+            <a href="https://www.linkedin.com/learning/build-ai-agents-and-chatbots-with-langgraph">Open course ↗</a>
+          </article>
+          <article class="course">
+            <div class="meta utility"><span class="badge core">Complete</span><span>30m</span></div>
+            <h3>Create Agents with the OpenAI Agents SDK</h3>
+            <p>A compact comparison point for tools, handoffs, guardrails, and tracing.</p>
+            <a href="https://www.linkedin.com/learning/build-with-ai-create-agents-with-the-openai-agents-sdk">Open course ↗</a>
+          </article>
+          <article class="course">
+            <div class="meta utility"><span class="badge core">Complete</span><span>55m</span></div>
+            <h3>Model Context Protocol: Hands-On with Agentic AI</h3>
+            <p>Learn the protocol, then replace the demo with a real Go MCP server.</p>
+            <a href="https://www.linkedin.com/learning/model-context-protocol-mcp-hands-on-with-agentic-ai">Open course ↗</a>
+          </article>
+          <article class="course">
+            <div class="meta utility"><span class="badge core">Complete</span><span>1h 10m</span></div>
+            <h3>Claude Code in Action by Anthropic</h3>
+            <p>Context control, planning, hooks, MCP, GitHub workflows, and automation.</p>
+            <a href="https://www.linkedin.com/learning/claude-code-in-action-by-anthropic">Open course ↗</a>
+          </article>
+          <article class="course">
+            <div class="meta utility"><span class="badge">Selective</span><span>Ch. 3, 6, 7</span></div>
+            <h3>Prompt Engineering with LangChain</h3>
+            <p>Use the LangChain components, ReAct/RAG, plan-and-execute, and LangSmith sections.</p>
+            <a href="https://www.linkedin.com/learning/prompt-engineering-with-langchain">Open course ↗</a>
+          </article>
+          <article class="course">
+            <div class="meta utility"><span class="badge">Selective</span><span>Retrieval path</span></div>
+            <h3>Level Up LLM Applications with LangChain and OpenAI</h3>
+            <p>Focus on embeddings, vector stores, retrieval, RAG, and multi-retriever agents.</p>
+            <a href="https://www.linkedin.com/learning/level-up-llm-applications-development-with-langchain-and-openai">Open course ↗</a>
+          </article>
+          <article class="course">
+            <div class="meta utility"><span class="badge">Selective</span><span>Workflow path</span></div>
+            <h3>OpenAI Codex 101: From Idea to Deployed App</h3>
+            <p>Prioritize AGENTS.md, review, MCP, reusable extensions, debugging, and monitoring.</p>
+            <a href="https://www.linkedin.com/learning/openai-codex-101-from-idea-to-deployed-app">Open course ↗</a>
+          </article>
+          <article class="course">
+            <div class="meta utility"><span class="badge">Selective</span><span>Evaluation path</span></div>
+            <h3>Complete Guide to Evaluating Large Language Models</h3>
+            <p>Study LLM-as-judge, embeddings, agent and RAG evaluation, drift, and test strategy.</p>
+            <a href="https://www.linkedin.com/learning/complete-guide-to-evaluating-large-language-models-llms">Open course ↗</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="shell">
+        <div class="section-head">
+          <div class="utility">The signal rail</div>
+          <div>
+            <h2>Six sprints. One system.</h2>
+            <p class="section-intro">Each sprint follows the same rhythm: acquire the minimum knowledge, apply it immediately, then pass an observable exit gate.</p>
+          </div>
+        </div>
+
+        <div class="roadmap">
+          <article class="sprint">
+            <div class="node">01</div>
+            <div class="sprint-card">
+              <div class="utility">LangChain + production-minded RAG</div>
+              <h3>Make retrieval inspectable.</h3>
+              <p>Ingest 15–30 public or synthetic runbooks. Implement chunking, embeddings, semantic retrieval, and cited answers. Compare two chunk sizes and two retrieval strategies.</p>
+              <div class="three-col">
+                <div class="lane"><h4>Watch</h4><ul><li>LangChain components</li><li>Retrieval and vector stores</li></ul></div>
+                <div class="lane"><h4>Build</h4><ul><li>RAG pipeline</li><li>Citation display</li><li>Failure log</li></ul></div>
+                <div class="lane"><h4>Exit gate</h4><ul><li>10 test questions</li><li>Inspectable retrieval</li><li>One measured improvement</li></ul></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="sprint">
+            <div class="node">02</div>
+            <div class="sprint-card">
+              <div class="utility">LangGraph orchestration</div>
+              <h3>Turn a chain into a controlled workflow.</h3>
+              <p>Implement: classify → retrieve → choose tool → execute → verify → answer. Add typed state, timeouts, retries, tool-failure fallbacks, and human approval.</p>
+              <div class="three-col">
+                <div class="lane"><h4>Watch</h4><ul><li>LangGraph course</li><li>ReAct and plan-and-execute</li></ul></div>
+                <div class="lane"><h4>Build</h4><ul><li>State graph</li><li>Verifier</li><li>Approval branch</li></ul></div>
+                <div class="lane"><h4>Exit gate</h4><ul><li>Knowledge flow</li><li>Tool flow</li><li>Safe failure flow</li></ul></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="sprint">
+            <div class="node">03</div>
+            <div class="sprint-card">
+              <div class="utility">Framework comparison</div>
+              <h3>Rebuild before choosing.</h3>
+              <p>Reimplement one identical workflow with the OpenAI Agents SDK. Keep prompts, tools, and test cases constant; compare control, observability, testability, failure handling, and code size.</p>
+              <div class="three-col">
+                <div class="lane"><h4>Watch</h4><ul><li>Agents SDK course</li></ul></div>
+                <div class="lane"><h4>Build</h4><ul><li>Equivalent workflow</li><li>Side-by-side tests</li></ul></div>
+                <div class="lane"><h4>Exit gate</h4><ul><li>One-page ADR</li><li>Evidence-backed choice</li></ul></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="sprint">
+            <div class="node">04</div>
+            <div class="sprint-card">
+              <div class="utility">MCP + Go tools</div>
+              <h3>Separate capabilities from clients.</h3>
+              <p>Build a Go MCP server with three read-only tools: search documentation, inspect a synthetic resource, and look up a public module. Add structured errors, timeouts, validation, and logs.</p>
+              <div class="three-col">
+                <div class="lane"><h4>Watch</h4><ul><li>MCP hands-on course</li></ul></div>
+                <div class="lane"><h4>Build</h4><ul><li>Go MCP server</li><li>Three safe tools</li></ul></div>
+                <div class="lane"><h4>Exit gate</h4><ul><li>Works from app</li><li>Works from coding agents</li></ul></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="sprint">
+            <div class="node">05</div>
+            <div class="sprint-card">
+              <div class="utility">Coding-agent field test</div>
+              <h3>Compare accepted work, not generated code.</h3>
+              <p>Give Claude Code and Codex the same feature, bug-fix, and behavior-preserving refactor. Track interventions, tests, incorrect assumptions, review effort, and unnecessary file changes.</p>
+              <div class="three-col">
+                <div class="lane"><h4>Watch</h4><ul><li>Claude Code</li><li>Codex workflow chapters</li></ul></div>
+                <div class="lane"><h4>Build</h4><ul><li>CLAUDE.md</li><li>AGENTS.md</li><li>Task harness</li></ul></div>
+                <div class="lane"><h4>Exit gate</h4><ul><li>Three paired tasks</li><li>Engineering comparison</li></ul></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="sprint">
+            <div class="node">06</div>
+            <div class="sprint-card">
+              <div class="utility">Evaluation + hardening</div>
+              <h3>Make quality repeatable.</h3>
+              <p>Create 30 evaluations: 10 retrieval/citation cases, 10 tool-selection cases, 5 unsupported-answer cases, and 5 malformed-input, timeout, or approval-boundary cases.</p>
+              <div class="three-col">
+                <div class="lane"><h4>Watch</h4><ul><li>Agent and RAG evaluation</li><li>Drift and LLM-as-judge</li></ul></div>
+                <div class="lane"><h4>Build</h4><ul><li>Langfuse traces</li><li>Regression suite</li><li>Minimal API or CLI</li></ul></div>
+                <div class="lane"><h4>Exit gate</h4><ul><li>30 repeatable cases</li><li>Deployed system</li><li>Failure analysis</li></ul></div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="shell">
+        <div class="section-head">
+          <div class="utility">Recommended stack</div>
+          <div><h2>Keep the lab deliberately small.</h2></div>
+        </div>
+        <div class="stack">
+          <div class="stack-panel">
+            <h3>One opinionated baseline</h3>
+            <div class="stack-row"><span>Application</span><span>Python, LangChain, LangGraph</span></div>
+            <div class="stack-row"><span>Models</span><span>One provider behind a swappable interface</span></div>
+            <div class="stack-row"><span>Retrieval</span><span>A simple local vector store first</span></div>
+            <div class="stack-row"><span>Tools</span><span>Go MCP server</span></div>
+            <div class="stack-row"><span>Evidence</span><span>Langfuse traces and evaluations</span></div>
+            <div class="stack-row"><span>Interface</span><span>CLI or minimal FastAPI endpoint</span></div>
+          </div>
+          <aside class="rules">
+            <h3>Rules of the lab</h3>
+            <ol>
+              <li>Never watch more than 45 minutes without implementing.</li>
+              <li>Use one repository for the entire roadmap.</li>
+              <li>Update stale course code against current official docs.</li>
+              <li>Keep a failure log; failures are the curriculum.</li>
+              <li>Add no new agent framework before the comparison is complete.</li>
+              <li>Use public or synthetic data only.</li>
+            </ol>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="finish" class="finish">
+      <div class="shell">
+        <div class="section-head">
+          <div class="utility">Definition of done</div>
+          <div>
+            <h2>The finish line is evidence.</h2>
+            <p class="section-intro">The roadmap is complete when the system can be demonstrated, measured, and explained—not when the watch history is full.</p>
+          </div>
+        </div>
+        <div class="check-grid">
+          <div class="check">One deployed assistant</div>
+          <div class="check">One Go MCP server with three tools</div>
+          <div class="check">Thirty repeatable evaluation cases</div>
+          <div class="check">Cited RAG answers</div>
+          <div class="check">Approval gates around risky actions</div>
+          <div class="check">Observable traces and failures</div>
+          <div class="check">A framework ADR</div>
+          <div class="check">A coding-agent comparison</div>
+          <div class="check">An architecture and failure report</div>
+        </div>
+        <div class="privacy-note"><strong>Public-safe lab:</strong> use public documentation, synthetic resources, placeholder endpoints, and test credentials. Never publish employer data, internal runbooks, private repositories, production traces, customer information, secrets, or identifying project details.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <span class="utility">Build-First Agentic AI Roadmap</span>
+      <span>Designed as a practical, public learning guide.</span>
+    </div>
+  </footer>
+</body>
+</html>

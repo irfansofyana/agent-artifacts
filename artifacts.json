@@ -103,6 +103,14 @@
       "createdAt": "2026-08-04",
       "type": "html",
       "url": "artifacts/litellm-bedrock-model-evaluation-playbook-2026-08-04/"
+    },
+    {
+      "title": "Build-First Agentic AI Roadmap",
+      "slug": "build-first-agentic-ai-roadmap",
+      "description": "A six-sprint practical roadmap for learning LangChain, LangGraph, MCP, coding agents, RAG, and LLM evaluation by shipping one public-safe capstone.",
+      "createdAt": "2026-08-08",
+      "type": "html",
+      "url": "artifacts/build-first-agentic-ai-roadmap/"
     }
   ]
 }
