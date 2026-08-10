@@ -41,7 +41,7 @@ main section{scroll-margin-top:64px}.band{border-top:1px solid var(--line)}.sect
     <div class="step"><b>02</b><strong>Parse</strong><span>Tree-sitter reads ASTs: functions, classes, imports, calls.</span></div>
     <div class="step"><b>03</b><strong>Resolve</strong><span>Connect symbols across files and tag confidence.</span></div>
     <div class="step"><b>04</b><strong>Build</strong><span>Merge nodes and edges into a NetworkX graph.</span></div>
-    <div class="step"><b>05</b><strong>Cluster</strong><span>Leiden groups dense regions into subsystems.</span></div>
+    <div class="step"><b>05</b><strong>Cluster</strong><span>Leiden when installed; otherwise Louvain groups dense regions.</span></div>
     <div class="step"><b>06</b><strong>Analyze</strong><span>Find hubs, bridges, surprising links, questions.</span></div>
     <div class="step"><b>07</b><strong>Export</strong><span>Write graph.json, graph.html, and GRAPH_REPORT.md.</span></div>
   </div>
@@ -61,20 +61,22 @@ main section{scroll-margin-top:64px}.band{border-top:1px solid var(--line)}.sect
   <div class="section-head"><div class="kicker">03 · Setup</div><div><h2>Install once. Register per agent.</h2><p class="intro">The PyPI package is <code>graphifyy</code> (double “y”); the command is <code>graphify</code>. Prefer <code>uv tool</code> for an isolated install.</p></div></div>
   <div class="command-shell">
     <div class="tabs" role="tablist"><button class="tab active" data-tab="pi">Pi</button><button class="tab" data-tab="cursor">Cursor</button><button class="tab" data-tab="claude">Claude Code</button><button class="tab" data-tab="generic">CLI only</button></div>
-    <div class="tab-panel active" id="tab-pi"><h3>Pi coding agent</h3><p>Graphify ships a native Pi skill. Install globally for personal use; use project scope when the team should share the skill.</p><div class="cmd">uv tool install graphifyy
-graphify install --platform pi<button class="copy">copy</button></div><div class="cmd"># inside Pi, from the repository root
-/graphify .
+    <div class="tab-panel active" id="tab-pi"><h3>Pi coding agent</h3><p>Graphify ships a Pi skill. Use the verified global install: Graphify’s current project-scoped Pi path does not match Pi’s documented project skill directories.</p><div class="cmd">uv tool install graphifyy
+graphify install --platform pi<button class="copy">copy</button></div><div class="cmd"># enable Pi skill commands, then invoke from the repository root
+/skill:graphify .
 
-# after the graph exists
-/graphify query "trace request authentication to persistence"<button class="copy">copy</button></div><div class="install-note"><strong>Integration mechanism:</strong> a Pi skill file. Pi follows the graph-first workflow when the skill is invoked. There is no Claude-style PreToolUse enforcement hook documented for Pi.</div></div>
-    <div class="tab-panel" id="tab-cursor"><h3>Cursor</h3><p>Cursor gets an always-applied rule at <code>.cursor/rules/graphify.mdc</code>. This is instruction-based, not a runtime hook.</p><div class="cmd">uv tool install graphifyy
+# after the graph exists, direct CLI queries are unambiguous
+graphify query "trace request authentication to persistence"<button class="copy">copy</button></div><div class="install-note"><strong>Integration mechanism:</strong> <code>~/.pi/agent/skills/graphify/</code>. Pi registers skills as <code>/skill:name</code>, so the verified command is <code>/skill:graphify</code>—not <code>/graphify</code>. Natural-language skill matching also works.</div></div>
+    <div class="tab-panel" id="tab-cursor"><h3>Cursor</h3><p>Cursor gets an always-applied rule at <code>.cursor/rules/graphify.mdc</code>. This is instruction-based, not a Graphify slash command or runtime hook.</p><div class="cmd">uv tool install graphifyy
 graphify cursor install
-# equivalent generic form: graphify install --platform cursor<button class="copy">copy</button></div><div class="cmd"># in Cursor Agent
-/graphify .
+# equivalent generic form: graphify install --platform cursor
 
-# then ask naturally:
+# build explicitly from a terminal
+graphify extract . --code-only<button class="copy">copy</button></div><div class="cmd"># then ask Cursor Agent conversationally:
 "Use graphify first. Show the blast radius of changing TokenService,
-then verify the relevant source files before editing."<button class="copy">copy</button></div><div class="install-note"><strong>Integration mechanism:</strong> <code>alwaysApply: true</code> Cursor rule. The agent is reminded to query first, but instruction-following can vary by model.</div></div>
+then verify the relevant source files before editing."
+
+# or ask it to run: graphify query "blast radius of TokenService"<button class="copy">copy</button></div><div class="install-note"><strong>Integration mechanism:</strong> <code>alwaysApply: true</code> Cursor rule. Graphify does not install a verified Cursor <code>/graphify</code> command; use natural language or direct CLI commands.</div></div>
     <div class="tab-panel" id="tab-claude"><h3>Claude Code</h3><p>Claude Code receives a skill, project instructions, and PreToolUse hooks that nudge search/file reads toward the graph.</p><div class="cmd">uv tool install graphifyy
 graphify install
 
@@ -99,7 +101,7 @@ graphify hook install
 # browser visualization
 xdg-open graphify-out/graph.html<button class="copy">copy</button></div><div class="install-note"><strong>Safer first trial:</strong> use <code>--code-only</code>. It stays local and skips semantic processing of docs, PDFs, and images.</div></div>
   </div>
-  <div class="agent-diff"><div class="agent-card"><b>Pi</b><h3>Explicit skill</h3><p>Best when you invoke Graphify deliberately and keep the workflow lightweight.</p><code>graphify pi install</code></div><div class="agent-card"><b>Cursor</b><h3>Persistent rule</h3><p>Good for always-on reminders inside a GUI agent; verify that the model actually used the command.</p><code>.cursor/rules/graphify.mdc</code></div><div class="agent-card"><b>Claude Code</b><h3>Rule + hook</h3><p>Strongest enforcement. Start soft; strict mode can be annoying on small, obvious tasks.</p><code>CLAUDE.md + PreToolUse</code></div></div>
+  <div class="agent-diff"><div class="agent-card"><b>Pi</b><h3>Explicit skill</h3><p>Best when you invoke Graphify deliberately and keep the workflow lightweight.</p><code>/skill:graphify .</code></div><div class="agent-card"><b>Cursor</b><h3>Persistent rule</h3><p>Good for always-on reminders inside a GUI agent; verify that the model actually ran the CLI.</p><code>.cursor/rules/graphify.mdc</code></div><div class="agent-card"><b>Claude Code</b><h3>Rule + hook</h3><p>Strongest enforcement. Start soft; strict mode can be annoying on small, obvious tasks.</p><code>CLAUDE.md + PreToolUse</code></div></div>
 </div></section>
 
 <section id="workflows" class="band"><div class="section">
@@ -129,7 +131,7 @@ graphify query "what changed around the symbols edited in this branch?"<button c
     <tr><td>“Why did this request fail in production?”</td><td>logs / traces / metrics</td><td>A static graph has no runtime truth.</td><td>Supporting context only</td></tr>
     <tr><td>“Is this implementation correct?”</td><td>tests + source review</td><td>Connectivity is not correctness.</td><td class="no">Not by itself</td></tr>
   </tbody></table>
-  <div class="caution"><strong>Failure modes to remember</strong><ul><li><b>Staleness:</b> a graph built before the latest refactor can mislead. Run <code>graphify update .</code></li><li><b>Inference risk:</b> treat <code>INFERRED</code> and <code>AMBIGUOUS</code> edges as hypotheses; follow provenance into source.</li><li><b>Static blind spots:</b> reflection, dependency injection, generated code, dynamic imports, framework magic, and runtime configuration may not resolve cleanly.</li><li><b>Noise:</b> utility hubs can dominate. Narrow the corpus, query specific symbols, or tune clustering rather than forcing the whole monorepo into one map.</li><li><b>Privacy:</b> code-only AST extraction is local, but semantic content can be sent to the host model/provider. Use <code>--code-only</code> or a local backend for sensitive work.</li><li><b>Repository weight:</b> <code>graphify-out/graph.json</code> can be large. Decide as a team whether to commit it; ignore <code>cost.json</code> and optionally cache.</li></ul></div>
+  <div class="caution"><strong>Failure modes to remember</strong><ul><li><b>Staleness:</b> a graph built before the latest refactor can mislead. Run <code>graphify update .</code></li><li><b>Lexical query seeding:</b> <code>graphify query</code> is lexical scoring plus graph traversal—not embedding search or semantic question answering. Include exact symbol, file, or subsystem names when broad prose returns noise.</li><li><b>Inference risk:</b> treat <code>INFERRED</code> and <code>AMBIGUOUS</code> edges as hypotheses; follow provenance into source.</li><li><b>Static blind spots:</b> reflection, dependency injection, generated code, dynamic imports, framework magic, and runtime configuration may not resolve cleanly.</li><li><b>Noise:</b> utility hubs can dominate. Narrow the corpus, query specific symbols, or tune clustering rather than forcing the whole monorepo into one map.</li><li><b>Privacy:</b> code-only AST extraction is local, but semantic content—and code-derived community labels when remote naming is enabled—can reach the configured provider. Use <code>--code-only</code>, disable remote labeling, or select a local backend for sensitive work.</li><li><b>Repository weight:</b> <code>graphify-out/graph.json</code> can be large. Decide as a team whether to commit it; ignore <code>cost.json</code> and optionally cache.</li></ul></div>
   <div class="split"><div class="note"><span class="tag">Measured evidence</span><h3 style="margin-top:16px">Promising, not definitive</h3><p>The project’s own ERPNext experiment reports key-fact coverage rising from <strong>70.8%</strong> with grep/read to <strong>82.0%</strong> when the same coding agent receives one Graphify tool (n=6 questions).</p><p>That is encouraging but small and maintainer-run. Treat “500× smarter” and similar community claims as marketing, not evidence.</p></div><div class="note"><span class="tag">My adoption gate</span><h3 style="margin-top:16px">Keep it only if it changes decisions</h3><p>Trial it on one medium/large repository for a week. Record five real questions. Keep Graphify if it finds dependencies you would have missed, reduces browsing time, or improves review scope. Drop it if you mostly ask exact-location questions.</p></div></div>
 </div></section>
 
@@ -151,11 +153,12 @@ graphify query "what changed around the symbols edited in this branch?"<button c
   <div class="section-head"><div class="kicker">07 · Sources</div><div><h2>Primary sources, not hype threads.</h2><p class="intro">Repository branch <code>v8</code>, commit <code>10ad921</code>, package version <code>0.9.38</code>, inspected 10 August 2026.</p></div></div>
   <div class="sources">
     <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify" target="_blank" rel="noopener">Graphify repository & README</a></b><small>Install, platform integrations, commands, privacy, supported inputs, team workflow.</small></div>
-    <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/docs/how-it-works.md" target="_blank" rel="noopener">How Graphify works</a></b><small>Three-pass extraction, Leiden clustering, confidence tags, cache, graph format.</small></div>
+    <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/docs/how-it-works.md" target="_blank" rel="noopener">How Graphify works</a></b><small>Three-pass extraction, Leiden/Louvain clustering, confidence tags, cache, graph format.</small></div>
     <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/ARCHITECTURE.md" target="_blank" rel="noopener">Architecture</a></b><small>Pipeline modules, extraction schema, security helpers, extension points.</small></div>
     <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/BENCHMARKS.md" target="_blank" rel="noopener">Benchmarks</a></b><small>Maintainer-run LOCOMO, LongMemEval, and ERPNext code-intelligence experiments.</small></div>
     <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/SECURITY.md" target="_blank" rel="noopener">Security policy and threat model</a></b><small>SSRF, path traversal, XSS, prompt injection, optional network paths.</small></div>
-    <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/graphify/skill-pi.md" target="_blank" rel="noopener">Pi skill source</a></b><small>Exact Pi workflow and supported slash commands.</small></div>
+    <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/graphify/skill-pi.md" target="_blank" rel="noopener">Graphify Pi skill source</a></b><small>Graphify’s generated Pi workflow and installation content.</small></div>
+    <div class="source"><b><a href="https://github.com/badlogic/pi-mono/blob/afae6a1a998dbdfacc1004cbd26c6c6a99395bb2/packages/coding-agent/docs/skills.md" target="_blank" rel="noopener">Pi’s official skill documentation</a></b><small>Authoritative skill directories and <code>/skill:name</code> invocation syntax.</small></div>
     <div class="source"><b><a href="https://github.com/Graphify-Labs/graphify/blob/v8/graphify/always_on/claude-md.md" target="_blank" rel="noopener">Claude Code always-on instructions</a></b><small>Query-first guidance and post-change update behavior.</small></div>
     <div class="source"><b><a href="https://pypi.org/project/graphifyy/" target="_blank" rel="noopener">PyPI: graphifyy</a></b><small>Official package and published version. Beware similarly named packages.</small></div>
   </div>
