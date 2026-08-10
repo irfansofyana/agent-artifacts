@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Graphify for Daily Coding — A Practical Field Guide",
+      "slug": "graphify-daily-coding-field-guide",
+      "description": "An interactive field guide to how Graphify builds code knowledge graphs and how to use it safely in daily workflows with Pi, Cursor, and Claude Code.",
+      "createdAt": "2026-08-10",
+      "type": "html",
+      "url": "artifacts/graphify-daily-coding-field-guide/"
+    },
+    {
       "title": "Agent Engineer Fieldbook — LangChain Learning Lab",
       "slug": "langchain-agent-engineer-fieldbook",
       "description": "An interactive, production-minded course covering LangChain, LangGraph, Deep Agents, LangSmith, the Stripe Kai architecture, and preparation for the LangChain Certified Agent Engineer exam.",
