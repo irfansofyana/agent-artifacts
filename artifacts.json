@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Evaluating MCP Servers Behind the Firewall",
+      "slug": "mcp-evaluation-private-stack-2026",
+      "description": "A self-hosted-first field guide to OAuth-protected MCP conformance, behavioral evals, cross-client testing, OpenTelemetry tracing, and cost-efficient improvement using private LLM infrastructure.",
+      "createdAt": "2026-08-13",
+      "type": "html",
+      "url": "artifacts/mcp-evaluation-private-stack-2026/"
+    },
+    {
       "title": "Graphify for Daily Coding — A Practical Field Guide",
       "slug": "graphify-daily-coding-field-guide",
       "description": "An interactive field guide to how Graphify builds code knowledge graphs and how to use it safely in daily workflows with Pi, Cursor, and Claude Code.",
