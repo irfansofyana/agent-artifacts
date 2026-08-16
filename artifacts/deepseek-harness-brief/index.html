@@ -70,6 +70,25 @@
 <p>Practically, this means you can swap the model provider, the sandbox, or the tool loop without forking the whole harness — which is the actual differentiator vs. Claude Code, Codex CLI, or OpenCode, all of which are far more monolithic under the hood.</p>
 </div>
 
+<h2>Deep dive: how Cordis actually works</h2>
+<p>Cordis is a separate open-source project (<a href="https://github.com/cordiverse/cordis" target="_blank">cordiverse/cordis</a>, MIT, "under active development, API not yet stable") that DeepSeek Harness vendors in as its plugin kernel. It's formalized in the paper <a href="https://github.com/cordiverse/paper" target="_blank">"A Programming Paradigm for Spatiotemporal Composability"</a>, and DeepSeek Harness ships its own plain-English walkthrough in <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cordis-primer.md" target="_blank">docs/cordis-primer.md</a> — that primer is the clearest primary source and most of what follows is drawn directly from it.</p>
+
+<img src="cordis-diagram.png" alt="Cordis architecture diagram: context tree, reversible effects, event dispatch modes, and comparison vs typical harnesses" style="width:100%;border-radius:12px;border:1px solid var(--border);margin:20px 0;">
+
+<h3>The five ideas, straight from the primer</h3>
+<ul>
+  <li><strong>A plugin is an object that implements Service.</strong> Either a function with optional <code>inject</code> and <code>apply(ctx)</code> fields, or a <code>Service</code> subclass whose lifecycle Cordis manages.</li>
+  <li><strong>A context is a repository of services.</strong> A service claims a stable key like <code>ctx.tools</code>, <code>ctx.llm</code>, or <code>ctx.sessions</code>. Other plugins look services up by key, never by importing a concrete implementation — this is what makes providers swappable.</li>
+  <li><strong>Dependencies are declared via <code>inject</code>.</strong> A plugin that names required services simply waits until those services exist. Load order falls out of the dependency graph instead of being hand-sequenced at boot.</li>
+  <li><strong>Typed events for communication.</strong> Services declare event names via TypeScript declaration merging, then dispatch as one of four modes — <code>emit</code> (fire-and-forget), <code>waterfall</code> (around-middleware, can short-circuit), <code>parallel</code> (fan-out, awaited), or <code>serial</code> (ordered pipeline, awaited, has a return value).</li>
+  <li><strong>Registrations are reversible effects.</strong> Prompt sections, tool schemas, adapters, providers, and listeners all install through <code>ctx.effect()</code> or <code>ctx.on()</code>, both of which return a disposer. Teardown unwinds disposers in strict reverse (LIFO) order — this is the actual mechanism behind hot-swapping and clean reload.</li>
+</ul>
+
+<h3>Why this is a structurally different bet</h3>
+<p>Most coding-agent CLIs (Claude Code, Codex, OpenCode) treat the model, tools, and sandbox as compiled-in modules — swapping a provider is a config flag inside an otherwise fixed binary, and there's no formal "undo" for a registered capability. Cordis instead builds the harness itself out of the same plugin primitives an end user would use to extend it: the LLM adapter, the tool pipeline, and the sandbox are peer plugins in a context tree, not privileged internals.</p>
+<p>The payoff is concrete: because every registration carries a guaranteed reverse operation, DeepSeek Harness can hot-swap a model provider, a sandbox policy, or even the agent loop <em>mid-session</em> without restarting the process or leaking half-registered state. That's also the mechanism behind Harness's "Creation mode" — inspecting and recomposing the live runtime without a restart, which most agent frameworks simply can't do.</p>
+<p style="color:var(--muted);font-size:13px;"><strong>Honest caveat:</strong> Cordis itself is pre-1.0 ("API not yet stable and may change without notice" per its own README). The elegance of the design doesn't offset the instability of the surface built on it — see Downsides below.</p>
+
 <h2>Why it's getting popular right now</h2>
 <div class="grid">
   <div class="card">
@@ -177,7 +196,7 @@ pnpm dsh web   # launches the web UI</pre>
 <p>Repo: <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank">github.com/deepseek-ai/deepseek-harness</a> · Official docs: <a href="https://deepseek.com/harness/en/" target="_blank">deepseek.com/harness</a></p>
 
 <footer>
-  Sources referenced: The New Stack, VentureBeat, DeepSeek official docs, BenchLM.ai pricing tracker, Terminal-Bench/SWE-bench leaderboard trackers, r/LocalLLaMA independent benchmark discussion, AgentsPulse/floatboat.ai architecture write-ups. Benchmark and pricing figures move fast in this space — treat exact percentages as directional, not final, and re-check before making a production decision.
+  Sources referenced: The New Stack, VentureBeat, DeepSeek official docs, BenchLM.ai pricing tracker, Terminal-Bench/SWE-bench leaderboard trackers, r/LocalLLaMA independent benchmark discussion, AgentsPulse/floatboat.ai architecture write-ups. Cordis primary sources: <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cordis-primer.md" target="_blank">deepseek-harness cordis-primer.md</a> · <a href="https://github.com/cordiverse/cordis" target="_blank">cordiverse/cordis</a> · <a href="https://github.com/cordiverse/paper" target="_blank">"A Programming Paradigm for Spatiotemporal Composability" paper</a>. Benchmark and pricing figures move fast in this space — treat exact percentages as directional, not final, and re-check before making a production decision.
   <br><br>
   Compiled by Kai for Irfan · not investment or engineering advice, just a research brief.
 </footer>
