@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepSeek Harness — Research Brief</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e7ebf0; --muted:#9aa4b2; --accent:#4fd1c5; --accent2:#f6ad55;
+    --danger:#f56565; --good:#68d391;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 24px 96px;}
+  header{margin-bottom:40px;}
+  .kicker{color:var(--accent);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;margin-bottom:10px;}
+  h1{font-size:2.2rem;margin:0 0 12px;line-height:1.15;}
+  .sub{color:var(--muted);font-size:1.05rem;max-width:680px;}
+  .meta{margin-top:20px;font-size:13px;color:var(--muted);border-top:1px solid var(--border);padding-top:14px;}
+  h2{font-size:1.4rem;margin:48px 0 16px;border-left:3px solid var(--accent);padding-left:14px;}
+  h3{font-size:1.1rem;margin:28px 0 10px;color:var(--accent2);}
+  p{color:#d3d9e0;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin:16px 0;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+  ul{padding-left:20px;color:#d3d9e0;}
+  li{margin-bottom:8px;}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);}
+  th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em;}
+  td.num{font-variant-numeric:tabular-nums;color:var(--good);font-weight:600;}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:999px;padding:3px 11px;font-size:12px;color:var(--muted);margin:2px 4px 2px 0;}
+  .pro{color:var(--good);}
+  .con{color:var(--danger);}
+  .verdict{background:linear-gradient(135deg,rgba(79,209,197,.12),rgba(246,173,85,.08));border:1px solid rgba(79,209,197,.35);border-radius:14px;padding:24px;margin:24px 0;}
+  .verdict h2{margin-top:0;border:none;padding-left:0;}
+  code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:.9em;color:var(--accent2);}
+  pre{background:#0d1013;border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:13px;}
+  a{color:var(--accent);}
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:12px;}
+  .badge-row{margin:16px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Research Brief · Coding Agent Harnesses</div>
+  <h1>DeepSeek Harness (dsh): Is It Worth Your Time?</h1>
+  <p class="sub">A compact, opinionated brief on what DeepSeek Harness is, why it's getting attention, whether it plugs into Claude Code / Codex / OpenCode-style workflows, and where it actually stands vs. the incumbents.</p>
+  <div class="meta">Prepared for Irfan · August 2026 · Sources: DeepSeek official docs, VentureBeat, The New Stack, independent benchmark trackers (cited inline)</div>
+</header>
+
+<div class="verdict">
+  <h2>Bottom line</h2>
+  <p><strong>Worth a look, not worth a switch — yet.</strong> DeepSeek Harness (<code>dsh</code>) is a genuinely interesting piece of infrastructure: an open-source, MIT-licensed agent runtime built on a real plugin kernel (Cordis), not a thin CLI wrapper. It's model-agnostic by design — Claude, GPT, Gemini, Kimi and local OpenAI-compatible endpoints all plug in as provider adapters, same as it runs DeepSeek's own V4-Pro/V4-Flash. The economics (V4-Pro at a fraction of Claude/GPT-5 pricing, comparable SWE-bench numbers) are the real headline. But it's an unstable <code>v0.1 developer preview</code> with expected breaking changes — not something to trust for daily driving yet. Clone it, poke at the plugin architecture, watch the benchmark numbers mature. Don't migrate your main workflow off Claude Code/Codex/OpenCode for it today.</p>
+</div>
+
+<h2>What it actually is</h2>
+<p>DeepSeek Harness is an open-source (MIT license) agentic coding runtime released by DeepSeek AI as a developer preview, alongside their V4-Pro model launch. It's Node.js-based, ships a CLI (<code>dsh</code>) and a web UI, and its core design principle is <strong>"everything is a plugin"</strong> — models, tools, skills, sessions, sandboxes, storage, the agent loop itself, and even the scheduling logic are all swappable plugin components rather than hardcoded runtime internals.</p>
+
+<div class="card">
+<h3>The architectural bet: Cordis</h3>
+<p>The plugin kernel underneath is called <strong>Cordis</strong>, formalized in DeepSeek's own paper "A Programming Paradigm for Spatiotemporal Composability." Two ideas do the real work:</p>
+<ul>
+  <li><strong>Temporal composability</strong> — a plugin's effects can be fully reverted/undone, so components can be hot-swapped or rolled back cleanly mid-session.</li>
+  <li><strong>Spatial composability</strong> — components declare dependencies and react to each other automatically, instead of being wired together by hand.</li>
+</ul>
+<p>Practically, this means you can swap the model provider, the sandbox, or the tool loop without forking the whole harness — which is the actual differentiator vs. Claude Code, Codex CLI, or OpenCode, all of which are far more monolithic under the hood.</p>
+</div>
+
+<h2>Why it's getting popular right now</h2>
+<div class="grid">
+  <div class="card">
+    <h3>1. Price shock</h3>
+    <p>V4-Pro API pricing undercuts GPT-5.6 by ~14x and Claude Opus 4.8 by ~28–46x on output tokens, while landing near parity on SWE-bench Verified. When a frontier-adjacent coding model costs a fraction of the incumbents, developers show up to test-drive the harness that ships with it.</p>
+  </div>
+  <div class="card">
+    <h3>2. Genuine architecture novelty</h3>
+    <p>Most "coding agent" launches in 2025–26 (Qwen Code, Trae Agent, Kimi CLI, ZCode) are variations on the same CLI-loop pattern. Harness's plugin-first, reversible-effects design is a structurally different bet, and it's catching attention from people building on agent frameworks, not just people who want a coding assistant.</p>
+  </div>
+  <div class="card">
+    <h3>3. Full OSS transparency</h3>
+    <p>MIT-licensed, GitHub-hosted, docs and BENCHMARK.md published alongside the code. Compare to Claude Code (source-available but Anthropic-controlled) — Harness invites forking and inspection in a way the incumbents don't.</p>
+  </div>
+  <div class="card">
+    <h3>4. Distribution via DeepSeek's existing user base</h3>
+    <p>DeepSeek already has a large developer following from V3/R1. Shipping Harness alongside V4-Pro puts it in front of a huge audience on day one — same playbook as Anthropic shipping Claude Code with Claude models.</p>
+  </div>
+</div>
+
+<h2>Multi-model support: does it work with Claude Code / Codex / OpenCode?</h2>
+<p><strong>Short answer: yes, model-agnostic — but "integration" means "another provider inside dsh," not interop with those other harnesses.</strong></p>
+<ul>
+  <li>Harness supports roughly <strong>40 model providers</strong> through plugin adapters, including OpenAI, Anthropic (Claude), Google (Gemini), and Kimi (Moonshot) — configured the same way you'd add a custom provider in any modern CLI harness.</li>
+  <li>Any OpenAI-compatible endpoint (local server, self-hosted router, your own gateway) can be pointed at via a custom provider or <code>DEEPSEEK_BASE_URL</code>-style override.</li>
+  <li>V4-Pro on the API side also natively supports the <strong>OpenAI Responses API</strong> and has explicit <strong>Codex integration</strong> — meaning you can run DeepSeek's model <em>inside</em> OpenAI's Codex CLI, not just DeepSeek's own harness.</li>
+  <li>What it does <em>not</em> do: run as a plugin/backend inside Claude Code or OpenCode — those are separate, closed-loop runtimes. The interop is one level: "swap the model," not "swap the harness."</li>
+</ul>
+<div class="card">
+  <p><strong>Practical implication for you:</strong> if the goal is "use DeepSeek's model quality/price inside a harness I already trust," the more mature path today is running DeepSeek V4-Pro/Flash through Claude Code's or Codex's own custom-provider config (both support OpenAI-compatible endpoints) — not switching to <code>dsh</code> itself. If the goal is "experiment with a genuinely different plugin architecture," that's where Harness earns its own evaluation.</p>
+</div>
+
+<h2>Benchmarks</h2>
+<table>
+  <tr><th>Model / Harness combo</th><th>SWE-bench Verified</th><th>Terminal-Bench 2.1</th><th>Notes</th></tr>
+  <tr><td>DeepSeek V4-Pro 0813</td><td class="num">80.6% (self-reported) / ~96.4% on some third-party leaderboards</td><td class="num">87.9%</td><td>Numbers vary a lot by source/methodology — treat with caution (see below)</td></tr>
+  <tr><td>DeepSeek V4-Flash 0731 (dsh minimal mode)</td><td class="num">—</td><td class="num">82.7% (445-trial independent run)</td><td>"Minimal mode" harness config not yet public at time of writing</td></tr>
+  <tr><td>Claude Opus 4.8</td><td class="num">88.6%</td><td class="num">—</td><td>Reference point</td></tr>
+  <tr><td>Kimi K3</td><td class="num">93.4%</td><td class="num">—</td><td>Also open-weight, ahead of several closed models</td></tr>
+  <tr><td>Grok 4.6</td><td class="num">—</td><td class="num">88.4%</td><td>Reference point</td></tr>
+</table>
+<p style="color:var(--muted);font-size:13px;"><strong>Caveat:</strong> SWE-bench Verified numbers for V4-Pro range from 80.6% (DeepSeek's own report) to 96.4% (a third-party leaderboard) depending on scaffold/harness config used at eval time — a >15pt spread is a red flag for reproducibility, not a benchmark you should take at face value. A separate, harder eval (DeepSWE, from-scratch tasks) reportedly shows V4-Pro passing only ~8% — a reminder that "SWE-bench Verified" and "real from-scratch engineering task" are very different difficulty regimes. Weigh benchmark claims accordingly.</p>
+
+<h2>Strengths</h2>
+<div class="badge-row">
+  <span class="tag pro">MIT licensed</span>
+  <span class="tag pro">Real plugin architecture (Cordis)</span>
+  <span class="tag pro">~40 model providers</span>
+  <span class="tag pro">Programmatic tool calling</span>
+  <span class="tag pro">4 sandbox presets</span>
+  <span class="tag pro">Append-only session log</span>
+  <span class="tag pro">Web UI + CLI</span>
+  <span class="tag pro">Aggressive pricing on backing model</span>
+</div>
+<ul>
+  <li><strong>Composable by design</strong> — swap models, tools, sandboxes, and even the agent loop without forking; genuinely different from monolithic CLI harnesses.</li>
+  <li><strong>Programmatic tool calling</strong> — the model emits one piece of orchestrating code instead of many sequential tool calls, cutting round-trips and improving reliability on multi-step tasks.</li>
+  <li><strong>Sandbox presets</strong> — ships four security presets (including seatbelt/macOS and Windows ACL modes) out of the box, rather than leaving sandboxing entirely to the user.</li>
+  <li><strong>"Creation mode"</strong> — lets you inspect the live runtime and compose new plugin configurations without restarting, useful if you actually want to build on top of it rather than just use it.</li>
+  <li><strong>Cost-to-capability ratio on the reference model</strong> — even with benchmark-number caveats, V4-Pro/Flash at this price point is a legitimate reason to test it for high-volume agentic workloads.</li>
+</ul>
+
+<h2>Downsides</h2>
+<div class="badge-row">
+  <span class="tag con">v0.1 developer preview</span>
+  <span class="tag con">Breaking changes expected</span>
+  <span class="tag con">No stable release tag</span>
+  <span class="tag con">Benchmark number inconsistency</span>
+  <span class="tag con">Small ecosystem so far</span>
+</div>
+<ul>
+  <li><strong>Explicitly unstable.</strong> DeepSeek's own docs call it a developer preview with core plugins/APIs "still evolving" — several independent write-ups flag "rapid rc churn" and no version tags as a real adoption risk.</li>
+  <li><strong>Benchmark claims aren't settled.</strong> The SWE-bench spread (80.6% vs 96.4% depending on source) and the much lower DeepSWE score (~8%) mean the headline numbers need independent reproduction before you plan around them.</li>
+  <li><strong>Young ecosystem.</strong> Fewer plugins, less community tooling, fewer battle-tested workflows than Claude Code or Codex, which have had a longer production run.</li>
+  <li><strong>"Minimal mode" (used for some of the strongest published numbers) wasn't public at launch</strong> — meaning some of the more attractive benchmark results can't currently be reproduced by third parties.</li>
+  <li><strong>Not a drop-in replacement for your current harness</strong> — different session format, different plugin API, different mental model. Migration cost is real if you're deep in Claude Code/Codex workflows already.</li>
+</ul>
+
+<h2>Should you try it?</h2>
+<div class="grid">
+  <div class="card">
+    <h3 class="pro">Try it if…</h3>
+    <ul>
+      <li>You're curious about agent-framework architecture (Cordis is a legitimately interesting design, worth reading the paper even independent of dsh itself).</li>
+      <li>You want to benchmark DeepSeek V4-Pro/Flash cheaply for a side project or batch/agentic workload where cost matters more than polish.</li>
+      <li>You're open to isolated, non-critical experiments — not your daily driver repo.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 class="con">Skip it for now if…</h3>
+    <ul>
+      <li>You need a stable daily-driver harness — stick with Claude Code / Codex / OpenCode, which are production-hardened.</li>
+      <li>You want the DeepSeek model specifically — just point Claude Code's or Codex's custom-provider config at DeepSeek's OpenAI-compatible endpoint instead of switching harnesses.</li>
+      <li>Reproducible benchmarks matter more to you than novelty — wait for independent, stable-tag re-runs.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Quick start (if you want to poke at it)</h2>
+<pre>git clone https://github.com/deepseek-ai/deepseek-harness.git
+cd deepseek-harness
+pnpm install
+pnpm run build
+pnpm dsh web   # launches the web UI</pre>
+<p>Repo: <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank">github.com/deepseek-ai/deepseek-harness</a> · Official docs: <a href="https://deepseek.com/harness/en/" target="_blank">deepseek.com/harness</a></p>
+
+<footer>
+  Sources referenced: The New Stack, VentureBeat, DeepSeek official docs, BenchLM.ai pricing tracker, Terminal-Bench/SWE-bench leaderboard trackers, r/LocalLLaMA independent benchmark discussion, AgentsPulse/floatboat.ai architecture write-ups. Benchmark and pricing figures move fast in this space — treat exact percentages as directional, not final, and re-check before making a production decision.
+  <br><br>
+  Compiled by Kai for Irfan · not investment or engineering advice, just a research brief.
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "DeepSeek Harness \u2014 Research Brief",
+      "slug": "deepseek-harness-brief",
+      "description": "What DeepSeek Harness (dsh) is, why it's getting popular, whether it integrates with Claude Code/Codex/OpenCode, benchmarks, strengths, and downsides.",
+      "createdAt": "2026-08-16",
+      "type": "html",
+      "url": "artifacts/deepseek-harness-brief/"
+    },
+    {
       "title": "Evaluating MCP Servers Behind the Firewall",
       "slug": "mcp-evaluation-private-stack-2026",
       "description": "A self-hosted-first field guide to OAuth-protected MCP conformance, behavioral evals, cross-client testing, OpenTelemetry tracing, and cost-efficient improvement using private LLM infrastructure.",
@@ -9,7 +17,7 @@
       "url": "artifacts/mcp-evaluation-private-stack-2026/"
     },
     {
-      "title": "Graphify for Daily Coding — A Practical Field Guide",
+      "title": "Graphify for Daily Coding \u2014 A Practical Field Guide",
       "slug": "graphify-daily-coding-field-guide",
       "description": "An interactive field guide to how Graphify builds code knowledge graphs and how to use it safely in daily workflows with Pi, Cursor, and Claude Code.",
       "createdAt": "2026-08-10",
@@ -17,7 +25,7 @@
       "url": "artifacts/graphify-daily-coding-field-guide/"
     },
     {
-      "title": "Agent Engineer Fieldbook — LangChain Learning Lab",
+      "title": "Agent Engineer Fieldbook \u2014 LangChain Learning Lab",
       "slug": "langchain-agent-engineer-fieldbook",
       "description": "An interactive, production-minded course covering LangChain, LangGraph, Deep Agents, LangSmith, the Stripe Kai architecture, and preparation for the LangChain Certified Agent Engineer exam.",
       "createdAt": "2026-08-04",
@@ -25,7 +33,7 @@
       "url": "artifacts/langchain-agent-engineer-fieldbook/"
     },
     {
-      "title": "Parallel AI Coding with Git Worktrees — Pi, Codex & Claude Code",
+      "title": "Parallel AI Coding with Git Worktrees \u2014 Pi, Codex & Claude Code",
       "slug": "ai-agent-git-worktrees",
       "description": "A practical field manual for running multiple AI coding tasks safely in one repository using isolated Git worktrees, with copy-ready Pi, Codex CLI, and Claude Code commands.",
       "createdAt": "2026-07-19",
@@ -33,7 +41,7 @@
       "url": "artifacts/ai-agent-git-worktrees/"
     },
     {
-      "title": "Forex Day Trading — A Risk-First Starter Course for Indonesia",
+      "title": "Forex Day Trading \u2014 A Risk-First Starter Course for Indonesia",
       "slug": "forex-day-trading-starter",
       "description": "An interactive six-week beginner course for learning forex day trading with locally regulated Indonesian broker demos, strict risk controls, a testable playbook, calculators, and a go-live gate.",
       "createdAt": "2026-07-17",
@@ -43,13 +51,13 @@
     {
       "title": "How Companies Deploy OpenClaw: Security vs Convenience",
       "slug": "openclaw-enterprise-deployment",
-      "description": "Research on enterprise OpenClaw deployment models — employee-led vs central per-user vs fleet/multi-tenant — balancing security and convenience, with sources from CrowdStrike, NVIDIA, Palo Alto Networks, Barracuda, and more.",
+      "description": "Research on enterprise OpenClaw deployment models \u2014 employee-led vs central per-user vs fleet/multi-tenant \u2014 balancing security and convenience, with sources from CrowdStrike, NVIDIA, Palo Alto Networks, Barracuda, and more.",
       "createdAt": "2026-07-13",
       "type": "html",
       "url": "artifacts/openclaw-enterprise-deployment/"
     },
     {
-      "title": "OpenClaw at Work — A Secure Employee-Agent Operating Model",
+      "title": "OpenClaw at Work \u2014 A Secure Employee-Agent Operating Model",
       "slug": "openclaw-enterprise-operating-model",
       "description": "A practical operating model for balancing employee agent autonomy with enterprise isolation, identity, approvals, and governance.",
       "createdAt": "2026-07-13",
@@ -105,7 +113,7 @@
       "url": "artifacts/bedrock-mantle-vs-runtime-2026-07-09/"
     },
     {
-      "title": "Amp Coding Agent — Deep Research: Design Philosophy, Oracle, Subagents & Competitive Landscape",
+      "title": "Amp Coding Agent \u2014 Deep Research: Design Philosophy, Oracle, Subagents & Competitive Landscape",
       "slug": "amp-coding-agent-deep-research",
       "description": "Comprehensive deep research on Amp's design philosophy, multi-model architecture, built-in agents (Oracle, Librarian, subagents), and comparison with Claude Code, Codex CLI, and Cursor.",
       "createdAt": "2026-07-19",
@@ -129,7 +137,7 @@
       "url": "artifacts/build-first-agentic-ai-roadmap/"
     },
     {
-      "title": "AIF-C01 · The AI Practitioner Flight Plan",
+      "title": "AIF-C01 \u00b7 The AI Practitioner Flight Plan",
       "slug": "aws-ai-practitioner-journey",
       "description": "An interactive AIF-C01 learning hub with embedded domain guides, 100% free curated resources, a four-week plan, flashcards, scenario quiz, progress tracking, and exam-booking steps.",
       "createdAt": "2026-08-08",
