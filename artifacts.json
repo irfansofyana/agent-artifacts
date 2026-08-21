@@ -73,6 +73,14 @@
       "url": "artifacts/goal-loop-engineering/"
     },
     {
+      "title": "Headroom: How LLM Context Compression Works",
+      "slug": "headroom-how-it-works",
+      "description": "A practical, source-backed guide to Headroom’s live-zone compression pipeline, reversibility, trade-offs, and pilot plan.",
+      "createdAt": "2026-08-22",
+      "type": "html",
+      "url": "artifacts/headroom-how-it-works/"
+    },
+    {
       "title": "Headroom + LiteLLM on EKS Runbook",
       "slug": "headroom-litellm-eks-runbook",
       "description": "Runbook for adding Headroom prompt compression to LiteLLM on AWS EKS, including Helm rollout guidance.",

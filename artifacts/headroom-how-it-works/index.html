@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A practical guide to Headroom, the content-aware context compression layer for LLM agents.">
+  <title>Headroom / Context, with the waste squeezed out</title>
+  <style>
+    :root { --ink:#e8edf2; --muted:#96a5b4; --bg:#0b1015; --panel:#111a22; --line:#263541; --cyan:#6ee7e0; --amber:#f6bf6a; --red:#ff806e; --max:1120px; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--ink); background:var(--bg); font:16px/1.7 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--cyan); text-underline-offset:3px; }
+    .shell { max-width:var(--max); margin:0 auto; padding:0 28px; }
+    .topline { border-bottom:1px solid var(--line); padding:22px 0; color:var(--muted); font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .hero { padding:82px 0 70px; display:grid; grid-template-columns:1.3fr .7fr; gap:60px; align-items:end; }
+    .eyebrow { color:var(--amber); font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.16em; text-transform:uppercase; }
+    h1,h2,h3 { margin:0; font-weight:650; letter-spacing:-.045em; line-height:1.06; }
+    h1 { max-width:760px; margin-top:18px; font-size:clamp(48px,8vw,96px); }
+    .dek { max-width:650px; margin:28px 0 0; color:#b5c1ca; font-size:20px; line-height:1.5; }
+    .hero-note { border-left:2px solid var(--cyan); padding:18px 0 18px 22px; color:var(--muted); }
+    .hero-note strong { display:block; color:var(--ink); font-size:22px; line-height:1.2; margin-bottom:10px; }
+    .meter { margin-top:34px; border:1px solid var(--line); background:linear-gradient(110deg,#151f27,#0e151c); padding:18px; }
+    .meter-head { display:flex; justify-content:space-between; color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .bars { display:flex; gap:4px; height:92px; align-items:end; margin-top:18px; }
+    .bars i { display:block; flex:1; background:var(--red); opacity:.8; }
+    .bars i:nth-child(1){height:84%}.bars i:nth-child(2){height:70%}.bars i:nth-child(3){height:92%}.bars i:nth-child(4){height:62%}.bars i:nth-child(5){height:77%}.bars i:nth-child(6){height:45%}.bars i:nth-child(7){height:31%;background:var(--cyan)}.bars i:nth-child(8){height:22%;background:var(--cyan)}.bars i:nth-child(9){height:16%;background:var(--cyan)}
+    .meter-label { display:flex; justify-content:space-between; margin-top:9px; color:var(--muted); font-size:12px; }
+    main { border-top:1px solid var(--line); }
+    .grid { display:grid; grid-template-columns:220px minmax(0,680px); gap:70px; padding:70px 0 110px; }
+    nav { position:sticky; top:24px; align-self:start; }
+    nav a { display:block; color:var(--muted); text-decoration:none; padding:5px 0; font-size:14px; }
+    nav a:hover,nav a:focus { color:var(--cyan); }
+    article h2 { margin:70px 0 22px; font-size:38px; }
+    article h3 { margin:36px 0 12px; font-size:24px; color:var(--amber); }
+    article p { color:#c4ced6; }
+    article ul,article ol { color:#c4ced6; padding-left:24px; }
+    .callout { border:1px solid var(--line); border-left:3px solid var(--cyan); background:var(--panel); padding:22px 24px; margin:28px 0; }
+    .callout p:last-child { margin-bottom:0; }
+    .flow { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:28px 0; }
+    .flow div { min-height:120px; padding:18px; border:1px solid var(--line); background:#101820; }
+    .flow b { display:block; color:var(--cyan); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.08em; margin-bottom:28px; }
+    .flow span { color:#d6dee4; }
+    table { width:100%; border-collapse:collapse; margin:26px 0; font-size:14px; }
+    th,td { text-align:left; padding:12px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--amber); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:uppercase; letter-spacing:.06em; }
+    td { color:#bec9d1; }
+    pre { overflow:auto; padding:20px; background:#080c10; border:1px solid var(--line); color:#cbe8e5; font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; }
+    code { color:var(--cyan); font:0.92em ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .sources { border-top:1px solid var(--line); margin-top:72px; padding-top:24px; font-size:14px; }
+    footer { border-top:1px solid var(--line); padding:28px 0 50px; color:var(--muted); font-size:13px; }
+    @media (max-width:760px){ .shell{padding:0 20px}.hero{display:block;padding:55px 0 48px}.hero-note{margin-top:42px}.grid{display:block;padding-top:38px}nav{position:static;display:flex;gap:18px;overflow:auto;border-bottom:1px solid var(--line);padding-bottom:16px}nav a{white-space:nowrap}.flow{grid-template-columns:1fr}article h2{font-size:32px;margin-top:52px} }
+    @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topline">A field note for agent builders · 22 August 2026</div>
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Headroom / context compression</div>
+        <h1>Context, with the waste squeezed out.</h1>
+        <p class="dek">A practical guide to how Headroom reduces the repetitive bulk in an agent’s prompt—without throwing the source material into a black hole.</p>
+        <div class="meter" aria-label="Illustrative context reduction meter">
+          <div class="meter-head"><span>tool output / before</span><span>after</span></div>
+          <div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="meter-label"><span>repetition, boilerplate, noise</span><span>signal + retrieval key</span></div>
+        </div>
+      </div>
+      <div class="hero-note"><strong>The mental model</strong>Headroom is a content-aware compression layer for agent context—not a smarter model and not a replacement for good retrieval.</div>
+    </header>
+  </div>
+  <main>
+    <div class="shell grid">
+      <nav aria-label="Article navigation">
+        <a href="#pipeline">The pipeline</a><a href="#live-zone">The live zone</a><a href="#reversible">Reversible by design</a><a href="#tradeoffs">Trade-offs</a><a href="#pilot">Pilot plan</a>
+      </nav>
+      <article>
+        <p>Agent workloads are token-hungry. A single coding task can inject shell output, test logs, JSON responses, search results, source files, configuration, retrieved documents, and repeated history. Headroom sits between the application and the model provider, finds the bulky parts, compresses them, and forwards a smaller request.</p>
+        <div class="callout"><strong>The thesis:</strong> keep the instructions and stable context intact; squeeze redundancy out of the data the agent is reading.</div>
+        <h2 id="pipeline">The pipeline</h2>
+        <p>Headroom can run as a proxy, an SDK call, or an MCP server. All three routes feed the same basic idea: inspect content, choose a compressor, preserve the original, and send the optimized request upstream.</p>
+        <div class="flow">
+          <div><b>01 / INTERCEPT</b><span>Receive messages through the proxy, SDK, or integration.</span></div><div><b>02 / ROUTE</b><span>Detect JSON, logs, search, code, diffs, tables, or prose.</span></div><div><b>03 / COMPRESS</b><span>Remove repeated structure and keep a compact view.</span></div><div><b>04 / PRESERVE</b><span>Store the original under a content hash/key.</span></div><div><b>05 / FORWARD</b><span>Send the optimized request to the provider.</span></div><div><b>06 / RECOVER</b><span>Retrieve the original or search within it when needed.</span></div>
+        </div>
+        <table><thead><tr><th>Content</th><th>Typical project-reported savings</th></tr></thead><tbody><tr><td>Search / grep results</td><td>80–95%</td></tr><tr><td>Build and test logs</td><td>85–95%</td></tr><tr><td>JSON tool outputs</td><td>70–90%</td></tr><tr><td>Diffs and tables</td><td>40–90%</td></tr><tr><td>Plain text</td><td>30–60%</td></tr></tbody></table>
+        <p class="hero-note">These are the project’s typical ranges, not a promise. Repetitive structured data is the sweet spot; unique prose and exact code are much harder targets.</p>
+        <h2 id="live-zone">The live zone</h2>
+        <p>The current architecture uses <strong>live-zone-only compression</strong>: the newest user content and latest tool result are eligible for compression, while the system prompt, tool definitions, and older turns remain unchanged.</p>
+        <p>That is a deliberate cache decision. Providers can reuse a stable prompt prefix. Rewriting the old history on every turn would create prefix drift and reduce cache hits. Current docs also say older rolling-window and intelligent-context scoring components were removed, so older explanations of Headroom may describe behavior that no longer exists.</p>
+        <pre>Your agent → [system + tools + older turns] unchanged
+          → [latest tool output] type-aware compression
+          → LLM provider</pre>
+        <h2 id="reversible">Reversible by design</h2>
+        <p>After compression, Headroom can keep the original in a local store and return a compact representation plus a hash. Through the MCP interface, <code>headroom_compress</code> reports the compressed content, token counts, savings, and transforms; <code>headroom_retrieve</code> can return the full original or matching excerpts.</p>
+        <div class="callout"><strong>Important:</strong> reversibility helps only if the model knows when it needs the missing detail and actually retrieves it. It reduces risk; it does not eliminate the need for evaluation.</div>
+        <h2 id="tradeoffs">The trade-offs</h2>
+        <h3>Quality</h3><p>Compression may hide a detail the model needs. Treat exact code, security-sensitive instructions, and critical structured data conservatively.</p>
+        <h3>Latency</h3><p>Compression costs CPU time. Compare the full request path—compression plus the smaller model call—rather than looking at token savings alone.</p>
+        <h3>Economics</h3><p>A 90% reduction in one tool output does not automatically mean a 90% production-cost reduction. Measure provider caching, output tokens, retries, retrievals, and task completion.</p>
+        <h2 id="pilot">A sensible pilot</h2>
+        <ol><li>Choose 20–50 representative tasks: repository search, test debugging, API investigation, RAG, and multi-turn coding.</li><li>Record baseline tokens, latency, cache hits, cost, and task success.</li><li>Enable proxy mode in default <code>cache</code> mode.</li><li>Compare savings by content type, not only in aggregate.</li><li>Track retrieval calls and cases where the agent needed to recover hidden detail.</li><li>Keep Headroom only if the end-to-end win survives the correctness check.</li></ol>
+        <p>My recommendation: start at the tool-output boundary—logs, search results, JSON, and database responses—before applying compression broadly to conversation history or source code. The benefit is measurable and the semantic-risk surface is smaller.</p>
+        <div class="sources"><strong>Sources</strong><ul><li><a href="https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/architecture.mdx">Architecture</a></li><li><a href="https://github.com/headroomlabs-ai/headroom">GitHub repository</a></li><li><a href="https://headroomlabs-ai.github.io/headroom/quickstart/">Quickstart</a></li><li><a href="https://docs.headroomlabs.ai/docs/context-management">Context management</a></li><li><a href="https://docs.headroomlabs.ai/docs/mcp">MCP tools</a></li></ul><small>Research checked 22 August 2026. Headroom is actively changing; verify behavior against the current release before production adoption.</small></div>
+      </article>
+    </div>
+  </main>
+  <div class="shell"><footer>Built as a field note for Irfan’s agent-platform notebook.</footer></div>
+</body>
+</html>
