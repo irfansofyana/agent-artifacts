@@ -1,0 +1,232 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Web Search for AI Agents in 2026</title><meta name="description" content="Sourced comparison of web search, research, extraction, crawling, and browser-agent platforms for AI agents."><style>body{margin:0;background:#0b1020;color:#e7eaf3;font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:1100px;margin:0 auto;padding:48px 24px 80px}h1,h2,h3{color:#fff;line-height:1.2;margin-top:1.6em}h1{font-size:2.5rem;margin-top:0}h2{font-size:1.7rem;border-bottom:1px solid #29324d;padding-bottom:.35em}h3{font-size:1.25rem}a{color:#82b1ff}table{border-collapse:collapse;width:100%;display:block;overflow-x:auto;margin:1.2rem 0}th,td{border:1px solid #35405f;padding:9px 11px;text-align:left;vertical-align:top}th{background:#19223a;color:#fff}tr:nth-child(even){background:#111a30}code{background:#171f35;color:#b9d5ff;padding:.15em .35em;border-radius:4px}pre{background:#111827;border:1px solid #2b3858;padding:16px;overflow:auto;border-radius:8px}blockquote{border-left:3px solid #6ea8fe;margin-left:0;padding-left:16px;color:#b9c3d9}.footnote{color:#aab4ca;font-size:.9rem}strong{color:#fff}</style></head><body><main><h1 id="web-search-for-ai-agents-in-2026-platform-comparison">Web Search for AI Agents in 2026: Platform Comparison</h1>
+<p><strong>Research date:</strong> 30 August 2026 (UTC)<br />
+<strong>Scope:</strong> Search and retrieval APIs, deep-research APIs, web extraction, and browser/web-task agents for AI-agent systems.</p>
+<h2 id="executive-recommendation">Executive recommendation</h2>
+<p>There is no single best platform because these products solve different layers:</p>
+<ul>
+<li><strong>Best default search layer:</strong> <strong>Exa</strong> if retrieval quality, semantic search, code/company discovery, and fresh page context matter more than the lowest price.</li>
+<li><strong>Best agent-native general-purpose choice:</strong> <strong>Tavily</strong> for a straightforward search → extract → crawl → research stack with strong SDK/MCP ergonomics.</li>
+<li><strong>Best deep research / structured task layer:</strong> <strong>Parallel</strong> when asynchronous multi-step research, structured outputs, confidence, and citations justify higher per-request cost.</li>
+<li><strong>Best extraction and crawling layer:</strong> <strong>Firecrawl</strong> when the agent already has URLs or needs site-wide crawling, markdown, mapping, and schema extraction.</li>
+<li><strong>Best browser-execution layer:</strong> <strong>TinyFish</strong> when the task requires interacting with live websites that lack a usable API.</li>
+<li><strong>Best compliance-oriented alternative:</strong> <strong>Linkup</strong>, especially where ZDR, regional data residency, SOC 2, and enterprise controls are decisive.</li>
+<li><strong>Best low-cost / high-throughput primitives:</strong> <strong>Brave Search</strong> or <strong>Serper</strong> for cheap, fast result retrieval; pair them with a separate extractor.</li>
+<li><strong>Best practical stack for Irfan:</strong> start with <strong>Tavily or Exa + Firecrawl</strong>, then add <strong>TinyFish</strong> only for workflows that genuinely require browser interaction. Use Parallel or Linkup for high-value research paths, not every agent turn.</li>
+</ul>
+<h2 id="important-category-distinction">Important category distinction</h2>
+<p>A search API returns candidate sources. An extraction API turns a known URL into usable content. A research API runs multiple searches and synthesis steps. A browser agent clicks, types, authenticates, and completes workflows. These are complementary layers, not interchangeable products.</p>
+<h2 id="desk-comparison">Desk comparison</h2>
+<p>Scores below are a transparent <strong>desk model</strong>, not a live A/B benchmark. They weight retrieval quality 25%, freshness 15%, agent ergonomics 15%, extraction 10%, browser execution 5%, speed 10%, cost 10%, and operations/compliance 10%. Scores are out of 100 and should be re-run against your own workload before procurement.</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Primary layer</th>
+<th style="text-align: right;">Desk score</th>
+<th>Best fit</th>
+<th>Main weakness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parallel</td>
+<td>Search + deep research/task</td>
+<td style="text-align: right;"><strong>85.0</strong></td>
+<td>Structured, multi-hop research</td>
+<td>Expensive at high processor levels; research can be slow</td>
+</tr>
+<tr>
+<td>Exa</td>
+<td>Semantic search + contents + research</td>
+<td style="text-align: right;"><strong>81.5</strong></td>
+<td>High-quality retrieval, code/company/publication discovery</td>
+<td>More expensive and less browser-oriented</td>
+</tr>
+<tr>
+<td>Linkup</td>
+<td>Search + research + extraction</td>
+<td style="text-align: right;"><strong>81.0</strong></td>
+<td>Grounded enterprise search and compliance</td>
+<td>Less of a browser automation platform</td>
+</tr>
+<tr>
+<td>TinyFish</td>
+<td>Search + fetch + browser agent</td>
+<td style="text-align: right;"><strong>80.0</strong></td>
+<td>Live-site interaction and automation</td>
+<td>Browser agent costs and reliability depend on site behavior</td>
+</tr>
+<tr>
+<td>Tavily</td>
+<td>Search + extract + crawl + research</td>
+<td style="text-align: right;"><strong>79.0</strong></td>
+<td>General-purpose LLM agents</td>
+<td>Credit accounting becomes complex for research/crawl</td>
+</tr>
+<tr>
+<td>You.com</td>
+<td>Search + contents + answer + research</td>
+<td style="text-align: right;"><strong>78.5</strong></td>
+<td>One API family with free MCP entry point</td>
+<td>Less independently verified comparative evidence</td>
+</tr>
+<tr>
+<td>Firecrawl</td>
+<td>Search + scrape + crawl + map + interact</td>
+<td style="text-align: right;"><strong>77.5</strong></td>
+<td>Extraction, crawling, markdown, schema data</td>
+<td>Search quality is not its only or primary differentiator</td>
+</tr>
+<tr>
+<td>Jina AI</td>
+<td>Search foundation + Reader + DeepSearch</td>
+<td style="text-align: right;"><strong>73.5</strong></td>
+<td>Low-cost page reading and retrieval primitives</td>
+<td>Product and pricing surface is changing quickly</td>
+</tr>
+<tr>
+<td>Brave Search</td>
+<td>Search + LLM context + answer</td>
+<td style="text-align: right;"><strong>71.0</strong></td>
+<td>Fast, independent index, low-cost search</td>
+<td>Not a full extraction/browser stack</td>
+</tr>
+<tr>
+<td>Serper</td>
+<td>Google SERP retrieval</td>
+<td style="text-align: right;"><strong>68.0</strong></td>
+<td>Cheapest, fastest SERP primitive</td>
+<td>Requires separate extraction, grounding, and agent logic</td>
+</tr>
+</tbody>
+</table>
+<h2 id="platform-details">Platform details</h2>
+<h3 id="tavily">Tavily</h3>
+<p>Tavily is the most balanced “agent web access” product in this set: Search, Extract, Map, Crawl, and Research are exposed as one coherent family.[1] Its official credit model charges 1 credit for basic search and 2 for advanced search; extraction and crawl costs depend on successful pages and depth. Research is dynamic, with documented ranges of 4–110 credits for <code>mini</code> and 15–250 credits for <code>pro</code>.[2]</p>
+<p>Official pricing lists 1,000 free credits/month, $0.008 pay-as-you-go credits, and monthly plans from $30 for 4,000 credits to $500 for 100,000 credits.[2]</p>
+<p><strong>Use it when:</strong> you want a simple default tool for an LLM, especially with MCP/SDK integration, and want search plus extraction without assembling several vendors.</p>
+<p><strong>Watch-outs:</strong> model research requests can consume many credits; benchmark marketing should be treated as vendor-reported until reproduced on your workload.</p>
+<h3 id="exa">Exa</h3>
+<p>Exa is strongest when retrieval itself is the product: semantic search, high-quality page contents, answer generation, deep search, and specialized discovery such as code, companies, people, and publications. Its current pricing lists <code>/search</code> at $7/1,000 requests, <code>/answer</code> at $5/1,000, <code>/contents</code> at $1/1,000 pages, and deep search at $12–$15/1,000 requests.[3]</p>
+<p>Exa also exposes an Agent API with fixed-effort prices from $0.012 for minimal to $1.00 for xhigh, plus metered compute in some modes.[3]</p>
+<p>Exa also publishes WebCode, a coding-agent-oriented search evaluation, which is relevant to documentation and code retrieval but remains vendor-originated evidence.[21]</p>
+<p><strong>Use it when:</strong> source quality, semantic matching, code/document discovery, or fewer but better retrieval turns matter more than the absolute lowest unit price.</p>
+<p><strong>Watch-outs:</strong> do not compare Exa’s search price directly with a bare SERP provider without including extraction and downstream model cost.</p>
+<h3 id="parallel">Parallel</h3>
+<p>Parallel is the strongest fit for a research agent rather than a simple search tool. Its product family separates Search, Extract, Task, Responses, Monitor, and Find All. The detailed pricing documentation lists Search at $1/1,000 for fast/turbo and $5/1,000 for basic/advanced, while Task processors range from about $5/1,000 to $2,400/1,000 depending on depth and compute.[26]</p>
+<p>The same documentation reports synchronous Search latency of roughly 200ms–3s, Extract under 3s, and asynchronous Task latency from seconds to 30 minutes, with citations, reasoning, confidence, and excerpts available on higher processors.[6]</p>
+<p><strong>Use it when:</strong> you need structured, multi-hop research or enrichment and can tolerate asynchronous jobs and higher cost.</p>
+<p><strong>Watch-outs:</strong> a deep research processor is not a drop-in replacement for a low-latency search call. Route requests by difficulty.</p>
+<h3 id="linkup">Linkup</h3>
+<p>Linkup positions itself as a production-grade, source-cited search layer with Search, Research, and URL extraction. Its detailed pricing lists fast/standard Search at $0.005/request, sourced or structured Search at $0.006/request, deep Search at $0.05–$0.055/request, Fetch at roughly $0.001–$0.01/request, and Research at $0.25–$2.50/request.[27]</p>
+<p>Its differentiator is enterprise posture: the official site highlights ZDR, SOC 2 Type II, SLAs, regional data residency, IP allowlisting, and dedicated support.[7]</p>
+<p><strong>Use it when:</strong> compliance, data residency, and predictable grounded search matter more than having a browser agent.</p>
+<p><strong>Watch-outs:</strong> Linkup’s public benchmark claims are vendor-reported; validate the exact task mix and labels before using them in a buying decision.</p>
+<h3 id="youcom">You.com</h3>
+<p>You.com offers Search, Contents, Answer, Research, Finance Research, and an MCP server. Its billing documentation lists Web Search at $5/1,000 calls, Contents at $1/1,000 pages, and research tiers from roughly $12/1,000 to $1,200/1,000 depending on depth.[28] Its free MCP profile supports <code>you-search</code> without credentials, limited to 100 queries/day.[8]</p>
+<p><strong>Use it when:</strong> you want a low-friction MCP integration and a unified search/answer/research API family.</p>
+<p><strong>Watch-outs:</strong> validate citation behavior and latency on your own agent loop; “answer” APIs can hide model-inference cost inside the request price.</p>
+<h3 id="firecrawl">Firecrawl</h3>
+<p>Firecrawl is primarily an extraction and crawling platform, although it also offers Search, Map, Crawl, Monitor, Interact, and an Agent preview.[4] Its official pricing states that Scrape, Crawl, Map, and Monitor cost 1 credit per page, Search costs 2 credits per 10 results, and Interact costs 2 credits per browser minute.[4]</p>
+<p><strong>Use it when:</strong> the agent has URLs to read, needs clean markdown, needs to crawl a site, or needs structured/schema extraction. It is often best paired with a search provider rather than judged as a pure search replacement.</p>
+<p><strong>Watch-outs:</strong> crawling and schema extraction can consume credits rapidly; respect robots, site terms, login boundaries, and sensitive-data handling.</p>
+<h3 id="tinyfish">TinyFish</h3>
+<p>TinyFish is the clearest browser-execution specialist in the comparison. Its current pricing says Search and Fetch are free within limits, while Agent is $0.016 per step and Browser is $0.002 per minute, metered from a wallet with no recurring plan or minimum.[5]</p>
+<p>The official pricing page lists Search at 30 requests/minute and Fetch at 150 URLs/minute, plus ISO 27001, VPC deployment, and a 99.99% uptime SLA for suitable plans.[5]</p>
+<p><strong>Use it when:</strong> the workflow requires clicking, filling forms, navigating JS-heavy pages, or interacting with a website that has no usable API.</p>
+<p><strong>Watch-outs:</strong> browser success depends on site churn, anti-bot behavior, account state, and permissions. Never use a browser agent for a task that can be done through a stable official API.</p>
+<h3 id="brave-search-api">Brave Search API</h3>
+<p>Brave provides an independent search index and an LLM-context/grounding endpoint. Its official product documentation positions it as a search and grounding primitive rather than a full extraction or browser stack.[9][33]</p>
+<p><strong>Use it when:</strong> you need fast, inexpensive, high-throughput search and can handle extraction and synthesis separately.</p>
+<p><strong>Watch-outs:</strong> it is not a complete research or browser platform.</p>
+<h3 id="jina-ai">Jina AI</h3>
+<p>Jina is most useful as a retrieval foundation and page-reading layer. The Reader API converts URLs into model-friendly content, while Jina also exposes search and deeper research primitives.[34][22]</p>
+<p><strong>Use it when:</strong> you want inexpensive URL reading, reranking, embeddings, or a modular retrieval stack.</p>
+<p><strong>Watch-outs:</strong> confirm current quotas, retention, and pricing at procurement time; Jina’s product surface changes quickly.</p>
+<h3 id="serper">Serper</h3>
+<p>Serper is a very cheap Google SERP primitive. Its official site advertises 2,500 free queries and pricing starting around $0.30 per 1,000 queries.[10]</p>
+<p><strong>Use it when:</strong> cost and speed dominate and you already operate your own extraction, deduplication, citation, and retry layers.</p>
+<p><strong>Watch-outs:</strong> SERP results alone are weak agent context. Add a content reader and source-verification layer.</p>
+<h2 id="benchmark-evidence-what-it-does-and-does-not-prove">Benchmark evidence: what it does and does not prove</h2>
+<h3 id="retrieval-and-grounded-answering">Retrieval and grounded answering</h3>
+<ul>
+<li><strong>BrowseComp</strong> contains 1,266 hard questions designed to test persistent browsing and entangled information retrieval.[13]</li>
+<li><strong>SimpleQA</strong> contains 4,326 short fact-seeking questions and primarily measures factuality, not browser execution.[16]</li>
+<li><strong>AssistantBench</strong> evaluates realistic, time-consuming web tasks, making it useful for agent-loop evaluation but not a pure search-provider leaderboard.[14]</li>
+<li><strong>Artificial Analysis Search Index</strong> is the most relevant current public comparison I found because it holds the agent and base model constant while comparing search providers on quality, cost, and speed; its latest listed data was 27 August 2026.[11][12]</li>
+<li><strong>Vendor benchmarks are directional, not neutral.</strong> Parallel, Exa, Linkup, Tavily, and Firecrawl publish useful results, but their datasets, query mixes, models, retries, and scoring may favor their product design.[17][19][20]</li>
+</ul>
+<h3 id="browser-execution">Browser execution</h3>
+<ul>
+<li><strong>WebArena</strong> evaluates agents completing tasks in realistic but controlled websites; it is not a direct search-API benchmark.[15]</li>
+<li><strong>Mind2Web / Online-Mind2Web</strong> evaluates multi-step browser tasks across live websites. TinyFish reports 89.9% on its 300-task Mind2Web evaluation, but that result is vendor-reported and should be treated as a claim to reproduce, not a neutral leaderboard.[18]</li>
+</ul>
+<h3 id="procurement-rule">Procurement rule</h3>
+<p>Do not select a provider from one benchmark number. Reproduce a small golden set containing:</p>
+<ol>
+<li>20 current factual questions with known answers.</li>
+<li>10 hard multi-hop questions.</li>
+<li>10 software/documentation lookups.</li>
+<li>10 pages requiring JavaScript rendering.</li>
+<li>5 structured extraction tasks.</li>
+<li>5 browser tasks with realistic failure and permission cases.</li>
+</ol>
+<p>Measure answer accuracy, citation precision, source recall, extraction completeness, p50/p95 latency, tool-call count, cost per successful task, timeout rate, and unsafe/incorrect action rate.</p>
+<h2 id="suggested-architecture">Suggested architecture</h2>
+<pre><code class="language-text">Agent router
+  ├─ cheap/fast lookup → Brave or Serper
+  ├─ default grounded search → Tavily, Exa, or Linkup
+  ├─ hard multi-hop research → Parallel, Exa Agent, Linkup Research, or Tavily Research
+  ├─ known-URL extraction/crawl → Firecrawl or Jina Reader
+  ├─ live interaction → TinyFish
+  └─ citation verifier + cache + domain policy + budget guard
+</code></pre>
+<p>The key design is routing by task difficulty. Sending every query to a deep-research endpoint is wasteful; using a bare SERP API for multi-hop research produces brittle grounding.</p>
+<h2 id="post-review-corrections-and-additional-alternatives">Post-review corrections and additional alternatives</h2>
+<p>The deeper source review changes the interpretation of the ranking in three ways:</p>
+<ol>
+<li><strong>Tavily and Exa are both credible defaults, but neither has a universal benchmark win.</strong> AIMultiple’s third-party 100-query agentic-search test put Exa slightly ahead of Tavily, while Tavily’s own SimpleQA evaluation reports much higher scores for Tavily and Exa’s own entity/publication benchmark strongly favors Exa. These datasets measure different workloads, so use them directionally rather than averaging the percentages.[23][24][25]</li>
+<li><strong>Parallel, Linkup, and You.com have clearer research ladders than a simple search API.</strong> Parallel exposes explicit Search, Task, and Responses processors; Linkup separates fast, standard, and deep modes; You.com separates Search, Answer, Contents, and multiple Research tiers.[26][27][28]</li>
+<li><strong>Additional alternatives are worth keeping in the architecture:</strong> SerpApi for engine/vertical-specific SERP schemas; Google Search grounding when the agent is already Gemini-native; Bing grounding when the agent is already in Microsoft Foundry; and Jina Reader when low-friction URL-to-Markdown extraction matters more than broad search recall.[30][31][32]</li>
+</ol>
+<h3 id="how-to-interpret-the-benchmark-numbers">How to interpret the benchmark numbers</h3>
+<p>A provider benchmark is only comparable when the corpus, model, query rewriting, result count, retries, judge, and time window are fixed. The most useful controlled product-level comparison located in this research is Artificial Analysis’s Search Index, which holds the agentic harness constant and reports quality, cost, and speed.[11][12] For retriever isolation, BrowseComp-Plus’s fixed corpus is more reproducible than live BrowseComp, although it cannot measure current-web freshness.[29]</p>
+<p>For browser agents, use WebArena/AssistantBench/Mind2Web-style task evaluation separately. A high search score does not prove reliable form filling, authentication, or multi-step browser execution.</p>
+<h2 id="final-recommendation">Final recommendation</h2>
+<p>For a new general-purpose agent, start with <strong>Tavily or Exa</strong>, not Firecrawl or TinyFish. Add <strong>Firecrawl</strong> for robust page extraction and crawling. Add <strong>TinyFish</strong> only where interaction is unavoidable. Choose <strong>Parallel</strong> when research quality and structured multi-hop output justify the cost. Choose <strong>Linkup</strong> when enterprise compliance and data residency are first-class requirements. Keep <strong>Brave or Serper</strong> as cheap fallback/search primitives.</p>
+<p>For Irfan’s preference for small, verified integrations: <strong>Tavily + Firecrawl</strong> is the most practical first stack; <strong>Exa + Firecrawl</strong> is the stronger quality-oriented stack; <strong>Parallel</strong> is the premium research path. I would not deploy a single vendor as the entire web layer until it passes the golden-set test above.</p>
+<h2 id="sources">Sources</h2>
+<p>[1] https://www.tavily.com/pricing — Tavily pricing
+[2] https://docs.tavily.com/documentation/api-credits — Tavily credits and pricing
+[3] https://exa.ai/docs/reference/pricing — Exa pricing
+[4] https://www.firecrawl.dev/pricing — Firecrawl pricing
+[5] https://www.tinyfish.ai/pricing — TinyFish pricing
+[6] https://parallel.ai/pricing — Parallel pricing
+[7] https://www.linkup.so/pricing — Linkup pricing
+[8] https://you.com/apis — You.com APIs
+[9] https://api-dashboard.search.brave.com/documentation/pricing — Brave Search API pricing
+[10] https://serper.dev — Serper
+[11] https://artificialanalysis.ai/agents/search-api — Artificial Analysis Search Index
+[12] https://artificialanalysis.ai/methodology/search-api — Artificial Analysis Search methodology
+[13] https://openai.com/index/browsecomp — OpenAI BrowseComp
+[14] https://assistantbench.github.io — AssistantBench
+[15] https://arxiv.org/abs/2307.13854 — WebArena paper
+[16] https://openai.com/index/introducing-simpleqa — OpenAI SimpleQA
+[17] https://www.firecrawl.dev/blog/crawlbench-llm-extraction — Firecrawl CrawlBench
+[18] https://www.tinyfish.ai/blog/mind2web — TinyFish Mind2Web
+[19] https://www.linkup.so/benchmarks — Linkup benchmarks
+[20] https://parallel.ai/benchmarks — Parallel benchmarks
+[21] https://exa.ai/blog/webcode — Exa WebCode
+[22] https://jina.ai — Jina AI search foundation
+[23] https://exa.ai/versus/tavily — Exa vs Tavily benchmark
+[24] https://github.com/tavily-ai/tavily-search-evals — Tavily Search Evals
+[25] https://aimultiple.com/agentic-search — AIMultiple Agentic Search benchmark
+[26] https://docs.parallel.ai/getting-started/pricing.md — Parallel detailed pricing
+[27] https://docs.linkup.so/pages/documentation/platform/pricing.md — Linkup detailed pricing
+[28] https://docs.you.com/administration/billing.md — You.com billing
+[29] https://arxiv.org/html/2508.06600v1 — BrowseComp-Plus
+[30] https://serpapi.com — SerpApi
+[31] https://ai.google.dev/gemini-api/docs/google-search — Google Search grounding
+[32] https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/bing-tools — Bing grounding for Foundry
+[33] https://brave.com/search/api — Brave Search API
+[34] https://jina.ai/reader — Jina Reader</p></main></body></html>

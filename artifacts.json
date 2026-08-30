@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Web Search for AI Agents in 2026 — Platform Comparison",
+      "slug": "web-search-for-ai-agents-2026",
+      "description": "Sourced comparison of Tavily, Exa, Firecrawl, TinyFish, Parallel, Linkup, You.com, Brave, Jina, Serper, and other web-search, research, extraction, crawling, and browser-agent platforms.",
+      "createdAt": "2026-08-30",
+      "type": "html",
+      "url": "artifacts/web-search-for-ai-agents-2026/"
+    },
+    {
       "title": "DeepSeek Harness — Research Brief",
       "slug": "deepseek-harness-brief",
       "description": "What DeepSeek Harness (dsh) is, why it's getting popular, whether it integrates with Claude Code/Codex/OpenCode, benchmarks, strengths, and downsides.",
