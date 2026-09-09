@@ -175,6 +175,14 @@
       "createdAt": "2026-09-10",
       "type": "html",
       "url": "artifacts/litellm-coding-agents/"
+    },
+    {
+      "title": "ECS + Fargate Field Guide — Concepts, Terraform & Practice",
+      "slug": "ecs-fargate-terraform-field-guide",
+      "description": "A practical, source-backed learning guide to ECS/Fargate mental models, task and service lifecycle, networking, IAM, Terraform provisioning, and a production-shaped four-week capstone.",
+      "createdAt": "2026-09-09",
+      "type": "html",
+      "url": "artifacts/ecs-fargate-terraform-field-guide/"
     }
   ]
 }
