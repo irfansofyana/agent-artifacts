@@ -167,6 +167,14 @@
       "createdAt": "2026-08-30",
       "type": "html",
       "url": "artifacts/frontier-llm-prompt-field-guide-2026/"
+    },
+    {
+      "title": "LiteLLM × Coding Agents · Field Guide",
+      "slug": "litellm-coding-agents",
+      "description": "Concise integration recipes for Pi, Claude Code Desktop, Codex Desktop, and OpenCode through LiteLLM.",
+      "createdAt": "2026-09-10",
+      "type": "html",
+      "url": "artifacts/litellm-coding-agents/"
     }
   ]
 }

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A concise field guide for connecting Pi, Claude Code Desktop, Codex Desktop, and OpenCode to a LiteLLM gateway.">
+  <title>LiteLLM × Coding Agents · Field Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:#18212b; --muted:#66717e; --paper:#f5f7f8; --card:#fff;
+      --line:#dbe1e6; --blue:#2563eb; --blue-soft:#eaf1ff; --cyan:#0891b2;
+      --amber:#b45309; --amber-soft:#fff6df; --green:#087f5b; --rose:#be445b;
+      --shadow:0 18px 50px rgba(24,33,43,.09); --radius:20px;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;color:var(--ink);background:var(--paper);font:15px/1.62 Manrope,system-ui,sans-serif}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(37,99,235,.045) 1px,transparent 1px),linear-gradient(rgba(37,99,235,.045) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to bottom,#000,transparent 50%)}
+    a{color:#174fb9;text-underline-offset:3px} button{font:inherit} code,pre,.mono{font-family:"DM Mono",monospace}.wrap{width:min(1120px,calc(100% - 32px));margin:auto}
+    .top{position:sticky;top:0;z-index:20;background:rgba(245,247,248,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(219,225,230,.9)}
+    .top-inner{min-height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-weight:800;letter-spacing:-.03em}.brand code{color:var(--blue);font-size:.9em}.updated{color:var(--muted);font-size:.78rem}
+    .hero{padding:78px 0 46px}.kicker{font:500 .74rem/1 "DM Mono";letter-spacing:.12em;text-transform:uppercase;color:var(--blue)}
+    h1{font-size:clamp(2.8rem,7vw,6.4rem);line-height:.94;letter-spacing:-.075em;margin:16px 0 22px;max-width:980px}.hero p{max-width:730px;font-size:clamp(1rem,2vw,1.22rem);color:#52606e}
+    .endpoint{display:inline-flex;gap:10px;align-items:center;margin-top:16px;padding:10px 13px;border:1px solid #bfd0ff;background:var(--blue-soft);border-radius:12px}.endpoint span{font-size:.76rem;color:#42629a;font-weight:700}.endpoint code{font-size:.85rem}
+    .rail{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;margin:34px 0 0;align-items:stretch;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+    .rail-node{padding:20px}.rail-node small{display:block;font:500 .69rem "DM Mono";letter-spacing:.08em;color:var(--muted);text-transform:uppercase}.rail-node strong{display:block;margin-top:8px}.rail-arrow{display:grid;place-items:center;padding:0 10px;color:var(--blue);background:#f8faff;border-inline:1px solid var(--line)}
+    .protocols{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.chip{font:500 .69rem "DM Mono";padding:5px 7px;border-radius:7px;background:#eef2f4;color:#53606c}.chip.good{background:#e8f7f1;color:var(--green)}
+    .section{padding:50px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.section-head p{max-width:600px;color:var(--muted);margin:0}h2{font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-.05em;line-height:1;margin:0}
+    .preflight{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.check{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}.check b{display:block;margin-bottom:7px}.check p{margin:0;color:var(--muted);font-size:.9rem}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.tab{border:1px solid var(--line);background:var(--card);padding:10px 14px;border-radius:11px;font-weight:800;color:#52606e;cursor:pointer}.tab[aria-selected="true"]{background:var(--ink);color:white;border-color:var(--ink)}.tab:focus-visible,.copy:focus-visible{outline:3px solid rgba(37,99,235,.3);outline-offset:2px}
+    .panel{display:none}.panel.active{display:block}.agent{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
+    .agent-head{padding:28px 30px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;align-items:start}.agent-head h3{margin:0 0 6px;font-size:1.7rem;letter-spacing:-.04em}.agent-head p{margin:0;color:var(--muted)}.badge{white-space:nowrap;font:500 .7rem "DM Mono";padding:7px 9px;border-radius:8px;background:var(--blue-soft);color:#2452a2}
+    .steps{padding:8px 30px 30px}.step{display:grid;grid-template-columns:36px 1fr;gap:14px;padding:22px 0;border-bottom:1px solid var(--line)}.step:last-child{border-bottom:0}.n{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--ink);color:white;font:500 .72rem "DM Mono"}.step h4{margin:2px 0 8px;font-size:1.04rem}.step p{margin:0 0 10px;color:var(--muted)}
+    .codebox{position:relative;background:#111923;color:#dce6ee;border-radius:14px;overflow:hidden;margin-top:12px}.code-label{padding:9px 13px;border-bottom:1px solid #2b3744;color:#8fa2b3;font:500 .67rem "DM Mono";letter-spacing:.08em;text-transform:uppercase}.codebox pre{margin:0;padding:16px 48px 16px 16px;overflow:auto;font-size:.78rem;line-height:1.65}.copy{position:absolute;right:9px;top:8px;border:1px solid #3c4b5b;background:#1c2834;color:#cfdae4;border-radius:8px;padding:5px 8px;font:500 .67rem "DM Mono";cursor:pointer}
+    .note{border-left:4px solid var(--blue);background:var(--blue-soft);padding:13px 15px;border-radius:0 11px 11px 0;margin-top:12px;font-size:.88rem}.note.warn{border-color:#e29b2d;background:var(--amber-soft)}.note strong{color:var(--ink)}
+    .model-map{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.model{border:1px solid var(--line);border-radius:13px;padding:14px}.model code{display:block;font-size:.77rem;color:var(--blue);margin-bottom:5px}.model span{font-size:.79rem;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.86rem}th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:#4b5966;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em}
+    .sources{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.source{display:block;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px;text-decoration:none}.source b{display:block;color:var(--ink);margin-bottom:3px}.source span{color:var(--muted);font-size:.8rem}.source:hover{border-color:#aac0fc;transform:translateY(-1px)}
+    footer{padding:36px 0 52px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line)}
+    @media(max-width:760px){.hero{padding-top:52px}.rail{grid-template-columns:1fr}.rail-arrow{padding:7px;border-inline:0;border-block:1px solid var(--line);transform:none}.preflight,.model-map,.sources{grid-template-columns:1fr}.section-head,.agent-head{align-items:start;flex-direction:column}.steps,.agent-head{padding-left:20px;padding-right:20px}.top-inner{min-height:54px}.updated{display:none}h1{font-size:3.2rem}}
+    @media(prefers-reduced-motion:no-preference){.panel.active{animation:rise .22s ease-out}.source{transition:.16s ease}@keyframes rise{from{opacity:0;transform:translateY(6px)}}}
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap top-inner"><div class="brand">LiteLLM <code>×</code> coding agents</div><div class="updated">Verified 10 Sep 2026 · first-party docs</div></div></header>
+  <main>
+    <section class="hero"><div class="wrap">
+      <div class="kicker">Operator field guide</div>
+      <h1>One gateway.<br>Four coding agents.</h1>
+      <p>Minimal, copy-ready setup for Pi, Claude Code Desktop, Codex Desktop, and OpenCode. The hard part is not the URL—it is matching each client to the protocol it actually speaks.</p>
+      <div class="endpoint"><span>Gateway</span><code>https://litellm.company.com</code></div>
+      <div class="rail" aria-label="Request path">
+        <div class="rail-node"><small>Clients</small><strong>Pi · Claude · Codex · OpenCode</strong><div class="protocols"><span class="chip">different configs</span></div></div>
+        <div class="rail-arrow">→</div>
+        <div class="rail-node"><small>Gateway</small><strong>LiteLLM Proxy</strong><div class="protocols"><span class="chip good">central auth</span><span class="chip good">routing</span></div></div>
+        <div class="rail-arrow">→</div>
+        <div class="rail-node"><small>Upstreams</small><strong>OpenAI · Anthropic · Bedrock · more</strong><div class="protocols"><span class="chip">model aliases</span></div></div>
+      </div>
+    </div></section>
+
+    <section class="section"><div class="wrap">
+      <div class="section-head"><h2>Before you connect</h2><p>Do these three things once. Everything below assumes the gateway already exposes the model aliases you intend to use.</p></div>
+      <div class="preflight">
+        <div class="check"><b>1 · Pick the wire API</b><p>Claude uses Anthropic Messages. Codex requires Responses. Pi and OpenCode can use Responses or Chat Completions.</p></div>
+        <div class="check"><b>2 · Curate aliases in LiteLLM</b><p>Expose stable names such as <code>gpt-5.6-sol</code>, <code>gpt-5.6-terra</code>, and <code>claude-opus-4-7</code>.</p></div>
+        <div class="check"><b>3 · Protect the key</b><p>Provide <code>LITELLM_API_KEY</code> through a managed environment or OS secret helper. Never commit it to a project file.</p></div>
+      </div>
+    </div></section>
+
+    <section class="section" id="guides"><div class="wrap">
+      <div class="section-head"><h2>Pick your agent</h2><p>Each panel is complete enough to use on its own.</p></div>
+      <div class="tabs" role="tablist" aria-label="Coding agents">
+        <button class="tab" role="tab" aria-selected="true" aria-controls="pi" data-tab="pi">Pi</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="claude" data-tab="claude">Claude Desktop</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="codex" data-tab="codex">Codex Desktop</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="opencode" data-tab="opencode">OpenCode</button>
+      </div>
+
+      <article class="panel active" id="pi" role="tabpanel">
+        <div class="agent"><div class="agent-head"><div><h3>Pi</h3><p>Explicit model list, hot-reloaded from one JSON file.</p></div><span class="badge">Responses API</span></div>
+          <div class="steps">
+            <div class="step"><span class="n">01</span><div><h4>Create <code>~/.pi/agent/models.json</code></h4><p>Pi does not need dynamic discovery here; define exactly the models you want available.</p>
+              <div class="codebox"><div class="code-label">models.json</div><button class="copy">Copy</button><pre><code>{
+  "providers": {
+    "litellm": {
+      "baseUrl": "https://litellm.company.com/v1",
+      "api": "openai-responses",
+      "apiKey": "$LITELLM_API_KEY",
+      "models": [
+        { "id": "gpt-5.6-sol", "name": "Sol via LiteLLM", "reasoning": true },
+        { "id": "gpt-5.6-terra", "name": "Terra via LiteLLM", "reasoning": true },
+        { "id": "gpt-5.6-luna", "name": "Luna via LiteLLM", "reasoning": true }
+      ]
+    }
+  }
+}</code></pre></div>
+            </div></div>
+            <div class="step"><span class="n">02</span><div><h4>Select and verify</h4><p>Open <code>/model</code>, choose <code>litellm/&lt;model-id&gt;</code>, then send a small tool-using task. Pi reloads the file whenever you open the picker.</p><div class="note"><strong>Fallback:</strong> if a deployment does not support Responses, change <code>api</code> to <code>openai-completions</code>.</div></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel" id="claude" role="tabpanel" hidden>
+        <div class="agent"><div class="agent-head"><div><h3>Claude Code Desktop</h3><p>The Desktop Code tab and CLI share Claude Code settings.</p></div><span class="badge">Anthropic Messages</span></div>
+          <div class="steps">
+            <div class="step"><span class="n">01</span><div><h4>Set gateway environment in <code>~/.claude/settings.json</code></h4>
+              <div class="codebox"><div class="code-label">settings.json</div><button class="copy">Copy</button><pre><code>{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://litellm.company.com",
+    "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY": "1"
+  },
+  "apiKeyHelper": "/absolute/path/to/your-litellm-key-helper"
+}</code></pre></div>
+              <div class="note"><strong>Secret handling:</strong> the helper should return the key from your OS or company secret store. Do not place the key itself in this file.</div>
+            </div></div>
+            <div class="step"><span class="n">02</span><div><h4>Open the Code tab and pick a model</h4><p>Start a new local session and use the dropdown next to Send. Claude Code 2.1.129+ can load models from the gateway’s <code>/v1/models</code>.</p><div class="note warn"><strong>Discovery filter:</strong> only IDs beginning with <code>claude</code> or <code>anthropic</code> are added. If your alias does not match, set the default Claude model variables or add one custom picker option.</div></div></div>
+            <div class="step"><span class="n">03</span><div><h4>Verify</h4><p>Use <code>/status</code> to confirm the resolved base URL and provider, then run a small edit. Gateway models are cached and refreshed at startup.</p></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel" id="codex" role="tabpanel" hidden>
+        <div class="agent"><div class="agent-head"><div><h3>Codex Desktop</h3><p>Routing works. Custom-provider model-list UX is the sharp edge.</p></div><span class="badge">Responses API only</span></div>
+          <div class="steps">
+            <div class="step"><span class="n">01</span><div><h4>Configure <code>~/.codex/config.toml</code></h4><p>Desktop, CLI, and the IDE extension share this user-level file.</p>
+              <div class="codebox"><div class="code-label">config.toml</div><button class="copy">Copy</button><pre><code>model = "gpt-5.6-terra"
+model_provider = "litellm"
+model_reasoning_effort = "medium"
+
+[model_providers.litellm]
+name = "LiteLLM"
+base_url = "https://litellm.company.com/v1"
+env_key = "LITELLM_API_KEY"
+wire_api = "responses"
+requires_openai_auth = false
+supports_websockets = false</code></pre></div>
+            </div></div>
+            <div class="step"><span class="n">02</span><div><h4>Understand the model list</h4><p>LiteLLM exposes standard OpenAI model data. Codex currently expects richer internal model metadata, so Desktop does not reliably turn LiteLLM’s <code>/v1/models</code> into a usable custom picker.</p>
+              <table><thead><tr><th>Method</th><th>Desktop result</th><th>Recommendation</th></tr></thead><tbody>
+                <tr><td><code>model = "…"</code></td><td>Routes new sessions to that alias</td><td><strong>Use this</strong></td></tr>
+                <tr><td>Standard <code>/v1/models</code></td><td>Not a reliable custom list source</td><td>Do not depend on it</td></tr>
+                <tr><td><code>model_catalog_json</code></td><td>Can replace the catalog, but schema and Desktop behavior are fragile</td><td>Avoid for routine setup</td></tr>
+                <tr><td>CLI <code>/model</code> or <code>-m</code></td><td>Easy per-session override in CLI</td><td>Best for frequent switching</td></tr>
+              </tbody></table>
+              <div class="note warn"><strong>Bottom line:</strong> for Codex Desktop + LiteLLM, treat <code>model</code> as the selected alias. Change it, restart Desktop, and create a new chat. Existing chats may retain their original model.</div>
+            </div></div>
+            <div class="step"><span class="n">03</span><div><h4>Pick among three LiteLLM aliases</h4><div class="model-map">
+              <div class="model"><code>gpt-5.6-sol</code><span>Hard, ambiguous, high-value work</span></div><div class="model"><code>gpt-5.6-terra</code><span>Pragmatic default for daily coding</span></div><div class="model"><code>gpt-5.6-luna</code><span>Fast, clear, repeatable tasks</span></div>
+              </div><p style="margin-top:12px">Set <code>model_reasoning_effort</code> to a level the selected upstream model supports. <code>xhigh</code> is model-dependent.</p></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel" id="opencode" role="tabpanel" hidden>
+        <div class="agent"><div class="agent-head"><div><h3>OpenCode</h3><p>Define the provider and its visible models together.</p></div><span class="badge">Responses API</span></div>
+          <div class="steps">
+            <div class="step"><span class="n">01</span><div><h4>Add a custom provider to <code>opencode.json</code></h4>
+              <div class="codebox"><div class="code-label">opencode.json · current v1 format</div><button class="copy">Copy</button><pre><code>{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "litellm/gpt-5.6-terra",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai",
+      "name": "LiteLLM",
+      "options": {
+        "baseURL": "https://litellm.company.com/v1",
+        "apiKey": "{env:LITELLM_API_KEY}"
+      },
+      "models": {
+        "gpt-5.6-sol": { "name": "Sol via LiteLLM" },
+        "gpt-5.6-terra": { "name": "Terra via LiteLLM" },
+        "gpt-5.6-luna": { "name": "Luna via LiteLLM" }
+      }
+    }
+  }
+}</code></pre></div>
+            </div></div>
+            <div class="step"><span class="n">02</span><div><h4>Select and verify</h4><p>Run <code>/models</code>; the three configured models should appear under LiteLLM. Use <code>litellm/model-id</code> as the full ID.</p><div class="note"><strong>Fallback:</strong> for Chat Completions-only deployments, use <code>@ai-sdk/openai-compatible</code> instead.</div></div></div>
+          </div>
+        </div>
+      </article>
+    </div></section>
+
+    <section class="section" id="sources"><div class="wrap">
+      <div class="section-head"><h2>Primary sources</h2><p>Configuration changes quickly. These are the pages used for this guide.</p></div>
+      <div class="sources">
+        <a class="source" href="https://docs.litellm.ai/"><b>LiteLLM · Getting started</b><span>Proxy endpoints and Responses API</span></a>
+        <a class="source" href="https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/models.md"><b>Pi · Custom models</b><span>models.json, protocols, and model selection</span></a>
+        <a class="source" href="https://code.claude.com/docs/en/llm-gateway"><b>Claude Code · LLM gateway</b><span>LiteLLM setup and gateway model discovery</span></a>
+        <a class="source" href="https://code.claude.com/docs/en/desktop"><b>Claude Code Desktop</b><span>Shared settings and Desktop model dropdown</span></a>
+        <a class="source" href="https://learn.chatgpt.com/docs/config-file/config-reference"><b>Codex · Configuration reference</b><span>Custom providers, model, and catalog keys</span></a>
+        <a class="source" href="https://learn.chatgpt.com/docs/models"><b>Codex · Models</b><span>Desktop picker and shared config behavior</span></a>
+        <a class="source" href="https://github.com/openai/codex/issues/37122"><b>Codex · Standard model-list gap</b><span>Current open issue for custom provider discovery</span></a>
+        <a class="source" href="https://opencode.ai/docs/providers"><b>OpenCode · Providers</b><span>Custom OpenAI-compatible provider configuration</span></a>
+      </div>
+    </div></section>
+  </main>
+  <footer><div class="wrap">A public implementation guide by Jax for Irfan · Examples use placeholder infrastructure and no real credentials.</div></footer>
+  <script>
+    var tabs = Array.from(document.querySelectorAll('.tab'));
+    var panels = Array.from(document.querySelectorAll('.panel'));
+    function activate(id, focus) {
+      tabs.forEach(function(tab) {
+        var active = tab.dataset.tab === id;
+        tab.setAttribute('aria-selected', String(active));
+        if (active && focus) tab.focus();
+      });
+      panels.forEach(function(panel) {
+        var active = panel.id === id;
+        panel.classList.toggle('active', active);
+        panel.hidden = !active;
+      });
+      history.replaceState(null, '', '#' + id);
+    }
+    tabs.forEach(function(tab, index) {
+      tab.addEventListener('click', function() { activate(tab.dataset.tab, false); });
+      tab.addEventListener('keydown', function(event) {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        event.preventDefault();
+        var next = event.key === 'ArrowRight' ? index + 1 : index - 1;
+        next = (next + tabs.length) % tabs.length;
+        activate(tabs[next].dataset.tab, true);
+      });
+    });
+    document.querySelectorAll('.copy').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var text = button.parentElement.querySelector('code').innerText;
+        navigator.clipboard.writeText(text).then(function() {
+          button.textContent = 'Copied';
+          setTimeout(function() { button.textContent = 'Copy'; }, 1200);
+        });
+      });
+    });
+    var initial = location.hash.slice(1);
+    if (panels.some(function(panel) { return panel.id === initial; })) activate(initial, false);
+  </script>
+</body>
+</html>
