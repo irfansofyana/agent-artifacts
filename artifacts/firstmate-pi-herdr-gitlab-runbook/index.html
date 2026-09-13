@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A beginner-to-advanced FirstMate runbook for Pi, Herdr, GitLab, and glab.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23173f4c'/%3E%3Cpath d='M15 42 39 18m0 0H23m16 0v16' fill='none' stroke='%23ef643f' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <title>FirstMate Bridge Manual | Pi + Herdr + GitLab</title>
+  <style>
+    :root {
+      --paper: #edf4f5;
+      --paper-2: #f8fbfb;
+      --ink: #15343e;
+      --muted: #55717a;
+      --line: #bed0d3;
+      --deep: #173f4c;
+      --deep-2: #0d2d37;
+      --signal: #ef643f;
+      --signal-soft: #fff0ea;
+      --sky: #b9e4ec;
+      --safe: #16775d;
+      --warn: #a34a29;
+      --code: #102f39;
+      --shadow: 0 18px 50px rgba(16, 48, 58, .10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(21, 52, 62, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21, 52, 62, .035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 28px 28px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    a { color: #0b6478; text-underline-offset: 3px; }
+    a:hover { color: var(--signal); }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--sky);
+      outline-offset: 3px;
+    }
+
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(237, 244, 245, .88);
+      border-bottom: 1px solid rgba(21, 52, 62, .12);
+    }
+    .topbar-inner {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font: 800 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--deep);
+      border-radius: 50%;
+      color: var(--signal);
+    }
+    nav { display: flex; gap: 5px; flex-wrap: wrap; }
+    nav a {
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    nav a:hover { background: var(--paper-2); color: var(--ink); }
+
+    .hero {
+      padding: 72px 0 46px;
+      display: grid;
+      grid-template-columns: 1.18fr .82fr;
+      gap: 44px;
+      align-items: end;
+    }
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--signal);
+      font: 800 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin-top: 0; line-height: 1.08; }
+    h1 {
+      max-width: 780px;
+      margin-bottom: 22px;
+      font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+      font-size: clamp(52px, 8vw, 102px);
+      font-stretch: condensed;
+      letter-spacing: -.055em;
+      text-transform: uppercase;
+    }
+    h1 span { color: var(--signal); }
+    .lede { max-width: 720px; margin: 0; color: var(--muted); font-size: clamp(17px, 2vw, 21px); }
+    .hero-card {
+      padding: 24px;
+      color: #e9f4f5;
+      background: var(--deep);
+      border-radius: 28px 28px 28px 4px;
+      box-shadow: var(--shadow);
+    }
+    .hero-card strong { color: white; }
+    .hero-card .signal { color: #ff9b78; }
+    .hero-card p:last-child { margin-bottom: 0; }
+    .version-row {
+      margin-top: 18px;
+      padding-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      border-top: 1px solid rgba(255,255,255,.18);
+    }
+    .version-row span { color: #b7cdd2; font: 12px/1.4 ui-monospace, monospace; }
+    .version-row b { display: block; color: white; font-size: 15px; }
+
+    .support-note {
+      margin: 0 0 56px;
+      padding: 22px 24px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      background: var(--signal-soft);
+      border: 1px solid #f2b29d;
+      border-left: 7px solid var(--signal);
+      border-radius: 14px;
+    }
+    .support-note .icon { font-size: 25px; }
+    .support-note h2 { margin-bottom: 7px; font-size: 19px; }
+    .support-note p { margin: 0; color: #70402f; }
+
+    section { scroll-margin-top: 84px; margin-bottom: 72px; }
+    .section-head {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 26px;
+    }
+    .section-no {
+      color: var(--signal);
+      font: 800 18px/1 ui-monospace, monospace;
+      letter-spacing: .06em;
+    }
+    .section-head h2 { margin-bottom: 8px; font-size: clamp(30px, 4.4vw, 52px); letter-spacing: -.035em; }
+    .section-head p { max-width: 760px; margin: 0; color: var(--muted); }
+
+    .route {
+      display: grid;
+      grid-template-columns: repeat(7, auto);
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 28px;
+      overflow-x: auto;
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .route-card { min-width: 145px; }
+    .route-card b { display: block; font-size: 16px; }
+    .route-card span { color: var(--muted); font-size: 12px; }
+    .route-arrow { color: var(--signal); font: 900 22px/1 ui-monospace, monospace; }
+    .route-card.primary { padding: 15px; color: white; background: var(--deep); border-radius: 12px; }
+    .route-card.primary span { color: #c8dde1; }
+
+    .grid { display: grid; gap: 18px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      padding: 24px;
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(16, 48, 58, .055);
+    }
+    .card h3 { margin-bottom: 10px; font-size: 20px; }
+    .card p { color: var(--muted); }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .tag {
+      display: inline-flex;
+      margin-bottom: 12px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font: 800 10px/1 ui-monospace, monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .tag.safe { color: var(--safe); border-color: #98c9b9; background: #effaf6; }
+    .tag.caution { color: var(--warn); border-color: #e4b29e; background: var(--signal-soft); }
+
+    .steps { counter-reset: bridge-step; display: grid; gap: 14px; }
+    .step {
+      counter-increment: bridge-step;
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 18px;
+      padding: 22px;
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .step::before {
+      content: counter(bridge-step, decimal-leading-zero);
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: var(--deep);
+      border-radius: 50%;
+      font: 800 13px/1 ui-monospace, monospace;
+    }
+    .step h3 { margin-bottom: 8px; font-size: 21px; }
+    .step p { margin-top: 0; color: var(--muted); }
+
+    .checklist { margin: 16px 0 0; padding: 0; list-style: none; }
+    .checklist li { margin: 8px 0; }
+    .checklist label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+    .checklist input { margin-top: 5px; accent-color: var(--safe); }
+    .checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
+
+    .command {
+      position: relative;
+      margin: 14px 0;
+      border-radius: 13px;
+      overflow: hidden;
+      background: var(--code);
+      color: #e6f1f3;
+    }
+    .command pre { margin: 0; padding: 20px 58px 20px 20px; overflow-x: auto; font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .copy {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 36px;
+      height: 32px;
+      color: #e6f1f3;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .copy:hover { background: rgba(255,255,255,.16); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    :not(pre) > code { padding: .12em .35em; color: #244e5b; background: #dce9eb; border-radius: 5px; }
+
+    .generator {
+      padding: 28px;
+      background: var(--deep-2);
+      color: #e8f3f4;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+    .generator h3 { margin-bottom: 6px; color: white; font-size: 25px; }
+    .generator > p { color: #aec8ce; }
+    .fields { display: grid; grid-template-columns: 1.2fr .8fr .7fr; gap: 12px; margin: 20px 0; }
+    .field label { display: block; margin-bottom: 6px; color: #b7ccd1; font: 700 11px/1 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; }
+    .field input {
+      width: 100%;
+      padding: 11px 12px;
+      color: white;
+      background: #173f4a;
+      border: 1px solid #48717b;
+      border-radius: 9px;
+    }
+    .generated {
+      position: relative;
+      padding: 20px 58px 20px 20px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #e8f3f4;
+      background: #0a242c;
+      border: 1px solid #355a63;
+      border-radius: 12px;
+      font: 13px/1.62 ui-monospace, monospace;
+    }
+
+    .prompt-card { display: flex; flex-direction: column; }
+    .prompt-card .prompt { flex: 1; margin: 10px 0 0; padding: 16px; white-space: pre-wrap; color: #173a45; background: #e7f0f1; border-radius: 10px; font: 12.5px/1.58 ui-monospace, monospace; }
+    .prompt-card .copy-inline { margin-top: 12px; align-self: flex-start; }
+    .button {
+      padding: 9px 12px;
+      color: white;
+      background: var(--deep);
+      border: 0;
+      border-radius: 9px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .button:hover { background: var(--signal); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; background: var(--paper-2); }
+    th, td { padding: 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); background: #dfeaec; font: 800 11px/1.2 ui-monospace, monospace; letter-spacing: .07em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+
+    .ladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; overflow-x: auto; }
+    .ladder div { min-width: 155px; padding: 18px; background: var(--deep); color: white; }
+    .ladder div:first-child { border-radius: 14px 0 0 14px; }
+    .ladder div:last-child { border-radius: 0 14px 14px 0; background: var(--signal); }
+    .ladder b { display: block; margin-bottom: 5px; }
+    .ladder span { color: #c8dadd; font-size: 12px; }
+    .ladder div:last-child span { color: #fff4ef; }
+
+    details { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; }
+    details + details { margin-top: 10px; }
+    summary { padding: 16px 18px; cursor: pointer; font-weight: 800; }
+    details > div { padding: 0 18px 18px; color: var(--muted); }
+
+    .source-list { columns: 2; column-gap: 34px; padding-left: 22px; }
+    .source-list li { margin: 0 0 12px; break-inside: avoid; }
+    .stamp { margin-top: 20px; color: var(--muted); font: 12px/1.5 ui-monospace, monospace; }
+    footer { margin-top: 80px; padding: 28px 0 42px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 850px) {
+      .hero { grid-template-columns: 1fr; padding-top: 48px; }
+      .grid.two, .grid.three, .fields { grid-template-columns: 1fr; }
+      .section-head { grid-template-columns: 1fr; gap: 7px; }
+      .version-row { grid-template-columns: 1fr; }
+      nav { display: none; }
+      .source-list { columns: 1; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1180px); }
+      .hero { padding-top: 34px; }
+      h1 { font-size: 49px; }
+      .support-note { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 40px minmax(0,1fr); padding: 16px; gap: 12px; }
+      .step::before { width: 38px; height: 38px; }
+      .card, .generator { padding: 19px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand"><span class="brand-mark">↗</span> Bridge manual</div>
+      <nav aria-label="Page sections">
+        <a href="#model">Mental model</a>
+        <a href="#setup">Setup</a>
+        <a href="#daily">Daily loop</a>
+        <a href="#prompts">Prompts</a>
+        <a href="#advanced">Advanced</a>
+        <a href="#troubleshooting">Fixes</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="hero">
+      <div>
+        <p class="eyebrow">FirstMate × Pi × Herdr × GitLab</p>
+        <h1>Run the crew.<br><span>Keep the wheel.</span></h1>
+        <p class="lede">A source-checked field guide for using Pi as your primary agent, Herdr as the visible terminal backend, and GitLab as the delivery forge.</p>
+      </div>
+      <aside class="hero-card" aria-label="Recommended operating posture">
+        <p class="eyebrow signal">Recommended posture</p>
+        <p><strong>Start with one repo, one scout, and one small change.</strong> Keep <code>yolo</code> off. Let FirstMate coordinate workers while you approve merge requests.</p>
+        <div class="version-row">
+          <span>Pi checked<b>0.85.1</b></span>
+          <span>Herdr checked<b>0.9.0 / p22</b></span>
+          <span>Guide checked<b>2026-09-13</b></span>
+        </div>
+      </aside>
+    </div>
+
+    <aside class="support-note">
+      <div class="icon" aria-hidden="true">⚠</div>
+      <div>
+        <h2>GitLab support has one sharp edge</h2>
+        <p>The full <code>no-mistakes</code> path can create and update GitLab MRs, inspect CI, fetch failed-job traces, and handle merge conflicts through <code>glab</code>. FirstMate can then watch and guard the merge. Its faster <code>direct-PR</code> template remains GitHub-only, and its universal bootstrap still requires authenticated <code>gh</code> plus GitHub-focused AXI tools.</p>
+      </div>
+    </aside>
+
+    <section id="model">
+      <div class="section-head">
+        <div class="section-no">01</div>
+        <div><h2>Know what runs where</h2><p>FirstMate is a repository full of operating instructions and scripts. Launching Pi inside that repository turns Pi into your coordinator.</p></div>
+      </div>
+      <div class="route" role="img" aria-label="You talk to Pi running FirstMate, which creates workers in Herdr and isolated worktrees, then delivers GitLab merge requests">
+        <div class="route-card"><b>You</b><span>scope and approve</span></div><div class="route-arrow">→</div>
+        <div class="route-card primary"><b>Pi + FirstMate</b><span>plan and supervise</span></div><div class="route-arrow">→</div>
+        <div class="route-card"><b>Herdr crew</b><span>visible agent panes</span></div><div class="route-arrow">→</div>
+        <div class="route-card"><b>Worktree → GitLab MR</b><span>isolated change and review</span></div>
+      </div>
+      <div class="grid three" style="margin-top:18px">
+        <article class="card"><span class="tag">Harness</span><h3>Pi</h3><p>The agent you chat with. Pi loads FirstMate’s tracked extensions after you trust the checkout.</p></article>
+        <article class="card"><span class="tag">Distro</span><h3>FirstMate</h3><p>The coordinator contract, skills, scripts, private state, project registry, and worktree lifecycle.</p></article>
+        <article class="card"><span class="tag">Backend</span><h3>Herdr</h3><p>The persistent terminal session where each worker gets a real pane and a readable lifecycle state.</p></article>
+      </div>
+    </section>
+
+    <section id="setup">
+      <div class="section-head">
+        <div class="section-no">02</div>
+        <div><h2>Get one clean launch</h2><p>Run this once on the machine where your repository credentials and coding agents live.</p></div>
+      </div>
+      <div class="steps">
+        <article class="step">
+          <div>
+            <h3>Check the hard prerequisites</h3>
+            <p>Herdr 0.8.0 or newer enables the default one-task presentation spaces. FirstMate needs protocol 14 or newer and <code>jq</code>.</p>
+            <div class="command"><button class="copy" aria-label="Copy prerequisite commands">⧉</button><pre>pi --version
+herdr --version
+herdr status --json | jq '{client: .client.version, protocol: .client.protocol, server: .server.status}'
+herdr integration install pi
+herdr integration status
+git --version
+jq --version
+node --version
+gh auth status
+glab --version
+glab auth status --hostname gitlab.example.com</pre></div>
+            <ul class="checklist" data-key="preflight">
+              <li><label><input type="checkbox"><span>Pi starts under my normal account and model provider.</span></label></li>
+              <li><label><input type="checkbox"><span>Herdr reports a compatible server.</span></label></li>
+              <li><label><input type="checkbox"><span>Both forge CLIs report valid authentication.</span></label></li>
+            </ul>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>Clone the distro into a dedicated home</h3>
+            <p>Do not place FirstMate inside an office project. It keeps its own private registry, state, and project clones.</p>
+            <div class="command"><button class="copy" aria-label="Copy clone commands">⧉</button><pre>cd "$HOME"
+git clone https://github.com/kunchenguid/firstmate.git firstmate-home
+cd "$HOME/firstmate-home"
+mkdir -p config
+printf 'herdr\n' &gt; config/backend</pre></div>
+            <div class="command"><button class="copy" aria-label="Copy Pi worker configuration">⧉</button><pre>printf 'pi\n' &gt; config/crew-harness</pre></div>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>Launch Herdr, then Pi from the FirstMate checkout</h3>
+            <p>Open Herdr, create or focus a terminal pane, enter the FirstMate directory, then run Pi. Approve Pi’s project trust prompt once for this clone.</p>
+            <div class="command"><button class="copy" aria-label="Copy launch commands">⧉</button><pre>herdr
+cd "$HOME/firstmate-home"
+pi</pre></div>
+            <p><strong>Avoid nesting tmux inside Herdr.</strong> FirstMate selects the innermost multiplexer, so a tmux pane inside Herdr routes workers to tmux.</p>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>Paste the setup prompt</h3>
+            <p>Replace the example host, project URL, local name, and target branch below.</p>
+            <div class="generator" id="generator">
+              <h3>GitLab setup prompt generator</h3>
+              <p>The prompt asks FirstMate to verify its full toolchain, register one project in <code>no-mistakes</code> mode, and prove the GitLab provider path before dispatch.</p>
+              <div class="fields">
+                <div class="field"><label for="repo-url">GitLab repository URL</label><input id="repo-url" value="git@gitlab.example.com:team/service.git"></div>
+                <div class="field"><label for="project-name">Local project name</label><input id="project-name" value="service"></div>
+                <div class="field"><label for="target-branch">Target branch</label><input id="target-branch" value="main"></div>
+              </div>
+              <div class="generated" id="setup-prompt" tabindex="0"></div>
+              <button class="button" id="copy-generated" style="margin-top:12px">Copy setup prompt</button>
+            </div>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>Run a scout before a ship task</h3>
+            <p>A scout produces a report and never pushes code. Use it to verify project access, Herdr placement, and worker supervision.</p>
+            <div class="card prompt-card">
+              <span class="tag safe">First safe task</span>
+              <div class="prompt">Scout project service. Read the README, build commands, test commands, and GitLab CI configuration. Do not change the project or open a merge request. Return a short report with the exact commands a future worker should run and any missing local prerequisites.</div>
+              <button class="button copy-inline">Copy prompt</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="daily">
+      <div class="section-head">
+        <div class="section-no">03</div>
+        <div><h2>The daily operating loop</h2><p>Talk to FirstMate in outcomes. Let it handle worker panes, worktrees, task records, and supervision.</p></div>
+      </div>
+      <div class="grid two">
+        <article class="card">
+          <span class="tag safe">Start of day</span>
+          <h3>Take bearings</h3>
+          <ol>
+            <li>Open Herdr and return to the FirstMate workspace.</li>
+            <li>Start or resume Pi from the FirstMate checkout.</li>
+            <li>Ask <code>/ahoy</code> for unanswered events, or <code>/bearings</code> for fleet state.</li>
+            <li>Resolve one decision before adding more work.</li>
+          </ol>
+        </article>
+        <article class="card">
+          <span class="tag">Dispatch</span>
+          <h3>Write a task contract</h3>
+          <ul>
+            <li>Name the project and desired outcome.</li>
+            <li>State what stays out of scope.</li>
+            <li>Name acceptance checks and required tests.</li>
+            <li>Choose <code>scout</code>, <code>direct-PR</code>, or <code>local-only</code>.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="tag">Supervise</span>
+          <h3>Watch state, not scrolling text</h3>
+          <p>Herdr shows working, blocked, done, or idle. Ask FirstMate to inspect a worker when the state looks wrong. Routine work should not require you to type into worker panes.</p>
+        </article>
+        <article class="card">
+          <span class="tag caution">Merge</span>
+          <h3>Approve the exact MR</h3>
+          <p>Require the full GitLab MR URL, passing pipeline at the current head, no conflicts, and resolved blocking discussions. Say “merge this MR” only after you review the result.</p>
+        </article>
+      </div>
+      <div class="table-wrap" style="margin-top:18px">
+        <table>
+          <thead><tr><th>Delivery choice</th><th>Use it for</th><th>GitLab fit</th><th>Merge authority</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Scout</strong></td><td>Investigation, reproduction, planning, audit</td><td>Good. No push or MR.</td><td>No merge exists.</td></tr>
+            <tr><td><strong>direct-PR</strong></td><td>Fast path without FirstMate’s validation pipeline</td><td>Generated brief is GitHub-only. Avoid until you prove a local GitLab customization.</td><td>Keep <code>yolo</code> off.</td></tr>
+            <tr><td><strong>local-only</strong></td><td>Practice, prototypes, repos with no remote</td><td>Good. You push and open the MR later.</td><td>You approve local landing.</td></tr>
+            <tr><td><strong>no-mistakes</strong></td><td>Full review, fixes, tests, push, MR, and CI path</td><td>Best-supported GitLab route through <code>glab</code>. Pilot on a disposable repo first.</td><td>Explicit approval unless <code>yolo</code> is enabled.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="prompts">
+      <div class="section-head">
+        <div class="section-no">04</div>
+        <div><h2>Prompts worth keeping</h2><p>Copy, replace the bracketed values, and send them to the Pi session running FirstMate.</p></div>
+      </div>
+      <div class="grid two">
+        <article class="card prompt-card">
+          <span class="tag">Small implementation</span>
+          <h3>Ship one bounded change</h3>
+          <div class="prompt">In project [name], implement [outcome]. Keep [areas] out of scope. Acceptance: [checks]. Run [tests]. Use the project’s no-mistakes mode with yolo off. Use the supported GitLab provider path through glab. Return the full MR URL, risk level, tests run, and current CI state. Do not merge it.</div>
+          <button class="button copy-inline">Copy prompt</button>
+        </article>
+        <article class="card prompt-card">
+          <span class="tag">Uncertain bug</span>
+          <h3>Investigate, then ask</h3>
+          <div class="prompt">Scout project [name] for [symptom]. Reproduce it, identify the smallest likely fix, and write a report with evidence. Do not modify the project or open an MR. Ask me before promoting the scout into implementation.</div>
+          <button class="button copy-inline">Copy prompt</button>
+        </article>
+        <article class="card prompt-card">
+          <span class="tag">Existing MR</span>
+          <h3>Review without merging</h3>
+          <div class="prompt">Review this GitLab MR: [full MR URL]. Check correctness, security, regression risk, tests, and CI state. Do not push, comment, approve, or merge. Return findings ordered by severity with file and line evidence.</div>
+          <button class="button copy-inline">Copy prompt</button>
+        </article>
+        <article class="card prompt-card">
+          <span class="tag">Parallel work</span>
+          <h3>Split independent tasks</h3>
+          <div class="prompt">In project [name], run these independent tasks in parallel: (1) [task], (2) [task]. Use separate worktrees and separate GitLab MRs. Flag any file or behavior overlap before dispatch. Keep yolo off and do not merge either MR.</div>
+          <button class="button copy-inline">Copy prompt</button>
+        </article>
+        <article class="card prompt-card">
+          <span class="tag">Steer</span>
+          <h3>Change a worker’s instruction</h3>
+          <div class="prompt">For the worker handling [task], keep the current worktree and add this constraint: [constraint]. Confirm whether it changes scope, tests, or the MR plan.</div>
+          <button class="button copy-inline">Copy prompt</button>
+        </article>
+        <article class="card prompt-card">
+          <span class="tag">Recovery</span>
+          <h3>Recover without losing work</h3>
+          <div class="prompt">The worker for [task] looks stuck. Inspect its current state and recent output. Preserve its worktree and commits. Use FirstMate’s recovery ladder, report the cause, and relaunch only if the current process is dead or cannot continue.</div>
+          <button class="button copy-inline">Copy prompt</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="advanced">
+      <div class="section-head">
+        <div class="section-no">05</div>
+        <div><h2>Advanced controls</h2><p>Add these after the basic loop works. Each feature creates more state to understand and recover.</p></div>
+      </div>
+      <div class="grid three">
+        <article class="card"><span class="tag safe">Pi</span><h3>Calm display</h3><p>Use <code>/calm</code> to hide supported operational rows without changing model context or session data.</p></article>
+        <article class="card"><span class="tag safe">Cost</span><h3>Cheaper supervision</h3><p>Use <code>/supervision-model</code> to select a cheaper model and shallower effort for Pi’s supervision branch.</p></article>
+        <article class="card"><span class="tag">Focus</span><h3>Quiet mode</h3><p>Use <code>/quiet</code> while chatting and <code>/quiet off</code> to leave it. Use <code>/afk</code> when you step away.</p></article>
+        <article class="card"><span class="tag">Backend</span><h3>One-shot Herdr</h3><p>Launch with <code>FM_BACKEND=herdr pi</code> for one session. Keep <code>config/backend</code> for the standing choice.</p></article>
+        <article class="card"><span class="tag caution">Autonomy</span><h3>Keep yolo off</h3><p>Enable it only for low-risk, mature repositories. It grants standing merge authority for green in-scope work.</p></article>
+        <article class="card"><span class="tag caution">Scale</span><h3>Add secondmates late</h3><p>Use a persistent secondmate for a stable domain with enough ongoing work. One repo and short tasks do not need it.</p></article>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>Worker environment for self-managed GitLab</h3>
+        <p>Workers inherit common executable paths. If your setup depends on extra environment names such as <code>GITLAB_HOST</code>, a proxy, or a custom CA path, add only the names you need to FirstMate’s launch allowlist. Prefer <code>glab auth login</code> with the OS keyring instead of token environment variables.</p>
+        <div class="command"><button class="copy" aria-label="Copy allowlist example">⧉</button><pre>cd "$HOME/firstmate-home"
+printf '%s\n' GITLAB_HOST HTTPS_PROXY SSL_CERT_FILE &gt;&gt; config/launch-env-allowlist</pre></div>
+      </div>
+      <div class="grid two" style="margin-top:18px">
+        <article class="card"><span class="tag caution">Versioning</span><h3>Pin an audited commit</h3><p>FirstMate has no releases or tags and its main branch changes fast. Mirror a reviewed commit to an internal default branch, or record the exact deployed SHA and review every update before using <code>/updatefirstmate</code>.</p></article>
+        <article class="card"><span class="tag caution">GitLab gaps</span><h3>Know the provider limits</h3><p>The GitLab no-mistakes path lacks GitHub’s unresolved review-bot comment ingestion and automatic rerun of transient cancelled or pre-run infrastructure checks. Fork MR routing is also unsupported.</p></article>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <div class="section-head">
+        <div class="section-no">06</div>
+        <div><h2>Recover in this order</h2><p>Preserve the worktree and task records. Ask FirstMate to apply these controls unless you are diagnosing the distro itself.</p></div>
+      </div>
+      <div class="ladder" aria-label="Recovery ladder">
+        <div><b>1 · State</b><span>Ask for current crew state</span></div>
+        <div><b>2 · Peek</b><span>Read bounded recent output</span></div>
+        <div><b>3 · Steer</b><span>Send one clear instruction</span></div>
+        <div><b>4 · Interrupt</b><span>Stop the active turn</span></div>
+        <div><b>5 · Relaunch</b><span>Restart the agent, keep work</span></div>
+      </div>
+      <div style="margin-top:20px">
+        <details><summary>Workers appear in tmux instead of Herdr</summary><div>Run <code>cat config/backend</code> from the FirstMate checkout. It should contain <code>herdr</code>. Leave any nested tmux session before launching Pi because the innermost multiplexer wins.</div></details>
+        <details><summary>Pi behaves like a normal coding agent</summary><div>Start Pi from the FirstMate checkout and accept the project trust prompt. The tracked <code>.pi/extensions</code> files need that trust to load.</div></details>
+        <details><summary>The worker tries to use gh-axi for a GitLab MR</summary><div>The task entered FirstMate’s GitHub-only <code>direct-PR</code> path. Stop and re-dispatch through <code>no-mistakes</code>, whose provider adapter supports GitLab MR creation and CI through <code>glab</code>. Keep the existing worktree until FirstMate confirms the safe handoff.</div></details>
+        <details><summary>FirstMate refuses to merge a GitLab MR with no pipeline</summary><div>That refusal is expected. Its GitLab merge guard requires a successful pipeline attached to the current source-branch head, plus mergeable state, no conflicts, and resolved blocking discussions.</div></details>
+        <details><summary>glab works in your shell but fails in a worker</summary><div>Check that Herdr started under the same OS account, <code>glab</code> is on the pane’s <code>PATH</code>, and the target hostname is selected. Add required non-secret environment names to <code>config/launch-env-allowlist</code>. Do not paste tokens into prompts.</div></details>
+        <details><summary>Herdr reports a client/server protocol mismatch</summary><div>Run <code>herdr status --json</code>. Remove or upgrade an older binary shadowing the active client. Use <code>herdr update --handoff</code> when your environment supports it.</div></details>
+        <details><summary>A worker terminal looks dead</summary><div>Do not kill the pane or run a broad server stop. Ask FirstMate to inspect, interrupt, or relaunch the exact task. Raw pane cleanup can separate the terminal from its worktree and durable task state.</div></details>
+      </div>
+    </section>
+
+    <section id="security">
+      <div class="section-head">
+        <div class="section-no">07</div>
+        <div><h2>Office-safe defaults</h2><p>Coding agents can read source, run commands, and reach authenticated developer tools. Treat their environment as privileged.</p></div>
+      </div>
+      <div class="grid two">
+        <article class="card"><span class="tag safe">Credentials</span><h3>Use the keyring</h3><p>Authenticate with <code>glab auth login</code>. Never use <code>glab auth status --show-token</code> in an agent transcript. Grant only the scopes your GitLab workflow needs.</p></article>
+        <article class="card"><span class="tag safe">Authority</span><h3>Keep human merge approval</h3><p>Leave <code>yolo</code> off. Ask workers to open MRs, then review the exact URL, current pipeline, discussions, and diff before authorizing a merge.</p></article>
+        <article class="card"><span class="tag caution">Runtime</span><h3>Treat Pi workers as autonomous</h3><p>Pi has no permission system. Worktrees isolate Git checkouts, not OS credentials, network access, home-directory files, or processes. Pilot under a least-privilege account or approved disposable environment.</p></article>
+        <article class="card"><span class="tag caution">Cleanup</span><h3>Use FirstMate’s lifecycle</h3><p>Never force-remove a task with unlanded work. Let FirstMate verify the MR or approved local merge before it returns the worktree.</p></article>
+      </div>
+    </section>
+
+    <section id="pilot">
+      <div class="section-head">
+        <div class="section-no">08</div>
+        <div><h2>Prove it before office work</h2><p>Use a disposable GitLab repository with real CI and branch protections. One green demo is weaker than a controlled refusal test.</p></div>
+      </div>
+      <div class="card">
+        <ul class="checklist" data-key="pilot">
+          <li><label><input type="checkbox"><span>Pi loads both FirstMate extensions and Herdr reports Pi state.</span></label></li>
+          <li><label><input type="checkbox"><span>A scout creates one isolated worktree and no remote mutation.</span></label></li>
+          <li><label><input type="checkbox"><span>Two independent ship tasks create distinct Herdr spaces, worktrees, branches, and GitLab MRs.</span></label></li>
+          <li><label><input type="checkbox"><span>A red pipeline, unresolved discussion, and moved source head each block guarded merge.</span></label></li>
+          <li><label><input type="checkbox"><span>One reviewed green MR merges only after explicit approval.</span></label></li>
+          <li><label><input type="checkbox"><span>Restarting the primary preserves task reconciliation and supervision.</span></label></li>
+          <li><label><input type="checkbox"><span>Office security approves the model provider, credentials, logs, sockets, and local state location.</span></label></li>
+        </ul>
+      </div>
+      <p class="stamp">Rollout: local-only smoke test → disposable GitLab no-mistakes project → one attended low-risk repository → parallel independent tasks → cost tuning → away mode or secondmates.</p>
+    </section>
+
+    <section id="sources">
+      <div class="section-head">
+        <div class="section-no">09</div>
+        <div><h2>Primary sources</h2><p>The guide reflects the FirstMate main branch and public GitLab CLI documentation checked on 2026-09-13.</p></div>
+      </div>
+      <div class="card">
+        <ol class="source-list">
+          <li><a href="https://github.com/kunchenguid/firstmate">FirstMate README and quick start</a></li>
+          <li><a href="https://github.com/kunchenguid/firstmate/blob/main/docs/configuration.md">FirstMate configuration and backend selection</a></li>
+          <li><a href="https://github.com/kunchenguid/firstmate/blob/main/docs/herdr-backend.md">Herdr backend contract and limits</a></li>
+          <li><a href="https://github.com/kunchenguid/firstmate/blob/main/docs/gitlab-merge-watch.md">GitLab MR watch and merge verification</a></li>
+          <li><a href="https://github.com/kunchenguid/firstmate/blob/main/.agents/skills/harness-adapters/references/harness/pi.md">Pi harness adapter</a></li>
+          <li><a href="https://github.com/kunchenguid/firstmate/blob/main/.agents/skills/project-management/SKILL.md">Project registration and delivery posture</a></li>
+          <li><a href="https://github.com/kunchenguid/firstmate/blob/main/bin/fm-dod-lib.sh">Generated delivery contracts</a></li>
+          <li><a href="https://github.com/kunchenguid/no-mistakes/blob/main/docs/src/content/docs/guides/provider-integration.md">no-mistakes GitLab provider integration</a></li>
+          <li><a href="https://herdr.dev/docs/integrations/">Herdr Pi integration</a></li>
+          <li><a href="https://pi.dev/docs/latest/packages">Pi extension and package security</a></li>
+          <li><a href="https://docs.gitlab.com/cli/authentication/">GitLab CLI authentication</a></li>
+          <li><a href="https://docs.gitlab.com/cli/mr/create/">glab mr create reference</a></li>
+          <li><a href="https://docs.gitlab.com/cli/mr/merge/">glab mr merge reference</a></li>
+        </ol>
+        <p class="stamp">Verified local examples: Pi 0.85.1 · Herdr 0.9.0, protocol 22 · jq 1.6 · Node 24.18.0. Local glab was unavailable in the publishing shell, so glab syntax is sourced from GitLab’s current generated CLI reference.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="shell">Built as a public-safe operating manual. Replace example hosts and repository names with your office values in your private terminal.</div></footer>
+
+  <script>
+    const copyText = async (text, button) => {
+      try {
+        await navigator.clipboard.writeText(text.trim());
+        const old = button.textContent;
+        button.textContent = 'Copied';
+        setTimeout(() => button.textContent = old, 1200);
+      } catch {
+        button.textContent = 'Select text';
+      }
+    };
+
+    document.querySelectorAll('.command').forEach(block => {
+      const button = block.querySelector('.copy');
+      const pre = block.querySelector('pre');
+      button.addEventListener('click', () => copyText(pre.textContent, button));
+    });
+
+    document.querySelectorAll('.prompt-card').forEach(card => {
+      const button = card.querySelector('.copy-inline');
+      const prompt = card.querySelector('.prompt');
+      button.addEventListener('click', () => copyText(prompt.textContent, button));
+    });
+
+    const repoInput = document.querySelector('#repo-url');
+    const nameInput = document.querySelector('#project-name');
+    const branchInput = document.querySelector('#target-branch');
+    const output = document.querySelector('#setup-prompt');
+    const safe = (value, fallback) => value.trim() || fallback;
+    const renderPrompt = () => {
+      const repo = safe(repoInput.value, 'git@gitlab.example.com:team/service.git');
+      const name = safe(nameInput.value, 'service').replace(/[^a-zA-Z0-9._-]/g, '-');
+      const branch = safe(branchInput.value, 'main').replace(/[^a-zA-Z0-9._/-]/g, '-');
+      output.textContent = `Set up this FirstMate home for my office workflow.\n\n1. Run the FirstMate session-start and bootstrap diagnostics. Ask before installing anything.\n2. Use Pi as the primary and crew harness. Use Herdr as the standing backend. Verify the Herdr client/server, Pi integration, jq, and Treehouse.\n3. Verify every universal FirstMate bootstrap dependency, including authenticated gh and GitHub-focused AXI tools that remain mandatory even though my projects use GitLab.\n4. Verify glab can authenticate to the GitLab host implied by ${repo}. Do not print or expose any token.\n5. Add the existing GitLab project ${repo} as ${name}. Register it with no-mistakes posture and yolo off. Initialize it and run no-mistakes doctor, but do not change product code.\n6. Verify no-mistakes detects GitLab and can use glab for MR and CI operations against target branch ${branch}. Do not push, create an MR, or merge during setup.\n7. Keep FirstMate's guarded fm-pr-check and fm-pr-merge paths for returned GitLab MR URLs. If the pipeline, discussions, conflicts, or current head cannot be verified, stop and report the blocker.\n8. Finish with a concise readiness report. Do not dispatch implementation yet.`;
+    };
+    [repoInput, nameInput, branchInput].forEach(input => input.addEventListener('input', renderPrompt));
+    renderPrompt();
+    document.querySelector('#copy-generated').addEventListener('click', event => copyText(output.textContent, event.currentTarget));
+
+    document.querySelectorAll('.checklist').forEach(list => {
+      const key = `firstmate-guide:${list.dataset.key}`;
+      const boxes = [...list.querySelectorAll('input[type="checkbox"]')];
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      boxes.forEach((box, index) => {
+        box.checked = Boolean(saved[index]);
+        box.addEventListener('change', () => localStorage.setItem(key, JSON.stringify(boxes.map(item => item.checked))));
+      });
+    });
+  </script>
+</body>
+</html>

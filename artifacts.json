@@ -183,6 +183,14 @@
       "createdAt": "2026-09-09",
       "type": "html",
       "url": "artifacts/ecs-fargate-terraform-field-guide/"
+    },
+    {
+      "title": "FirstMate Bridge Manual: Pi + Herdr + GitLab",
+      "slug": "firstmate-pi-herdr-gitlab-runbook",
+      "description": "A beginner-to-advanced, source-backed runbook for operating FirstMate with Pi workers, Herdr, GitLab, glab, and safe office rollout controls.",
+      "createdAt": "2026-09-13",
+      "type": "html",
+      "url": "artifacts/firstmate-pi-herdr-gitlab-runbook/"
     }
   ]
 }
