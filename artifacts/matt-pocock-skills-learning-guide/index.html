@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matt Pocock’s Skills: a Practical Learning Guide</title><style>
+@page { size: A4; margin: 15mm 13mm 16mm; @bottom-right { content: counter(page); color: #667085; font-size: 9pt; } }
+:root { --ink:#182230; --muted:#475467; --line:#d0d5dd; --soft:#f8fafc; --navy:#0b2342; --blue:#175cd3; --amber:#b54708; --green:#067647; }
+* { box-sizing: border-box; }
+body { color:var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size:9.25pt; line-height:1.45; margin:0; }
+h1 { color:var(--navy); font-size:29pt; line-height:1.08; letter-spacing:-.9px; margin:0 0 8mm; padding-bottom:5mm; border-bottom:3px solid var(--blue); }
+h1 + p { font-size:10.2pt; color:var(--muted); background:#f1f5f9; padding:4mm; border-left:3px solid var(--blue); }
+h2 { color:var(--navy); font-size:17pt; line-height:1.2; letter-spacing:-.3px; margin:10mm 0 4mm; padding-bottom:2mm; border-bottom:1px solid var(--line); break-after:avoid; }
+h3 { color:#123b69; font-size:11.5pt; margin:6mm 0 2mm; break-after:avoid; }
+p { margin:0 0 3mm; }
+strong { color:#101828; }
+code { background:#eef2f6; color:#0b4aa2; padding:.15em .35em; border-radius:3px; font-family:"SFMono-Regular", Consolas, monospace; font-size:.9em; }
+pre { background:#0b1f35; color:#e6edf6; padding:4mm; border-radius:5px; overflow:hidden; }
+table { border-collapse:collapse; width:100%; margin:4mm 0 6mm; font-size:8.2pt; break-inside:avoid; }
+th { background:var(--navy); color:white; font-weight:700; text-align:left; padding:2.3mm; vertical-align:top; }
+td { border:1px solid var(--line); padding:2.1mm; vertical-align:top; }
+tr:nth-child(even) td { background:var(--soft); }
+ul,ol { margin:1.5mm 0 4mm 5mm; padding-left:4mm; }
+li { margin:1.2mm 0; }
+blockquote { color:var(--muted); border-left:3px solid var(--blue); padding-left:3mm; margin:4mm 0; }
+a { color:var(--blue); text-decoration:none; overflow-wrap:anywhere; }
+hr { border:0; border-top:1px solid var(--line); margin:5mm 0; }
+@media print { h2 { break-before: auto; } table { page-break-inside:avoid; } }
+</style></head>
+<body><h1>Matt Pocock’s Skills: a Practical Learning Guide</h1>
+<p><strong>Snapshot studied:</strong> <code>mattpocock/skills</code> commit <code>c55ee46073ed923f86ce59a5eb3b6d895095d1b7</code> (18 September 2026). This guide covers every <code>SKILL.md</code> in that snapshot: <strong>38 skills</strong>: 25 promoted daily-use skills, 4 misc skills, and 9 in-progress skills. The promoted public set is described by AI Hero as portable, composable process files that can work across agents; it also presents the recommended engineering spine as clarify → specify → ticket → implement → review.[1][2]</p>
+<h2>Executive take</h2>
+<p>This is not a “prompt pack.” It is an opinionated operating system for agent-assisted engineering. Its central bet is sound: agents need repeatable feedback and decision-making processes, not longer one-shot prompts. The highest-value skills form a chain:</p>
+<p><code>setup</code> → <code>grill-with-docs</code> → <code>to-spec</code> → <code>to-tickets</code> → <code>implement</code> (<code>tdd</code>) → <code>code-review</code></p>
+<p>Use the chain when work has enough consequence to deserve a written trail. Do <strong>not</strong> force it onto a two-line fix. For a one-session, well-understood task, grill briefly and go to <code>implement</code>; for a genuinely uncertain or cross-session effort, use the full spine. The author’s public teaching emphasizes the same pattern: shared understanding first, a spec after the conversation, tracer-bullet tickets, test-first implementation, and ongoing architectural upkeep.[2][3]</p>
+<h3>What “all skills” means in this repository</h3>
+<table>
+<thead>
+<tr>
+<th>Bucket</th>
+<th style="text-align: right;">Count</th>
+<th>Status</th>
+<th>What it means for you</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>engineering/</code> + <code>productivity/</code></td>
+<td style="text-align: right;">25</td>
+<td><strong>Promoted</strong></td>
+<td>Daily-use skills, in the README and Claude plugin, with AI Hero docs. Start here.</td>
+</tr>
+<tr>
+<td><code>misc/</code></td>
+<td style="text-align: right;">4</td>
+<td>Unpromoted</td>
+<td>Useful niche tools, excluded from the plugin and public skill list. Treat as optional utilities.</td>
+</tr>
+<tr>
+<td><code>in-progress/</code></td>
+<td style="text-align: right;">9</td>
+<td>Public beta</td>
+<td>Explicitly unstable and may change or disappear. Try deliberately, not as foundational process.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Invocation:</strong> user-invoked skills are orchestration commands a human must call; model-invoked skills are reusable discipline the agent may select when the task fits.[1]</p>
+<h2>The learning path I recommend</h2>
+<ol>
+<li><strong>Install selectively, then set up one repository.</strong> <code>setup-matt-pocock-skills</code> configures tracker, triage labels, and domain-document layout. The official installation options are an editable <code>npx skills@latest add mattpocock/skills</code> install or the managed Claude plugin; do not install both because that duplicates skills.[1][2]</li>
+<li><strong>Learn the 5 core behaviors:</strong> <code>grill-with-docs</code>, <code>to-spec</code>, <code>to-tickets</code>, <code>tdd</code>, <code>code-review</code>.</li>
+<li><strong>Add upkeep:</strong> <code>diagnosing-bugs</code>, <code>improve-codebase-architecture</code>, <code>domain-modeling</code>, <code>research</code>.</li>
+<li><strong>Use productivity tools when friction appears:</strong> <code>handoff</code>, <code>to-questionnaire</code>, <code>wait-what</code>, <code>teach</code>.</li>
+<li><strong>Treat beta/misc skills as local experiments.</strong> Do not make a beta workflow your team’s process until it survives real work.</li>
+</ol>
+<h2>The promoted engineering skills (18)</h2>
+<h3><code>/setup-matt-pocock-skills</code></h3>
+<p><strong>Solves:</strong> unconfigured assumptions about trackers, triage, glossary/ADR locations.<br />
+<strong>Use when:</strong> once per repo before the engineering flow, or when switching trackers.<br />
+<strong>How it works:</strong> inspects the repository, asks for tracker/labels/docs choices, shows drafts, then writes a small Agent Skills block plus <code>docs/agents/*</code> configuration.<br />
+<strong>Pros:</strong> makes downstream skills’ hidden assumptions explicit; avoids creating <code>AGENTS.md</code> when <code>CLAUDE.md</code> already exists.<br />
+<strong>Cons / boundaries:</strong> interactive by design; it explores and confirms before writing. It is setup, not project understanding.<br />
+<strong>Sequence:</strong> prerequisite for the engineering system; <code>code-review</code> specifically expects its issue-tracker configuration.</p>
+<h3><code>/ask-matt</code></h3>
+<p><strong>Solves:</strong> choosing a skill when you know the situation but not the map.<br />
+<strong>Use when:</strong> “what should I run for this?”<br />
+<strong>How it works:</strong> routes among the main flow, codebase health, vocabulary work, phase transitions, and standalone tasks.<br />
+<strong>Pros:</strong> stops random skill invocation and distinguishes repo work from stateless work.<br />
+<strong>Cons / boundaries:</strong> it recommends; it does not execute your project. Keep grilling/spec/ticket work in one context window where possible.<br />
+<strong>Sequence:</strong> router over the rest; use <code>grill-with-docs</code> rather than <code>grill-me</code> when you have a working repository.</p>
+<h3><code>/grill-with-docs</code></h3>
+<p><strong>Solves:</strong> misalignment plus undocumented design vocabulary.<br />
+<strong>Use when:</strong> starting a design or plan in a real codebase.<br />
+<strong>How it works:</strong> wraps <code>grilling</code> and <code>domain-modeling</code>, producing clarified decisions while updating glossary/ADR material.<br />
+<strong>Pros:</strong> creates a durable shared language instead of a disposable chat.<br />
+<strong>Cons / boundaries:</strong> it is intentionally a thin wrapper; the actual interview and documentation rules live in its dependencies.<br />
+<strong>Sequence:</strong> usual start of repository work; optionally detour through <code>prototype</code>, then go direct to <code>implement</code> or through <code>to-spec</code> and <code>to-tickets</code>.</p>
+<h3><code>/to-spec</code></h3>
+<p><strong>Solves:</strong> a good conversation that never becomes a buildable, testable contract.<br />
+<strong>Use when:</strong> agreement exists and you want synthesis, not more questions.<br />
+<strong>How it works:</strong> explores the current code, identifies viable testing seams, checks them with you, writes structured user stories/decisions/tests/scope, then publishes to the configured tracker.<br />
+<strong>Pros:</strong> anchors work in behavior and boundaries rather than implementation trivia.<br />
+<strong>Cons / boundaries:</strong> it must not interview; requires tracker and triage configuration; avoids stale paths and incidental code snippets.<br />
+<strong>Sequence:</strong> follows grilling or a prototype; commonly precedes <code>to-tickets</code>.</p>
+<h3><code>/to-tickets</code></h3>
+<p><strong>Solves:</strong> a spec too large for one fresh agent context or parallel work.<br />
+<strong>Use when:</strong> you need independently executable slices and explicit blockers.<br />
+<strong>How it works:</strong> turns a plan/spec into vertical tracer-bullet tickets, establishes dependencies, quizzes/iterates, and publishes each item to the tracker or local files.<br />
+<strong>Pros:</strong> exposes the unblocked frontier; each ticket is meant to be demoable and small enough for one context.<br />
+<strong>Cons / boundaries:</strong> needs tracker/labels; do not mutate the parent issue; mechanical broad refactors need expand–contract instead of fake vertical slices.<br />
+<strong>Sequence:</strong> <code>to-spec</code> → <code>to-tickets</code> → implement tickets at the frontier.</p>
+<h3><code>/implement</code></h3>
+<p><strong>Solves:</strong> implementation that skips tests, final verification, and review.<br />
+<strong>Use when:</strong> a spec or ticket set is ready.<br />
+<strong>How it works:</strong> builds the requested work, uses <code>tdd</code> at agreed seams where possible, repeatedly runs focused checks, runs the full suite, calls <code>code-review</code>, and commits.<br />
+<strong>Pros:</strong> makes verification and review part of delivery rather than an optional afterthought.<br />
+<strong>Cons / boundaries:</strong> TDD is conditional on usable pre-agreed seams; this skill assumes the work is already sufficiently described.<br />
+<strong>Sequence:</strong> direct after small, clear grilling; otherwise after <code>to-spec</code> → <code>to-tickets</code>.</p>
+<h3><code>/tdd</code></h3>
+<p><strong>Solves:</strong> plausible agent code with no tight behavioral feedback loop.<br />
+<strong>Use when:</strong> building one behavior or fixing a bug test-first.<br />
+<strong>How it works:</strong> reads domain docs, agrees public seams, then repeats one vertical slice at a time: failing behavior test → minimal implementation → repeat.<br />
+<strong>Pros:</strong> tests survive refactors because they target behavior at public interfaces.<br />
+<strong>Cons / boundaries:</strong> do not write a test before agreeing the seam; rejects tautological/internal tests and horizontal test slicing; refactoring belongs outside red-green.<br />
+<strong>Sequence:</strong> used by <code>implement</code>; consult <code>codebase-design</code> when the interface/seam is unclear.</p>
+<h3><code>/code-review</code></h3>
+<p><strong>Solves:</strong> a change that “looks fine” but either violates standards or misses the originating spec.<br />
+<strong>Use when:</strong> reviewing a branch, PR, work in progress, or a diff since a fixed point.<br />
+<strong>How it works:</strong> validates the fixed point and non-empty diff, locates the spec and standards, then runs isolated parallel reviews: <strong>Standards</strong> and <strong>Spec</strong>.<br />
+<strong>Pros:</strong> two independent axes avoid standards compliance hiding a missed requirement, or vice versa.<br />
+<strong>Cons / boundaries:</strong> needs a fixed point; asks if missing. Without a spec, the Spec axis is explicitly unavailable. Repository standards outrank its Fowler-smell baseline.<br />
+<strong>Sequence:</strong> final stage of <code>implement</code>, but valuable standalone.</p>
+<h3><code>/diagnosing-bugs</code></h3>
+<p><strong>Solves:</strong> random debugging and untested “fixes.”<br />
+<strong>Use when:</strong> behavior is broken, failing, throwing, regressing, or slow.<br />
+<strong>How it works:</strong> build a tight red-capable loop; reproduce/minimize; propose 3–5 ranked falsifiable hypotheses; instrument one prediction at a time; write regression test before fix if a proper seam exists; verify and clean up.<br />
+<strong>Pros:</strong> forces evidence before theory; minimization shrinks the search space.<br />
+<strong>Cons / boundaries:</strong> never hypothesize before a loop exists; redact secrets. If no loop can be built, stop and request needed access. For performance, measure/bisect rather than log.<br />
+<strong>Sequence:</strong> feeds <code>improve-codebase-architecture</code> if no suitable regression-test seam exists.</p>
+<h3><code>/improve-codebase-architecture</code></h3>
+<p><strong>Solves:</strong> shallow modules, weak seams, and code that agents struggle to navigate or test.<br />
+<strong>Use when:</strong> weekly-ish upkeep, after a development surge, or around a named pain point.<br />
+<strong>How it works:</strong> targets recently changed hotspots, reads context/ADRs, explores candidates, applies the deletion test, creates a self-contained visual HTML report, then grills the selected candidate.<br />
+<strong>Pros:</strong> prioritizes high-leverage deepening opportunities, with before/after diagrams and test/locality reasoning.<br />
+<strong>Cons / boundaries:</strong> a survey, not a magic mud-removal service. Must not propose interfaces before you choose a candidate; report is temporary, outside the repo.<br />
+<strong>Sequence:</strong> uses <code>codebase-design</code>, then <code>grilling</code> + <code>domain-modeling</code> for the chosen opportunity.</p>
+<h3><code>/codebase-design</code></h3>
+<p><strong>Solves:</strong> vague architectural language and accidental shallow-module design.<br />
+<strong>Use when:</strong> shaping module interfaces, seams, testability, or deepening opportunities.<br />
+<strong>How it works:</strong> supplies a strict vocabulary—module, interface, implementation, depth, seam, adapter, leverage, locality—and applies interface-reduction/deletion-test questions.<br />
+<strong>Pros:</strong> gives a shared design lens: lots of behavior behind a small interface.<br />
+<strong>Cons / boundaries:</strong> deliberately prescriptive vocabulary; do not measure depth by line-count ratios or introduce a seam for only one adapter.<br />
+<strong>Sequence:</strong> reference discipline under <code>tdd</code> and architecture improvement.</p>
+<h3><code>/domain-modeling</code></h3>
+<p><strong>Solves:</strong> overloaded terms, code/conversation mismatch, and ADRs written for trivia.<br />
+<strong>Use when:</strong> terms are fuzzy, <code>CONTEXT.md</code> needs work, or a decision may deserve an ADR.<br />
+<strong>How it works:</strong> challenges terms, stress-tests scenarios, checks against code, updates glossary inline, and adds ADRs only for hard-to-reverse, surprising, genuine trade-offs.<br />
+<strong>Pros:</strong> improves naming, navigation, and concise communication across future sessions.<br />
+<strong>Cons / boundaries:</strong> <code>CONTEXT.md</code> is a glossary, not an implementation dump, spec, or scratchpad. Create docs lazily.<br />
+<strong>Sequence:</strong> used by <code>grill-with-docs</code>, <code>triage</code>, <code>wayfinder</code>, and architecture improvement.</p>
+<h3><code>/research</code></h3>
+<p><strong>Solves:</strong> design decisions made from stale secondary summaries.<br />
+<strong>Use when:</strong> you need documentation/API facts or background investigation before design.<br />
+<strong>How it works:</strong> delegates a background agent to primary docs, source, specs, or APIs; traces claims to owners; saves cited Markdown in repository convention.<br />
+<strong>Pros:</strong> preserves the main session while research proceeds; emphasizes source ownership.<br />
+<strong>Cons / boundaries:</strong> primary sources only; follows existing notes conventions.<br />
+<strong>Sequence:</strong> produces input for <code>grill-with-docs</code>; it supplements rather than replaces design.</p>
+<h3><code>/prototype</code></h3>
+<p><strong>Solves:</strong> questions that paper plans cannot settle.<br />
+<strong>Use when:</strong> you must validate a state model/logic or compare radically different UI directions.<br />
+<strong>How it works:</strong> first names the exact question. Logic gets a shareable single-page state-machine demo; UI gets multiple route-selectable variants. Validate, record the verdict, then fold only the decision into production work.<br />
+<strong>Pros:</strong> creates runnable evidence, often usable by non-developers.<br />
+<strong>Cons / boundaries:</strong> deliberately throwaway: no tests, broad error handling, or needless abstractions; does not go on main.<br />
+<strong>Sequence:</strong> optional evidence loop after grilling; <code>handoff</code> can bridge its separate directory.</p>
+<h3><code>/wayfinder</code></h3>
+<p><strong>Solves:</strong> a large/foggy effort that cannot be honestly planned in one session.<br />
+<strong>Use when:</strong> you need a tracker-backed map of decisions before implementation.<br />
+<strong>How it works:</strong> grills the destination, maps frontier/fog as decision tickets, wires dependencies, dispatches research, resolves one frontier decision per session, updates the map, and graduates fog only when it becomes actionable.<br />
+<strong>Pros:</strong> supports parallel work without pretending uncertainty is resolved.<br />
+<strong>Cons / boundaries:</strong> planning-only by default; do not resolve more than one ticket/session except research; human-in-the-loop decisions require a human.<br />
+<strong>Sequence:</strong> when the route clears, hand off to <code>to-spec</code>/<code>to-tickets</code>.</p>
+<h3><code>/triage</code></h3>
+<p><strong>Solves:</strong> raw issue queues that lack ownership, state, evidence, or usable briefs.<br />
+<strong>Use when:</strong> reviewing incoming issues/PRs or managing an attention queue.<br />
+<strong>How it works:</strong> gathers tracker/code context, detects duplicates/prior rejection, verifies claims, grills if needed, then applies category/state labels, comments, closures, and ready-for-agent briefs.<br />
+<strong>Pros:</strong> small state machine and actionable work queue; checks “already implemented?” before planning.<br />
+<strong>Cons / boundaries:</strong> depends on configured label mapping; comments need the prescribed AI-triage disclaimer; exactly one category and one state role.<br />
+<strong>Sequence:</strong> may invoke <code>grilling</code>/<code>domain-modeling</code>; can feed implementation.</p>
+<h3><code>/resolving-merge-conflicts</code></h3>
+<p><strong>Solves:</strong> line-level conflict resolution that destroys one side’s intent.<br />
+<strong>Use when:</strong> a merge or rebase is already in conflict.<br />
+<strong>How it works:</strong> inspects state/history/files, traces each side to commits/PRs/issues, resolves each hunk by intent, tests, stages, and finishes the operation.<br />
+<strong>Pros:</strong> seeks to preserve both intentions rather than mechanically choosing ours/theirs.<br />
+<strong>Cons / boundaries:</strong> must not invent behavior and must not abort. Incompatibility requires choosing the merge goal and recording the trade-off.<br />
+<strong>Sequence:</strong> standalone incident skill.</p>
+<h3><code>/wizard</code></h3>
+<p><strong>Solves:</strong> human-only setup steps that agents cannot safely perform (dashboards, secrets, provisioning/cutovers).<br />
+<strong>Use when:</strong> a repeatable manual process needs a guided script.<br />
+<strong>How it works:</strong> inspects context, proposes stages, confirms scope, writes an interactive Bash wizard from a template, validates syntax/ShellCheck, makes it executable, and traces value destinations.<br />
+<strong>Pros:</strong> supports confirmation gates, hidden secret entry, idempotent <code>.env</code> updates, and a close-out summary.<br />
+<strong>Cons / boundaries:</strong> do not use it for work the agent can perform; do not invent dashboard steps; do not end-to-end run browser/human-input flows. Ephemeral by default.<br />
+<strong>Sequence:</strong> companion for human execution, not a deployment agent.</p>
+<h2>The promoted productivity skills (7)</h2>
+<h3><code>/grill-me</code></h3>
+<p><strong>Solves:</strong> a plan accepted before its decision tree is resolved. <strong>Use when:</strong> you want an interview without repository documentation. <strong>How:</strong> thin user-facing router to <code>grilling</code>. <strong>Pros:</strong> tiny and direct. <strong>Cons:</strong> creates no durable project context. <strong>Sequence:</strong> use <code>grill-with-docs</code> instead for repo work.</p>
+<h3><code>/grilling</code></h3>
+<p><strong>Solves:</strong> agents silently filling decision gaps with guesses. <strong>Use when:</strong> sharpening a plan, decision, or idea. <strong>How:</strong> maps a design tree, asks all currently unblocked questions in numbered rounds with recommendations, recomputes the frontier, and stops only once no decision is silently assumed. <strong>Pros:</strong> respects dependencies and separates facts the agent can discover from choices the user must make. <strong>Cons:</strong> no action until shared understanding is confirmed. <strong>Sequence:</strong> core primitive behind <code>grill-me</code>, <code>grill-with-docs</code>, <code>triage</code>, <code>wayfinder</code>, and architecture work.</p>
+<h3><code>/handoff</code></h3>
+<p><strong>Solves:</strong> lost context when switching agents/sessions. <strong>Use when:</strong> moving work to a new session. <strong>How:</strong> writes a focused handoff to OS temporary storage, points at existing artifacts, proposes relevant skills, and redacts sensitive material. <strong>Pros:</strong> preserves continuity without duplicating specs/commits/diffs. <strong>Cons:</strong> must remain outside the workspace; not a substitute for real source artifacts. <strong>Sequence:</strong> after any partially completed phase.</p>
+<h3><code>/teach</code></h3>
+<p><strong>Solves:</strong> disconnected one-off explanations when the user needs durable learning. <strong>Use when:</strong> learning a topic over multiple sessions. <strong>How:</strong> maintains mission/resources/records/lessons, researches trusted sources, calibrates difficulty, and creates short interactive HTML lessons with retrieval practice, spacing, and interleaving. <strong>Pros:</strong> mission-linked, cumulative learning. <strong>Cons:</strong> uses the current directory as stateful teaching workspace and must build <code>RESOURCES.md</code> before relying on memory. <strong>Sequence:</strong> subsequent lessons use learning records and assets.</p>
+<h3><code>/to-questionnaire</code></h3>
+<p><strong>Solves:</strong> a decision blocked by information held by another person. <strong>Use when:</strong> collecting answers async or in a meeting. <strong>How:</strong> grills the sending context, then writes a clear Markdown questionnaire with answer space, ordered by importance. <strong>Pros:</strong> turns vague “ask them about it” into a usable instrument. <strong>Cons:</strong> asks about recipient/needed result, not the subject; questions must be single-idea. <strong>Sequence:</strong> answers feed later planning/specification.</p>
+<h3><code>/wait-what</code></h3>
+<p><strong>Solves:</strong> an explanation that did not land. <strong>Use when:</strong> immediately after a confusing agent message. <strong>How:</strong> re-pitches it in Simplified Technical English using project ubiquitous language. <strong>Pros:</strong> lowers cognitive load without losing relevant context. <strong>Cons:</strong> must honor <code>CONTEXT-MAP.md</code> when several glossaries exist. <strong>Sequence:</strong> recovery/clarification only.</p>
+<h3><code>/writing-for-agents</code></h3>
+<p><strong>Solves:</strong> bloated or stale agent-facing docs that waste context and cause inconsistent behavior. <strong>Use when:</strong> editing skills, <code>AGENTS.md</code>, <code>CLAUDE.md</code>, or pointed-to documents. <strong>How:</strong> applies progressive disclosure, clear pointers, hierarchy, positive instructions, completion bounds, and pruning. <strong>Pros:</strong> improves predictable behavior while controlling context cost. <strong>Cons:</strong> process guidance, not a guarantee; split files only when the split earns its load. <strong>Sequence:</strong> a reference tool for agent-facing documentation. AI Hero’s companion guidance makes the same case: keep root agent files minimal and point to detailed materials progressively.[4]</p>
+<h2>Misc skills (4): niche utilities, not the core system</h2>
+<h3><code>git-guardrails-claude-code</code></h3>
+<p>Blocks dangerous Git operations with a Claude Code PreToolUse hook: push, hard reset, forced clean, destructive branch deletion, and working-tree discard. <strong>Use:</strong> when you want preventative guardrails. <strong>Pros:</strong> intercepts before execution and can be project/global. <strong>Cons:</strong> must merge rather than overwrite hooks; customize and test the patterns. <strong>Status:</strong> model-invoked; Claude-specific.</p>
+<h3><code>migrate-to-shoehorn</code></h3>
+<p>Replaces test-only TypeScript <code>as</code> assertions with <code>@total-typescript/shoehorn</code> helpers: <code>fromPartial</code>, <code>fromAny</code>, and sometimes <code>fromExact</code>. <strong>Use:</strong> test fixtures are huge or assertions erase useful checking. <strong>Pros:</strong> concise partial fixtures while retaining type-aware alternatives. <strong>Cons:</strong> test code only; carefully distinguish valid partial data from intentionally-invalid inputs. <strong>Status:</strong> model-invoked.</p>
+<h3><code>scaffold-exercises</code></h3>
+<p>Creates <code>ai-hero-cli</code>-conforming course-exercise directories, readmes, stubs, and validates them with its linter. <strong>Use:</strong> authoring AI Hero course exercises. <strong>Pros:</strong> encodes structural/lint rules. <strong>Cons:</strong> highly product-specific. <strong>Status:</strong> model-invoked.</p>
+<h3><code>setup-pre-commit</code></h3>
+<p>Adds Husky/lint-staged/Prettier plus available typecheck/test commands. <strong>Use:</strong> need commit-time hygiene. <strong>Pros:</strong> formatting first, then checks; detects package manager/config. <strong>Cons:</strong> defaults to npm if unclear and omits absent scripts; assumes Husky v9+. <strong>Status:</strong> model-invoked.</p>
+<h2>In-progress skills (9): beta, useful but not foundational</h2>
+<h3><code>/claude-handoff</code></h3>
+<p>Starts a fresh background Claude agent with a concise, named handoff prompt. <strong>Use:</strong> continuation should start immediately, not as a saved document. <strong>Pros:</strong> direct continuation and descriptive job identity. <strong>Cons:</strong> Claude CLI-specific; redact secrets because the summary is a prompt. <strong>Sequence:</strong> background alternative to <code>handoff</code>.</p>
+<h3><code>/implement-spec</code></h3>
+<p>Implements an entire spec/ticket dependency graph in one draft-PR branch using worktrees, parallel implementers, a merger agent, review, one fix pass, and cleanup. <strong>Use:</strong> spec + linked tickets already exist. <strong>Pros:</strong> concurrency on the ready frontier. <strong>Cons:</strong> operationally complex; requires clean worktree lifecycle and shared outside-repo exploration notes. <strong>Sequence:</strong> spec/tickets → parallel implementation → <code>code-review</code> → fix → ready PR.</p>
+<h3><code>/loop-me</code></h3>
+<p>Turns recurring life/work patterns into implementable workflow specs over multiple sessions. <strong>Use:</strong> designing a workflow or finding one worth designing. <strong>Pros:</strong> uses a loop lens to surface delegation opportunities. <strong>Cons:</strong> produces only specs; it may have no AI, schedule, or checkpoint. <strong>Sequence:</strong> invokes <code>grilling</code>; <code>workflows/*.md</code> is source of truth.</p>
+<h3><code>pr</code></h3>
+<p>Writes a concise PR body: Summary with the smallest explanatory visual, Evidence, and Merge Danger (one-way/two-way door plus blast radius). <strong>Use:</strong> drafting a PR description. <strong>Pros:</strong> forces evidence and reversibility thinking. <strong>Cons:</strong> no boilerplate theater; use only the visual form that answers the question. <strong>Status:</strong> model-invoked.</p>
+<h3><code>/retro</code></h3>
+<p>Reviews a coding session and proposes agent-environment improvements across navigation, checks, standards, context, tool use, and information access. <strong>Use:</strong> retrospective process improvement. <strong>Pros:</strong> routes deterministic violations toward automation rather than prose. <strong>Cons:</strong> explicitly a <strong>STUB/design note</strong>, not functional yet; inspect existing CI/checks before proposing a guardrail. <strong>Sequence:</strong> first invokes <code>writing-for-agents</code>.</p>
+<h3><code>/setup-ts-deep-modules</code></h3>
+<p>Configures dependency-cruiser to make package roots public entry points and subfolders private implementation. <strong>Use:</strong> TypeScript repo wants enforced deep-module boundaries. <strong>Pros:</strong> verifies clean pass → intentional deep-import failure → clean pass; allows multiple small entry points. <strong>Cons:</strong> must merge config, not overwrite; no tsconfig/path-alias changes; flat package layer constraint. <strong>Sequence:</strong> uses <code>codebase-design</code> vocabulary.</p>
+<h3><code>/writing-fragments</code></h3>
+<p>Explores raw ideas as append-only Markdown fragments without an outline. <strong>Use:</strong> gathering material before knowing the article. <strong>Pros:</strong> preserves sharp claims, observations, quotes, and leading words. <strong>Cons:</strong> no body headings/order/structure; reread before append. <strong>Sequence:</strong> exploration, then a later writing phase.</p>
+<h3><code>/writing-beats</code></h3>
+<p>Turns a fixed raw-material pile into an article one coherent “beat” at a time. <strong>Use:</strong> exploration is complete but article route is uncertain. <strong>Pros:</strong> makes conceptual prerequisites and transitions explicit. <strong>Cons:</strong> user chooses each beat; cannot rely on ungrounded concepts; do not write ahead. <strong>Sequence:</strong> exploit fixed raw material.</p>
+<h3><code>/writing-shape</code></h3>
+<p>Turns read-only raw Markdown into a separate article block-by-block, with explicit format choices. <strong>Use:</strong> raw material exists and you want deliberate article shaping. <strong>Pros:</strong> preserves input, exposes structure/format choices, and refuses invented material. <strong>Cons:</strong> no publishing/platform formatting/frontmatter unless asked; re-read output before every write. <strong>Sequence:</strong> exploit, distinct from fragments’ exploration and beats’ larger narrative units.</p>
+<h2>Practical decision guide</h2>
+<table>
+<thead>
+<tr>
+<th>If you are here…</th>
+<th>Run this</th>
+<th>Avoid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“I know roughly what I want, but the decisions are mushy.”</td>
+<td><code>grill-with-docs</code> (repo) or <code>grill-me</code> (stateless)</td>
+<td>Asking the agent to write a plan immediately</td>
+</tr>
+<tr>
+<td>“We agree; make it buildable.”</td>
+<td><code>to-spec</code></td>
+<td>Re-grilling the same decisions</td>
+</tr>
+<tr>
+<td>“This won’t fit in one agent session.”</td>
+<td><code>to-tickets</code></td>
+<td>Horizontal tasks such as “make all types first”</td>
+</tr>
+<tr>
+<td>“We do not know whether this model/UI will work.”</td>
+<td><code>prototype</code></td>
+<td>Turning the experiment into production code</td>
+</tr>
+<tr>
+<td>“Implement this ready, bounded behavior.”</td>
+<td><code>implement</code> + <code>tdd</code></td>
+<td>Tests that assert private implementation</td>
+</tr>
+<tr>
+<td>“Something is broken/slow.”</td>
+<td><code>diagnosing-bugs</code></td>
+<td>Hypotheses before a reproducible feedback loop</td>
+</tr>
+<tr>
+<td>“The agent has made the codebase harder to change.”</td>
+<td><code>improve-codebase-architecture</code></td>
+<td>Big-bang rewrites or treating the report as an automatic fix</td>
+</tr>
+<tr>
+<td>“The diff is ready.”</td>
+<td><code>code-review</code></td>
+<td>One-axis ‘looks clean’ review</td>
+</tr>
+<tr>
+<td>“A person must perform a secret/dashboard step.”</td>
+<td><code>wizard</code></td>
+<td>An agent pretending to execute it</td>
+</tr>
+<tr>
+<td>“We keep losing session context.”</td>
+<td><code>handoff</code></td>
+<td>Copying every artifact into a giant prompt</td>
+</tr>
+</tbody>
+</table>
+<h2>Strengths, weaknesses, and adoption advice</h2>
+<h3>Strengths</h3>
+<ul>
+<li><strong>Composable rather than monolithic.</strong> Each skill has a narrow job and explicit handoffs.[1][2]</li>
+<li><strong>Decision quality before code.</strong> Grilling, domain modeling, specs, and tracer bullets target the most common agent failure: confidently building the wrong thing.[1][3]</li>
+<li><strong>Feedback-first implementation.</strong> TDD, diagnosis, and review make evidence part of the loop.[1][3]</li>
+<li><strong>Architecture is a first-class maintenance task.</strong> Deep modules and clean seams are especially valuable with agents because they improve both navigation and testing.[1][3]</li>
+<li><strong>Progressive disclosure.</strong> The system keeps specialized process material available without putting all rules in a giant root instruction file.[2][4]</li>
+</ul>
+<h3>Weaknesses / trade-offs</h3>
+<ul>
+<li><strong>Process overhead is real.</strong> The full flow is overkill for trivial changes. Use the shortest path that still gives you confidence.</li>
+<li><strong>Tracker and documentation discipline are prerequisites.</strong> The engineering flow becomes clumsy if the repository has no agreed tracker/labels/docs arrangement.</li>
+<li><strong>Some skills are tool- or ecosystem-specific.</strong> Claude hooks, AI Hero exercise layout, and TypeScript dependency-cruiser are not portable defaults.</li>
+<li><strong>Beta is beta.</strong> The in-progress bucket is explicitly not the stable contract; <code>retro</code> is not functional.</li>
+<li><strong>Skills encode a philosophy.</strong> Deep modules, glossary/ADR behavior, tracer bullets, and strict terminology may not fit every codebase unchanged. Adapt the process, but preserve the underlying feedback loops.</li>
+</ul>
+<h3>A pragmatic rollout</h3>
+<p><strong>Week 1:</strong> install/edit only <code>setup-matt-pocock-skills</code>, <code>grill-with-docs</code>, <code>to-spec</code>, <code>tdd</code>, and <code>code-review</code>. Use them on one meaningful feature.<br />
+<strong>Week 2:</strong> add <code>to-tickets</code>, <code>diagnosing-bugs</code>, and <code>handoff</code>; compare rework and review findings against the previous week.<br />
+<strong>Week 3+:</strong> introduce <code>domain-modeling</code>, <code>research</code>, and <code>improve-codebase-architecture</code>; trial beta/misc tools only where they solve a concrete repeated pain.</p>
+<p>Do not copy the whole repository blindly into every project. The point is to make the agent’s process fit your standards—not to replace your judgment with somebody else’s workflow.[1][2]</p>
+<h2>Sources</h2>
+<p>[1] https://github.com/mattpocock/skills<br />
+[2] https://www.aihero.dev/skills<br />
+[3] https://www.aihero.dev/5-agent-skills-i-use-every-day<br />
+[4] https://www.aihero.dev/a-complete-guide-to-agents-md</p></body></html>
