@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Orca AI Development Runbook",
+      "slug": "orca-ai-development-runbook",
+      "description": "A practical operating system for high-throughput, high-quality development with Orca, Pi, Claude Code, Cursor, and Codex.",
+      "createdAt": "2026-09-22",
+      "type": "html",
+      "url": "artifacts/orca-ai-development-runbook/"
+    },
+    {
       "title": "Hermes Dashboard Inspiration",
       "slug": "hermes-dashboard-inspiration",
       "description": "Curated open-source references for designing a calm, high-signal Hermes web dashboard, including official plugin examples and visual systems worth studying.",
