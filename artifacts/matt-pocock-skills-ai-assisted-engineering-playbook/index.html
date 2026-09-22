@@ -1,0 +1,581 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Matt Pocock Skills — AI-Assisted Engineering Playbook</title><style>
+@page { size: A4; margin: 16mm 15mm 18mm 15mm; }
+:root { --ink:#152033; --muted:#556277; --blue:#1769e0; --line:#dce4ef; --soft:#f5f8fc; --dark:#101827; }
+* { box-sizing:border-box; }
+body { font-family: Arial, "DejaVu Sans", sans-serif; color:var(--ink); font-size:10.25pt; line-height:1.5; }
+h1 { font-size:27pt; line-height:1.08; letter-spacing:-0.7px; color:var(--dark); margin:0 0 15px; padding-bottom:15px; border-bottom:5px solid var(--blue); }
+h2 { font-size:16.5pt; color:var(--dark); margin:27px 0 9px; padding-top:3px; break-after:avoid; }
+h3 { font-size:12.3pt; color:var(--blue); margin:20px 0 7px; break-after:avoid; }
+p { margin:0 0 10px; }
+strong { color:var(--dark); }
+ul, ol { margin:4px 0 12px; padding-left:21px; }
+li { margin:3px 0; }
+pre { background:var(--dark); color:#e8effb; padding:11px 13px; border-radius:6px; font-size:8.8pt; white-space:pre-wrap; break-inside:avoid; }
+code { font-family:"DejaVu Sans Mono", monospace; background:#edf2f9; padding:1px 3px; border-radius:3px; font-size:0.92em; }
+pre code { background:transparent; padding:0; }
+table { width:100%; border-collapse:collapse; margin:11px 0 16px; font-size:8.8pt; }
+th { background:#eaf2ff; color:#183c72; text-align:left; font-weight:700; }
+th, td { border:1px solid var(--line); padding:7px 8px; vertical-align:top; }
+tr:nth-child(even) td { background:#fafcff; }
+blockquote { border-left:4px solid var(--blue); color:var(--muted); padding:4px 0 4px 12px; margin:12px 0; }
+a { color:var(--blue); text-decoration:none; }
+h2:nth-of-type(3) { break-before:page; }
+</style></head><body><div style="font-size:9pt;color:#556277;margin:0 0 14px;">Updated 22 Sep 2026 · <a href="playbook.pdf">Download the PDF</a> · <a href="playbook.md">Read the Markdown source</a></div><h1>Matt Pocock Skills — AI-Assisted Engineering Playbook</h1>
+<h2>Executive take</h2>
+<p>Matt Pocock's skills are most useful as an <strong>engineering control system for agents</strong>, not as a list of slash commands. Their job is to make an AI coding loop behave like a good senior engineer: establish the real problem, expose decisions, create a testable contract, make a small verified change, then review against both the contract and repository standards.</p>
+<p>The default spine is:</p>
+<pre><code class="language-text">grill-with-docs → to-spec → to-tickets → implement + tdd → code-review
+</code></pre>
+<p>Use the whole spine only when uncertainty, blast radius, or duration justifies it. A small known fix should not be buried in planning theater. A multi-service platform should not be "one big prompt" either.</p>
+<h2>The operating model</h2>
+<table>
+<thead>
+<tr>
+<th>Work characteristic</th>
+<th>Correct agent posture</th>
+<th>Skills that earn their keep</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Small and understood</td>
+<td>Make one narrow change and prove it</td>
+<td><code>implement</code>, <code>tdd</code>, <code>code-review</code></td>
+</tr>
+<tr>
+<td>Requirements or vocabulary unclear</td>
+<td>Resolve decisions before code</td>
+<td><code>grill-with-docs</code>, <code>domain-modeling</code>, <code>research</code></td>
+</tr>
+<tr>
+<td>Risky or cross-cutting</td>
+<td>Produce a written behavioral contract</td>
+<td><code>to-spec</code>, <code>codebase-design</code></td>
+</tr>
+<tr>
+<td>Too large for one context</td>
+<td>Slice into independently demonstrable work</td>
+<td><code>to-tickets</code>, <code>handoff</code></td>
+</tr>
+<tr>
+<td>A key assumption is unproven</td>
+<td>Run a throwaway experiment</td>
+<td><code>prototype</code>, then <code>to-spec</code></td>
+</tr>
+<tr>
+<td>Existing behavior is wrong</td>
+<td>Reproduce first; fix second</td>
+<td><code>diagnosing-bugs</code>, <code>tdd</code></td>
+</tr>
+<tr>
+<td>System is getting harder to change</td>
+<td>Improve a high-leverage seam, not everything</td>
+<td><code>improve-codebase-architecture</code>, <code>codebase-design</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Complete skill catalog — what each skill is and when to use it</h2>
+<p>This is the full set from the studied snapshot: <strong>25 promoted daily-use skills, 4 niche utilities, and 9 in-progress skills</strong>. Treat the promoted set as the working toolbox. Treat misc and in-progress skills as deliberate opt-ins, not automatic standards.</p>
+<h3>Promoted engineering skills</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>What it is</th>
+<th>When to use it</th>
+<th>Typical role in an AI-assisted flow</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setup-matt-pocock-skills</code></td>
+<td>Repository setup wizard for tracker, labels, docs locations, and agent instructions.</td>
+<td>Once per repository or when workflow conventions change.</td>
+<td>Establishes the operating contract for downstream skills.</td>
+</tr>
+<tr>
+<td><code>ask-matt</code></td>
+<td>Skill router.</td>
+<td>You know the situation but not the right workflow.</td>
+<td>Picks a sensible entry point; it does not implement work.</td>
+</tr>
+<tr>
+<td><code>grill-with-docs</code></td>
+<td>Repository-aware decision interview plus glossary/ADR upkeep.</td>
+<td>Starting meaningful work in an existing codebase.</td>
+<td>Align on intent, invariants, vocabulary, and non-goals before design.</td>
+</tr>
+<tr>
+<td><code>to-spec</code></td>
+<td>Converts settled decisions into a behavioral, testable specification.</td>
+<td>Agreement exists but the work is not yet buildable.</td>
+<td>Defines scope, acceptance behavior, test seams, decisions, and exclusions.</td>
+</tr>
+<tr>
+<td><code>to-tickets</code></td>
+<td>Breaks a spec into small, dependency-aware tracer-bullet tickets.</td>
+<td>Work exceeds one context window or needs safe parallelism.</td>
+<td>Makes the unblocked implementation frontier visible.</td>
+</tr>
+<tr>
+<td><code>implement</code></td>
+<td>Delivery wrapper that builds, checks, reviews, and commits.</td>
+<td>A bounded ticket or spec is ready.</td>
+<td>Executes work with tests and final verification rather than stopping at code generation.</td>
+</tr>
+<tr>
+<td><code>tdd</code></td>
+<td>Red-green-refactor discipline centered on public behavior seams.</td>
+<td>Building behavior or fixing a reproducible regression.</td>
+<td>Writes a failing behavior test, makes the smallest fix, then repeats.</td>
+</tr>
+<tr>
+<td><code>code-review</code></td>
+<td>Independent standards and spec review from a fixed diff point.</td>
+<td>Before merge, on a PR, or after an implementation slice.</td>
+<td>Checks both “is this good code?” and “did it build the requested thing?”</td>
+</tr>
+<tr>
+<td><code>diagnosing-bugs</code></td>
+<td>Evidence-first debugging loop.</td>
+<td>A bug, regression, failure, or slowdown is not understood.</td>
+<td>Reproduce, minimize, test ranked hypotheses, add regression coverage, then fix.</td>
+</tr>
+<tr>
+<td><code>improve-codebase-architecture</code></td>
+<td>Survey for high-leverage design/deep-module opportunities.</td>
+<td>Code is becoming harder to change or after a development surge.</td>
+<td>Selects one worthwhile architectural improvement instead of a vague cleanup rewrite.</td>
+</tr>
+<tr>
+<td><code>codebase-design</code></td>
+<td>Shared vocabulary for deep modules, interfaces, seams, locality, and adapters.</td>
+<td>Designing boundaries, refactoring modules, or choosing test seams.</td>
+<td>Keeps public interfaces small and implementation complexity hidden.</td>
+</tr>
+<tr>
+<td><code>domain-modeling</code></td>
+<td>Ubiquitous-language and ADR discipline.</td>
+<td>Terms are overloaded, domain boundaries are fuzzy, or a hard trade-off needs recording.</td>
+<td>Improves naming, navigation, and decision memory.</td>
+</tr>
+<tr>
+<td><code>research</code></td>
+<td>Primary-source research that produces cited repository notes.</td>
+<td>APIs, vendors, frameworks, or facts need validation before design.</td>
+<td>Supplies evidence; it does not replace architecture decisions.</td>
+</tr>
+<tr>
+<td><code>prototype</code></td>
+<td>Deliberately throwaway runnable experiment.</td>
+<td>A key state model, integration, performance, or UI assumption is uncertain.</td>
+<td>Produces evidence before production design; do not merge it as product code.</td>
+</tr>
+<tr>
+<td><code>wayfinder</code></td>
+<td>Decision-map workflow for large, foggy initiatives.</td>
+<td>A system or program cannot be honestly planned in one session.</td>
+<td>Separates unresolved decision tickets from implementation-ready work.</td>
+</tr>
+<tr>
+<td><code>triage</code></td>
+<td>Issue/PR intake and state-machine management.</td>
+<td>An incoming queue needs evidence, ownership, labels, or actionable briefs.</td>
+<td>Verifies claims, identifies duplicates, and prepares work for agents.</td>
+</tr>
+<tr>
+<td><code>resolving-merge-conflicts</code></td>
+<td>Intent-preserving merge/rebase conflict resolution.</td>
+<td>A Git conflict already exists.</td>
+<td>Traces both sides to their source intent, resolves, tests, and completes the operation.</td>
+</tr>
+<tr>
+<td><code>wizard</code></td>
+<td>Generates an interactive Bash guide for human-only steps.</td>
+<td>A person must enter secrets, use a dashboard, provision, migrate, or cut over.</td>
+<td>Creates a safe, confirmable human execution path rather than pretending the agent can do it.</td>
+</tr>
+</tbody>
+</table>
+<h3>Promoted productivity skills</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>What it is</th>
+<th>When to use it</th>
+<th>Typical role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grill-me</code></td>
+<td>Stateless user-facing decision interview.</td>
+<td>A non-repository plan or design is still fuzzy.</td>
+<td>Use instead of premature planning; prefer <code>grill-with-docs</code> for codebase work.</td>
+</tr>
+<tr>
+<td><code>grilling</code></td>
+<td>The reusable interview primitive behind several other skills.</td>
+<td>The agent needs to resolve a decision tree without guessing.</td>
+<td>Model-invoked foundation for structured questions and explicit choices.</td>
+</tr>
+<tr>
+<td><code>handoff</code></td>
+<td>Compact continuation record for another session or agent.</td>
+<td>You need to pause or transfer partially complete work.</td>
+<td>Preserves evidence, risks, artifacts, and next action without bloating prompts.</td>
+</tr>
+<tr>
+<td><code>teach</code></td>
+<td>Stateful, multi-session learning workflow.</td>
+<td>You want durable technical learning instead of an isolated explanation.</td>
+<td>Builds lessons, retrieval practice, resources, and learning records.</td>
+</tr>
+<tr>
+<td><code>to-questionnaire</code></td>
+<td>Markdown question set for a decision owner.</td>
+<td>Progress is blocked by information someone else holds.</td>
+<td>Turns “ask them” into an async or meeting-ready instrument.</td>
+</tr>
+<tr>
+<td><code>wait-what</code></td>
+<td>Plain-English re-explanation using project vocabulary.</td>
+<td>An agent explanation did not land.</td>
+<td>Immediate clarity recovery; not a design or implementation step.</td>
+</tr>
+<tr>
+<td><code>writing-for-agents</code></td>
+<td>Guidance for skills, AGENTS.md, CLAUDE.md, and pointed-to docs.</td>
+<td>Agent-facing instructions are stale, bloated, or inconsistent.</td>
+<td>Applies progressive disclosure and explicit completion bounds.</td>
+</tr>
+</tbody>
+</table>
+<h3>Misc skills — useful, but niche</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>What it is</th>
+<th>When to use it</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git-guardrails-claude-code</code></td>
+<td>Claude Code hook that blocks risky Git actions.</td>
+<td>You want preventative protection against push/reset/clean/discard mistakes.</td>
+<td>Claude-specific; merge with existing hooks and test the rule set.</td>
+</tr>
+<tr>
+<td><code>migrate-to-shoehorn</code></td>
+<td>Converts test fixtures/assertions to Total TypeScript ShoeHorn helpers.</td>
+<td>TypeScript tests need concise but type-aware partial fixtures.</td>
+<td>Test code only; do not use it as production validation.</td>
+</tr>
+<tr>
+<td><code>scaffold-exercises</code></td>
+<td>Creates AI Hero course-exercise structure and validates it.</td>
+<td>Authoring AI Hero exercises.</td>
+<td>Product-specific, not a general application scaffolder.</td>
+</tr>
+<tr>
+<td><code>setup-pre-commit</code></td>
+<td>Adds Husky, lint-staged, Prettier, and detected checks.</td>
+<td>A JavaScript/TypeScript repo lacks commit-time hygiene.</td>
+<td>Inspect existing package-manager and CI conventions before merging it.</td>
+</tr>
+</tbody>
+</table>
+<h3>In-progress skills — public beta, not foundational process</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>What it is</th>
+<th>When to use it</th>
+<th>Caution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claude-handoff</code></td>
+<td>Starts a new background Claude agent with a concise continuation prompt.</td>
+<td>A Claude-specific continuation should begin immediately.</td>
+<td>Claude-specific; redact secrets in the prompt.</td>
+</tr>
+<tr>
+<td><code>implement-spec</code></td>
+<td>Parallel worktree implementation of a complete spec/ticket graph.</td>
+<td>The spec and dependency graph are already stable and ready.</td>
+<td>Operationally complex; do not use it to resolve uncertainty.</td>
+</tr>
+<tr>
+<td><code>loop-me</code></td>
+<td>Multi-session workflow-spec design tool.</td>
+<td>Designing a repeatable work/life loop.</td>
+<td>Produces a spec, not necessarily automation.</td>
+</tr>
+<tr>
+<td><code>pr</code></td>
+<td>Concise PR body with summary, evidence, and merge danger.</td>
+<td>Preparing a reviewable pull request.</td>
+<td>A PR description is not a substitute for tests or review.</td>
+</tr>
+<tr>
+<td><code>retro</code></td>
+<td>Proposed agent-environment retrospective workflow.</td>
+<td>Reviewing recurring friction after coding sessions.</td>
+<td>Explicitly a stub/design note in this snapshot.</td>
+</tr>
+<tr>
+<td><code>setup-ts-deep-modules</code></td>
+<td>Dependency-cruiser setup to enforce TypeScript package entry points.</td>
+<td>A TypeScript repo needs enforceable deep-module boundaries.</td>
+<td>Merge configuration carefully; do not make unrelated tsconfig changes.</td>
+</tr>
+<tr>
+<td><code>writing-fragments</code></td>
+<td>Append-only raw-idea writing workspace.</td>
+<td>Gathering material before article structure exists.</td>
+<td>Not an engineering design/planning workflow.</td>
+</tr>
+<tr>
+<td><code>writing-beats</code></td>
+<td>Shapes fixed raw material into coherent article beats.</td>
+<td>Exploration is complete but narrative order is unclear.</td>
+<td>Writing workflow only.</td>
+</tr>
+<tr>
+<td><code>writing-shape</code></td>
+<td>Turns raw Markdown into a separately structured article.</td>
+<td>Source material is fixed and a deliberate article is needed.</td>
+<td>Read-only input discipline; not a publishing system.</td>
+</tr>
+</tbody>
+</table>
+<h3>The five skills to internalize first</h3>
+<ol>
+<li><code>grill-with-docs</code> — decide what to build and learn the local language.</li>
+<li><code>to-spec</code> — turn the decision into a testable contract.</li>
+<li><code>tdd</code> — make behavior observable before implementation grows.</li>
+<li><code>implement</code> — deliver with focused checks and a full verification pass.</li>
+<li><code>code-review</code> — independently verify spec fidelity and engineering standards.</li>
+</ol>
+<p>Everything else is a targeted amplifier: use it because the problem demands it, not because the catalog exists.</p>
+<h2>Common engineering use cases</h2>
+<h3>1. Add a new feature to an existing codebase</h3>
+<p><strong>Typical risk:</strong> an agent implements the UI/API requested but violates an existing domain rule, architectural boundary, or operational convention.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">grill-with-docs → to-spec → [to-tickets if &gt;1 session] → implement + tdd → code-review
+</code></pre>
+<p><strong>How the skills help</strong></p>
+<ul>
+<li><code>grill-with-docs</code> forces the agent to read the existing repository and establish terms, invariants, ownership, and non-goals before proposing architecture.</li>
+<li><code>to-spec</code> turns the conversation into observable user stories, acceptance behavior, boundaries, decisions, and test seams.</li>
+<li><code>to-tickets</code> creates vertical slices when a feature spans backend, API, UI, migrations, or operational work.</li>
+<li><code>tdd</code> makes each slice demonstrate behavior through a public seam rather than internal implementation details.</li>
+<li><code>code-review</code> runs independent <strong>spec</strong> and <strong>standards</strong> reviews, so a clean diff cannot hide a missed requirement.</li>
+</ul>
+<p><strong>Example</strong></p>
+<p>Add a team-invite workflow: first define invitation states, expiry, idempotency, authorization, notification failure behavior, and audit expectations. Then slice as: persistence + domain service; API contract; email delivery adapter; UI; observability/rollout. Do not start by asking an agent to "build invites end to end."</p>
+<p><strong>Principal-engineer guardrail:</strong> write the contract before the schema migration. Data shape is implementation; behavior and rollback are the design.</p>
+<h3>2. Refactor an existing feature</h3>
+<p><strong>Typical risk:</strong> a cosmetically cleaner rewrite changes hidden behavior, removes useful compatibility, or leaves test seams worse than before.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">codebase-design → grill-with-docs → tdd characterization tests → implement → code-review
+</code></pre>
+<p>For a broad mechanical migration, use an <strong>expand–contract</strong> plan rather than fake vertical tickets.</p>
+<p><strong>How the skills help</strong></p>
+<ul>
+<li><code>codebase-design</code> applies deep-module reasoning: reduce the public interface while hiding complexity behind it.</li>
+<li><code>grill-with-docs</code> identifies what behavior must remain stable and whether the domain vocabulary is misleading.</li>
+<li><code>tdd</code> creates characterization tests at public seams before structural work begins.</li>
+<li><code>improve-codebase-architecture</code> helps select the one high-leverage hotspot instead of launching a vague cleanup campaign.</li>
+</ul>
+<p><strong>Example</strong></p>
+<p>Extract a payment-provider adapter from a sprawling checkout service. First characterize charge, retry, refund, idempotency, error mapping, and telemetry behavior. Introduce an adapter behind the existing interface, migrate callers, measure, then remove the old path. Do not move files until the behavioral boundary is explicit.</p>
+<p><strong>Principal-engineer guardrail:</strong> preserve behavior first. Refactoring is not permission to redesign product semantics unnoticed.</p>
+<h3>3. Fix a bug, regression, or performance problem</h3>
+<p><strong>Typical risk:</strong> agents invent causes, apply plausible patches, and claim success without a reproducible loop.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">diagnosing-bugs → tdd regression test → implement → code-review
+</code></pre>
+<p><strong>How the skills help</strong></p>
+<ul>
+<li><code>diagnosing-bugs</code> requires reproduction/minimization before hypotheses, then tests ranked falsifiable explanations one at a time.</li>
+<li><code>tdd</code> locks in the regression at the public behavior boundary before the fix.</li>
+<li><code>code-review</code> checks whether the patch fixes the original failure rather than merely changing nearby code.</li>
+</ul>
+<p><strong>Example</strong></p>
+<p>An intermittent duplicate webhook: capture the exact delivery shape and concurrency timing, identify idempotency storage behavior, write a duplicate-delivery regression test, then modify the narrow persistence/sequencing boundary.</p>
+<p><strong>Principal-engineer guardrail:</strong> for performance, measure and bisect. Logging until something feels true is not diagnosis.</p>
+<h3>4. Infrastructure as Code — Terraform, Pulumi, CDK, Kubernetes</h3>
+<p><strong>Typical risk:</strong> a generated plan looks syntactically valid but creates an outage, destructive replacement, secret leak, public exposure, or region/policy violation.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">research → grill-with-docs → to-spec → to-tickets → implement → code-review → human plan/apply gate
+</code></pre>
+<p><strong>How the skills help</strong></p>
+<ul>
+<li><code>research</code> grounds provider/service assumptions in primary documentation and existing stack conventions.</li>
+<li><code>grill-with-docs</code> makes environment, account, region, tenancy, networking, ownership, and rollback decisions explicit.</li>
+<li><code>to-spec</code> records desired state, security invariants, validation plan, migration sequence, and rollback conditions.</li>
+<li><code>to-tickets</code> separates prerequisites such as IAM, network, data migration, service deployment, and observability.</li>
+<li><code>code-review</code> should include a dedicated <strong>blast-radius and destroy/replace</strong> pass in addition to normal standards/spec review.</li>
+</ul>
+<p><strong>Example</strong></p>
+<p>Provision a private AWS service: specify the Jakarta-region constraint, VPC/subnet placement, IAM least privilege, encryption, secret references, loopback/private ingress, health checks, backups, observability, and a <code>terraform plan</code> review gate. Apply is a human-confirmed operation, not an agent default.</p>
+<p><strong>Principal-engineer guardrail:</strong> Terraform apply is a two-way-door action only when a tested rollback exists. Treat destructive replacements, databases, IAM, DNS, and public ingress as explicit approval gates.</p>
+<h3>5. Build scratch code from research results</h3>
+<p><strong>Typical risk:</strong> research findings become production-shaped code before the core assumption has been validated.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">research → prototype → grill-with-docs → to-spec → implement
+</code></pre>
+<p><strong>How the skills help</strong></p>
+<ul>
+<li><code>research</code> gathers primary-source facts and writes cited notes.</li>
+<li><code>prototype</code> asks one precise question, builds only enough runnable code to answer it, and records the verdict.</li>
+<li><code>grill-with-docs</code> separates what the experiment proved from remaining design decisions.</li>
+<li><code>to-spec</code> converts the surviving decision into a production contract.</li>
+</ul>
+<p><strong>Example</strong></p>
+<p>Evaluate an AI document-extraction pipeline: prototype extraction quality, latency, cost, privacy boundary, and failure handling against representative documents. Production work starts only once the chosen model, fallback, evaluation threshold, and data-retention decision are explicit.</p>
+<p><strong>Principal-engineer guardrail:</strong> prototypes are disposable evidence. Do not merge the prototype as the first production version because it "already works."</p>
+<h3>6. Build a system from scratch with multiple services</h3>
+<p><strong>Typical risk:</strong> one agent prompt produces a diagram and a pile of components with unclear ownership, deployment sequencing, interfaces, security boundaries, and operational responsibility.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">wayfinder → research → grill-with-docs + domain-modeling → prototype where needed → to-spec → to-tickets → implement → code-review
+</code></pre>
+<p><strong>How the skills help</strong></p>
+<ul>
+<li><code>wayfinder</code> maps uncertainty as decision tickets and keeps fog separate from ready work.</li>
+<li><code>domain-modeling</code> establishes bounded contexts, ubiquitous language, and the few decisions worth ADRs.</li>
+<li><code>prototype</code> validates sharp architectural uncertainties: state model, integration shape, UI direction, throughput, or deployment topology.</li>
+<li><code>to-spec</code> defines system behavior, service responsibilities, contracts, non-functional requirements, failure modes, and rollout criteria.</li>
+<li><code>to-tickets</code> makes dependencies visible and identifies the safe parallel frontier.</li>
+<li><code>handoff</code> preserves execution state between sessions and agents without stuffing the full history into prompts.</li>
+</ul>
+<p><strong>Example</strong></p>
+<p>Build an event-driven SaaS platform: begin with actors, tenancy, authorization, data ownership, sync vs async boundaries, consistency expectations, operational SLOs, and incident ownership. Create a thin vertical walking skeleton from authenticated request through one durable action, event, read model, metric, and deployment. Expand only after that path is proved.</p>
+<p><strong>Principal-engineer guardrail:</strong> do not start with a microservice count. Start with boundaries, ownership, and a thin end-to-end slice. Split services only where the operational and domain boundary earns the cost.</p>
+<h3>7. Integrate a third-party API or replace a vendor</h3>
+<p><strong>Typical risk:</strong> the happy path works while retries, quotas, pagination, version changes, auth refresh, webhook duplication, and vendor outages are ignored.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">research → grill-with-docs → to-spec → prototype or contract tests → implement + tdd → code-review
+</code></pre>
+<p><strong>Key decisions to make explicit</strong></p>
+<ul>
+<li>Who owns retries, backoff, idempotency, and dead-letter handling?</li>
+<li>What are the timeout, quota, and cost boundaries?</li>
+<li>Which vendor data is source of truth?</li>
+<li>How are credentials stored and rotated?</li>
+<li>What is the fallback or exit strategy?</li>
+<li>Which behavior is contract-tested against the real vendor or a verified sandbox?</li>
+</ul>
+<p><strong>Principal-engineer guardrail:</strong> isolate a vendor behind a small adapter only when it buys real replacement, testability, or policy control. Do not create a ceremonial abstraction with one implementation and no meaningful seam.</p>
+<h3>8. Dependency upgrade, framework migration, or security remediation</h3>
+<p><strong>Typical risk:</strong> an apparent version bump changes runtime behavior, generated artifacts, lockfiles, plugin compatibility, deployment requirements, or data migrations.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">research → diagnosing-bugs / grill-with-docs → to-spec → to-tickets → implement → code-review
+</code></pre>
+<p><strong>How to use the skills</strong></p>
+<ul>
+<li>Research changelogs, migration guides, source compatibility notes, and breaking-change ownership.</li>
+<li>Write a migration spec with compatibility target, rollback boundary, smoke tests, contract tests, and release sequence.</li>
+<li>Ticket expand–contract stages separately: dual read/write, backfill, cutover, observation, and removal.</li>
+<li>Review against both migration plan and production risk.</li>
+</ul>
+<p><strong>Principal-engineer guardrail:</strong> a green unit suite does not prove an upgrade. Verify actual version, startup, auth, integrations, migrations, and deployment behavior.</p>
+<h3>9. Code review, PR preparation, and release readiness</h3>
+<p><strong>Typical risk:</strong> one reviewer checks style while nobody verifies the original behavior, operational impact, or rollback.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">code-review → pr → release/change gate
+</code></pre>
+<p><strong>Use review on two independent axes</strong></p>
+<ol>
+<li><strong>Spec review:</strong> Are acceptance criteria, negative cases, non-goals, and migration/operational requirements satisfied?</li>
+<li><strong>Standards review:</strong> Does the code fit repository conventions, security, architecture, tests, and maintainability expectations?</li>
+</ol>
+<p>Add a third release axis for consequential changes: deploy/rollback path, data safety, observability, runbook, and blast radius.</p>
+<p><strong>Principal-engineer guardrail:</strong> do not write a PR description as marketing. State evidence, remaining risk, and whether the change is one-way or two-way.</p>
+<h3>10. Long-running work across agents, sessions, or parallel streams</h3>
+<p><strong>Typical risk:</strong> duplicated research, conflicting edits, vague ownership, and context loss.</p>
+<p><strong>Recommended route</strong></p>
+<pre><code class="language-text">to-tickets / wayfinder → handoff → implement-spec (beta, only when ready) → code-review
+</code></pre>
+<p><strong>How the skills help</strong></p>
+<ul>
+<li><code>to-tickets</code> creates independently testable, dependency-aware slices.</li>
+<li><code>wayfinder</code> keeps unresolved decisions out of the implementation queue.</li>
+<li><code>handoff</code> records only active context, current evidence, artifacts, risks, and next action.</li>
+<li><code>implement-spec</code> is an experimental parallel implementation harness; use it only after a stable spec/ticket graph exists.</li>
+</ul>
+<p><strong>Principal-engineer guardrail:</strong> parallelism accelerates ready work, not uncertainty. Never delegate a vague architecture decision to multiple agents and hope the merge is the answer.</p>
+<h2>Recommended recipes by scope</h2>
+<h3>Small change — under one session</h3>
+<pre><code class="language-text">Read relevant code → grill briefly → implement + TDD → focused tests → code review → commit
+</code></pre>
+<p>Use when scope and acceptance behavior are already clear.</p>
+<h3>Medium feature — one team / one repository</h3>
+<pre><code class="language-text">grill-with-docs → to-spec → implement in vertical slices → code-review → release check
+</code></pre>
+<p>Use when the feature crosses at least two layers or changes durable behavior.</p>
+<h3>Large initiative — multi-service or multi-session</h3>
+<pre><code class="language-text">wayfinder → research + prototypes → spec → ticket graph → guarded parallel implementation → independent review → staged rollout
+</code></pre>
+<p>Use when decisions and work have different readiness levels.</p>
+<h3>Operationally sensitive change</h3>
+<pre><code class="language-text">research → spec with invariants and rollback → dry run/plan → human approval → narrow apply → health verification → evidence record
+</code></pre>
+<p>Use for IaC, production databases, credentials, access control, DNS, queues, and irreversible migrations.</p>
+<h2>What to put in the repository</h2>
+<p>The skills work best when the repository gives agents a small durable truth layer:</p>
+<ul>
+<li>a concise <code>AGENTS.md</code> or existing agent instruction file that points to deeper docs;</li>
+<li>a glossary/context map for domain terms;</li>
+<li>ADRs only for hard-to-reverse, surprising decisions;</li>
+<li>a clear test/run/build command inventory;</li>
+<li>a definition of done including tests, review, and operational evidence;</li>
+<li>a tracker or local ticket convention for work that exceeds one context window.</li>
+</ul>
+<p>Do not dump every past decision into a root instruction file. Use progressive disclosure: short entry point, precise pointers, current sources of truth.</p>
+<h2>Principal-engineer rules for AI-assisted work</h2>
+<ol>
+<li><strong>Make decisions visible before implementation.</strong> Agents are fast at filling gaps; that is exactly why hidden gaps are dangerous.</li>
+<li><strong>Specify behavior and invariants, not a preferred file layout.</strong> Let implementation follow the contract.</li>
+<li><strong>Choose seams before writing tests.</strong> Tests should protect public behavior and survive refactors.</li>
+<li><strong>Prefer a thin end-to-end slice over horizontal layers.</strong> A running narrow path exposes integration risk early.</li>
+<li><strong>Keep a rollback boundary for stateful or external changes.</strong> Backups, plans, migration phases, and health checks are engineering work.</li>
+<li><strong>Use evidence as the completion condition.</strong> A command exited zero is not proof that the system works.</li>
+<li><strong>Treat security and operations as requirements.</strong> Authentication, data handling, observability, capacity, recovery, and ownership belong in the spec.</li>
+<li><strong>Use the shortest process that protects the decision.</strong> Process is a risk-control tool, not a performance.</li>
+</ol>
+<h2>Practical prompts for an AI coding agent</h2>
+<h3>New feature</h3>
+<blockquote>
+<p>Use <code>grill-with-docs</code> first. Read the existing code and docs, identify unresolved product and technical decisions, and propose a small behavioral spec with test seams before editing code. Keep the first implementation slice vertical and demonstrable.</p>
+</blockquote>
+<h3>Refactor</h3>
+<blockquote>
+<p>Use <code>codebase-design</code> and create characterization tests at public seams. Preserve behavior first. Propose an expand–contract sequence and show what interface becomes smaller or clearer; do not begin with file moves.</p>
+</blockquote>
+<h3>IaC</h3>
+<blockquote>
+<p>Research official provider documentation and existing infrastructure conventions. Produce a spec covering region, tenancy, IAM, ingress/egress, secrets, state, plan/apply gates, observability, data migration, and rollback. Do not apply changes without an explicit human gate.</p>
+</blockquote>
+<h3>System from scratch</h3>
+<blockquote>
+<p>Start with <code>wayfinder</code>: separate ready decisions from fog. Define actors, boundaries, data ownership, failure behavior, and SLOs. Build a thin vertical walking skeleton before adding services or broad abstractions.</p>
+</blockquote>
+<h2>Adoption plan</h2>
+<p><strong>Start with five skills:</strong> <code>grill-with-docs</code>, <code>to-spec</code>, <code>tdd</code>, <code>implement</code>, and <code>code-review</code>.</p>
+<p>After one meaningful feature, add <code>to-tickets</code>, <code>diagnosing-bugs</code>, and <code>handoff</code>. Add <code>research</code>, <code>domain-modeling</code>, <code>prototype</code>, and <code>improve-codebase-architecture</code> when recurring ambiguity or design friction proves they are needed.</p>
+<p>Do not install or invoke every skill by default. The outcome we want is not ritual. It is code that is easier to change, easier to verify, and harder to accidentally break.</p>
+<h2>Sources</h2>
+<ul>
+<li>Matt Pocock Skills repository: https://github.com/mattpocock/skills</li>
+<li>AI Hero skills documentation: https://www.aihero.dev/skills</li>
+<li>Original guide supplied by Irfan: <em>Matt Pocock's Skills: a Practical Learning Guide</em> (repository snapshot <code>c55ee46073ed923f86ce59a5eb3b6d895095d1b7,</code> 18 Sep 2026)</li>
+</ul></body></html>

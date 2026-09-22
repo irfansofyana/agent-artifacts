@@ -9,7 +9,7 @@
       "url": "artifacts/hermes-dashboard-inspiration/"
     },
     {
-      "title": "Web Search for AI Agents in 2026 — Platform Comparison",
+      "title": "Web Search for AI Agents in 2026 \u2014 Platform Comparison",
       "slug": "web-search-for-ai-agents-2026",
       "description": "Sourced comparison of Tavily, Exa, Firecrawl, TinyFish, Parallel, Linkup, You.com, Brave, Jina, Serper, and other web-search, research, extraction, crawling, and browser-agent platforms.",
       "createdAt": "2026-08-30",
@@ -17,7 +17,7 @@
       "url": "artifacts/web-search-for-ai-agents-2026/"
     },
     {
-      "title": "DeepSeek Harness — Research Brief",
+      "title": "DeepSeek Harness \u2014 Research Brief",
       "slug": "deepseek-harness-brief",
       "description": "What DeepSeek Harness (dsh) is, why it's getting popular, whether it integrates with Claude Code/Codex/OpenCode, benchmarks, strengths, and downsides.",
       "createdAt": "2026-08-16",
@@ -33,7 +33,7 @@
       "url": "artifacts/mcp-evaluation-private-stack-2026/"
     },
     {
-      "title": "Graphify for Daily Coding — A Practical Field Guide",
+      "title": "Graphify for Daily Coding \u2014 A Practical Field Guide",
       "slug": "graphify-daily-coding-field-guide",
       "description": "An interactive field guide to how Graphify builds code knowledge graphs and how to use it safely in daily workflows with Pi, Cursor, and Claude Code.",
       "createdAt": "2026-08-10",
@@ -41,7 +41,7 @@
       "url": "artifacts/graphify-daily-coding-field-guide/"
     },
     {
-      "title": "Agent Engineer Fieldbook — LangChain Learning Lab",
+      "title": "Agent Engineer Fieldbook \u2014 LangChain Learning Lab",
       "slug": "langchain-agent-engineer-fieldbook",
       "description": "An interactive, production-minded course covering LangChain, LangGraph, Deep Agents, LangSmith, the Stripe Kai architecture, and preparation for the LangChain Certified Agent Engineer exam.",
       "createdAt": "2026-08-04",
@@ -49,7 +49,7 @@
       "url": "artifacts/langchain-agent-engineer-fieldbook/"
     },
     {
-      "title": "Parallel AI Coding with Git Worktrees — Pi, Codex & Claude Code",
+      "title": "Parallel AI Coding with Git Worktrees \u2014 Pi, Codex & Claude Code",
       "slug": "ai-agent-git-worktrees",
       "description": "A practical field manual for running multiple AI coding tasks safely in one repository using isolated Git worktrees, with copy-ready Pi, Codex CLI, and Claude Code commands.",
       "createdAt": "2026-07-19",
@@ -57,7 +57,7 @@
       "url": "artifacts/ai-agent-git-worktrees/"
     },
     {
-      "title": "Forex Day Trading — A Risk-First Starter Course for Indonesia",
+      "title": "Forex Day Trading \u2014 A Risk-First Starter Course for Indonesia",
       "slug": "forex-day-trading-starter",
       "description": "An interactive six-week beginner course for learning forex day trading with locally regulated Indonesian broker demos, strict risk controls, a testable playbook, calculators, and a go-live gate.",
       "createdAt": "2026-07-17",
@@ -67,13 +67,13 @@
     {
       "title": "How Companies Deploy OpenClaw: Security vs Convenience",
       "slug": "openclaw-enterprise-deployment",
-      "description": "Research on enterprise OpenClaw deployment models — employee-led vs central per-user vs fleet/multi-tenant — balancing security and convenience, with sources from CrowdStrike, NVIDIA, Palo Alto Networks, Barracuda, and more.",
+      "description": "Research on enterprise OpenClaw deployment models \u2014 employee-led vs central per-user vs fleet/multi-tenant \u2014 balancing security and convenience, with sources from CrowdStrike, NVIDIA, Palo Alto Networks, Barracuda, and more.",
       "createdAt": "2026-07-13",
       "type": "html",
       "url": "artifacts/openclaw-enterprise-deployment/"
     },
     {
-      "title": "OpenClaw at Work — A Secure Employee-Agent Operating Model",
+      "title": "OpenClaw at Work \u2014 A Secure Employee-Agent Operating Model",
       "slug": "openclaw-enterprise-operating-model",
       "description": "A practical operating model for balancing employee agent autonomy with enterprise isolation, identity, approvals, and governance.",
       "createdAt": "2026-07-13",
@@ -91,7 +91,7 @@
     {
       "title": "Headroom: How LLM Context Compression Works",
       "slug": "headroom-how-it-works",
-      "description": "A practical, source-backed guide to Headroom’s live-zone compression pipeline, reversibility, trade-offs, and pilot plan.",
+      "description": "A practical, source-backed guide to Headroom\u2019s live-zone compression pipeline, reversibility, trade-offs, and pilot plan.",
       "createdAt": "2026-08-22",
       "type": "html",
       "url": "artifacts/headroom-how-it-works/"
@@ -137,7 +137,7 @@
       "url": "artifacts/bedrock-mantle-vs-runtime-2026-07-09/"
     },
     {
-      "title": "Amp Coding Agent — Deep Research: Design Philosophy, Oracle, Subagents & Competitive Landscape",
+      "title": "Amp Coding Agent \u2014 Deep Research: Design Philosophy, Oracle, Subagents & Competitive Landscape",
       "slug": "amp-coding-agent-deep-research",
       "description": "Comprehensive deep research on Amp's design philosophy, multi-model architecture, built-in agents (Oracle, Librarian, subagents), and comparison with Claude Code, Codex CLI, and Cursor.",
       "createdAt": "2026-07-19",
@@ -161,7 +161,7 @@
       "url": "artifacts/build-first-agentic-ai-roadmap/"
     },
     {
-      "title": "AIF-C01 · The AI Practitioner Flight Plan",
+      "title": "AIF-C01 \u00b7 The AI Practitioner Flight Plan",
       "slug": "aws-ai-practitioner-journey",
       "description": "An interactive AIF-C01 learning hub with embedded domain guides, 100% free curated resources, a four-week plan, flashcards, scenario quiz, progress tracking, and exam-booking steps.",
       "createdAt": "2026-08-08",
@@ -169,7 +169,7 @@
       "url": "artifacts/aws-ai-practitioner-journey/"
     },
     {
-      "title": "Prompting the 2026 Frontier — Model Field Guide",
+      "title": "Prompting the 2026 Frontier \u2014 Model Field Guide",
       "slug": "frontier-llm-prompt-field-guide-2026",
       "description": "A source-backed, interactive guide to prompting GPT-5.6, Claude Opus 5, Grok 4.6, GLM-5.3, Qwen3.8-Max, Kimi K3, and Gemini 3.7 Flash.",
       "createdAt": "2026-08-30",
@@ -177,7 +177,7 @@
       "url": "artifacts/frontier-llm-prompt-field-guide-2026/"
     },
     {
-      "title": "LiteLLM × Coding Agents · Field Guide",
+      "title": "LiteLLM \u00d7 Coding Agents \u00b7 Field Guide",
       "slug": "litellm-coding-agents",
       "description": "Concise integration recipes for Pi, Claude Code Desktop, Codex Desktop, and OpenCode through LiteLLM.",
       "createdAt": "2026-09-10",
@@ -185,7 +185,7 @@
       "url": "artifacts/litellm-coding-agents/"
     },
     {
-      "title": "ECS + Fargate Field Guide — Concepts, Terraform & Practice",
+      "title": "ECS + Fargate Field Guide \u2014 Concepts, Terraform & Practice",
       "slug": "ecs-fargate-terraform-field-guide",
       "description": "A practical, source-backed learning guide to ECS/Fargate mental models, task and service lifecycle, networking, IAM, Terraform provisioning, and a production-shaped four-week capstone.",
       "createdAt": "2026-09-09",
@@ -201,12 +201,20 @@
       "url": "artifacts/firstmate-pi-herdr-gitlab-runbook/"
     },
     {
-      "title": "Matt Pocock’s Skills: Practical Learning Guide",
+      "title": "Matt Pocock\u2019s Skills: Practical Learning Guide",
       "slug": "matt-pocock-skills-learning-guide",
       "description": "A cited, practical guide to every skill in mattpocock/skills: problems solved, when to use each, workflow sequences, strengths, limits, and a pragmatic rollout plan.",
       "createdAt": "2026-09-22",
       "type": "html",
       "url": "artifacts/matt-pocock-skills-learning-guide/"
+    },
+    {
+      "title": "Matt Pocock Skills \u2014 AI-Assisted Engineering Playbook",
+      "slug": "matt-pocock-skills-ai-assisted-engineering-playbook",
+      "description": "Principal-engineer field guide: the full Matt Pocock skills catalog, what each skill is, when to use it, and mapped AI-assisted engineering workflows from features to IaC and multi-service systems.",
+      "createdAt": "2026-09-22",
+      "type": "html",
+      "url": "artifacts/matt-pocock-skills-ai-assisted-engineering-playbook/"
     }
   ]
 }
