@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Deep Agents Field Guide — Real Use Cases and Code",
+      "slug": "deepagents-use-case-atlas-2026",
+      "description": "63 verified external sources on LangChain Deep Agents: real implementations, exact code links, tutorials, use cases, and source-checked popularity.",
+      "createdAt": "2026-09-24",
+      "type": "html",
+      "url": "artifacts/deepagents-use-case-atlas-2026/"
+    },
+    {
       "title": "LangGraph Learning Atlas — Best External Tutorials",
       "slug": "langgraph-learning-resources-2026",
       "description": "A sourced, filterable guide to 49 external LangGraph repos, official courses, tech tutorials and videos, with verified GitHub stars and YouTube engagement.",
