@@ -243,10 +243,11 @@
     {
       "title": "Deep Agents (TypeScript): From First Agent to Production on AWS",
       "slug": "deep-agents-typescript-guide",
-      "description": "Chapter-by-chapter guide to LangChain Deep Agents for TypeScript: build IncidentScout from one tool call to a production AWS service \u2014 filesystem, Postgres backends, sandboxes, MCP, subagents, HITL, and ECS/Aurora deployment.",
+      "description": "Chapter-by-chapter guide to LangChain Deep Agents for TypeScript: build IncidentScout from one tool call to a production AWS service \u2014 filesystem, Postgres backends, sandboxes, MCP, subagents, HITL, ECS/Aurora deployment, plus a tested chapter wiring middleware, skills and multimodal files.",
       "createdAt": "2026-09-27",
       "type": "html",
-      "url": "artifacts/deep-agents-typescript-guide/"
+      "url": "artifacts/deep-agents-typescript-guide/",
+      "updatedAt": "2026-09-27"
     }
   ]
 }
