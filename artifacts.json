@@ -1,7 +1,7 @@
 {
   "artifacts": [
     {
-      "title": "Deep Agents Field Guide — Real Use Cases and Code",
+      "title": "Deep Agents Field Guide \u2014 Real Use Cases and Code",
       "slug": "deepagents-use-case-atlas-2026",
       "description": "63 verified external sources on LangChain Deep Agents: real implementations, exact code links, tutorials, use cases, and source-checked popularity.",
       "createdAt": "2026-09-24",
@@ -9,7 +9,7 @@
       "url": "artifacts/deepagents-use-case-atlas-2026/"
     },
     {
-      "title": "LangGraph Learning Atlas — Best External Tutorials",
+      "title": "LangGraph Learning Atlas \u2014 Best External Tutorials",
       "slug": "langgraph-learning-resources-2026",
       "description": "A sourced, filterable guide to 49 external LangGraph repos, official courses, tech tutorials and videos, with verified GitHub stars and YouTube engagement.",
       "createdAt": "2026-09-24",
@@ -239,6 +239,14 @@
       "createdAt": "2026-09-22",
       "type": "html",
       "url": "artifacts/matt-pocock-skills-ai-assisted-engineering-playbook/"
+    },
+    {
+      "title": "Deep Agents (TypeScript): From First Agent to Production on AWS",
+      "slug": "deep-agents-typescript-guide",
+      "description": "Chapter-by-chapter guide to LangChain Deep Agents for TypeScript: build IncidentScout from one tool call to a production AWS service \u2014 filesystem, Postgres backends, sandboxes, MCP, subagents, HITL, and ECS/Aurora deployment.",
+      "createdAt": "2026-09-27",
+      "type": "html",
+      "url": "artifacts/deep-agents-typescript-guide/"
     }
   ]
 }
