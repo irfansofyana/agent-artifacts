@@ -151,6 +151,17 @@ blockquote{border-left:3px solid var(--accent);margin:0;padding-left:14px;color:
 <li><a href="#recap-what-each-concept-contributed">Recap: what each concept contributed</a></li>
 </ul>
 </li>
+<li><a href="#chapter-13-wiring-it-together-middleware-skills-and-multimodal-files">Chapter 13 — Wiring it together: middleware, skills, and multimodal files</a><ul>
+<li><a href="#the-problem_11">The problem</a></li>
+<li><a href="#two-corrections-found-while-running-it">Two corrections found while running it</a></li>
+<li><a href="#how-the-pieces-meet">How the pieces meet</a></li>
+<li><a href="#the-agent-srcincidentscoutts">The agent — src/incidentscout.ts</a></li>
+<li><a href="#calling-it">Calling it</a></li>
+<li><a href="#the-tests-testwiringtestts">The tests — test/wiring.test.ts</a></li>
+<li><a href="#gotchas_6">Gotchas</a></li>
+<li><a href="#next-problem_10">Next problem</a></li>
+</ul>
+</li>
 <li><a href="#glossary">Glossary</a></li>
 </ul>
 </div>
@@ -158,6 +169,7 @@ blockquote{border-left:3px solid var(--accent);margin:0;padding-left:14px;color:
 <main>
 <h1 id="deep-agents-typescript-from-first-agent-to-production-on-aws">Deep Agents (TypeScript): From First Agent to Production on AWS</h1>
 <p>2026-09-26 · @Irfan Sofyana Putra</p>
+<p><em>Updated 2026-09-27: added Chapter 13 (verified wiring of middleware, skills and multimodal files) with corrections for <code>deepagents@1.14.1</code>.</em></p>
 <h2 id="how-to-read-this-guide">How to read this guide</h2>
 <p>This guide teaches LangChain <strong>Deep Agents for JavaScript/TypeScript</strong> (<code>deepagents</code> on npm) by building one agent, chapter by chapter, until it is a production service on AWS. Each chapter opens with a problem the previous version of the agent ran into, introduces the concept that fixes it, and closes with the next problem.</p>
 <p><strong>Running example: IncidentScout.</strong> An on-call assistant that investigates production incidents. It starts as a single tool call ("fetch logs for service X"), then learns to keep notes in files, remember past incidents across conversations (Postgres on Aurora), run analysis scripts in a sandbox, call observability tools over MCP, read dashboard screenshots, survive long investigations, split work across specialist subagents, and ask a human before it posts to the incident channel.</p>
@@ -1772,6 +1784,354 @@ export async function resumeTurn(threadId: string, ctx: Ctx, decisions: unknown[
 </tbody>
 </table></div>
 <p>Sources: all chapters above.</p>
+<h2 id="chapter-13-wiring-it-together-middleware-skills-and-multimodal-files">Chapter 13 — Wiring it together: middleware, skills, and multimodal files</h2>
+<h3 id="the-problem_11">The problem</h3>
+<p>Chapters 8, 7 and 10 introduced skills, multimodal input and middleware one at a time. In a real service they meet in one <code>createDeepAgent</code> call and interact: middleware wraps the built-in file tools that load skills and read PDFs, the backend routes decide who can see which file, and runtime context has to reach both. This chapter wires all three into IncidentScout and proves the wiring with tests.</p>
+<blockquote>
+<p><strong>Verified, not just composed.</strong> Unlike Ch12, every line here was executed: <code>deepagents@1.14.1</code>, <code>langchain@1.5.12</code>, <code>@langchain/langgraph@1.4.18</code>, Node 24. <code>tsc --strict</code> passes; 5 tests pass; 4 deliberate mutations (drop the policy middleware, drop <code>toolErrorMiddleware</code>, collapse org scoping, drop <code>skills</code>) each make a test fail. Tests use LangChain's scripted <code>fakeModel()</code>, so they are deterministic and need no API key.</p>
+</blockquote>
+<h3 id="two-corrections-found-while-running-it">Two corrections found while running it</h3>
+<p>Running the code against the current packages exposed two places where earlier chapters are out of date:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Earlier claim</th>
+<th>What <code>deepagents@1.14.1</code> / <code>langchain@1.5.12</code> actually do</th>
+<th>Affects</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>StoreBackend</code> namespace factories receive a LangGraph <code>Runtime</code>, so <code>(rt) =&gt; [rt.context.orgId, …]</code> works</td>
+<td>The factory receives <code>{ state, config, assistantId }</code> — <strong>no <code>context</code></strong>. <code>rt.context.orgId</code> is <code>undefined</code> and throws. Read identity from <code>config.configurable</code> (set it server-side next to <code>thread_id</code>), or use a static namespace.</td>
+<td>Ch4.2, 4.3, 8, 12</td>
+</tr>
+<tr>
+<td><code>ToolErrorMiddleware</code> is not yet available in JS</td>
+<td><code>toolErrorMiddleware({ onError })</code> is exported from <code>langchain</code>. Returning content from <code>onError</code> converts a thrown tool error into an error <code>ToolMessage</code>; returning nothing re-throws.</td>
+<td>Ch6, 10.4, 12</td>
+</tr>
+</tbody>
+</table></div>
+<p>Treat the rest of the guide's namespace examples accordingly: pass <code>configurable: { thread_id, orgId }</code> <strong>and</strong> <code>context: { userId, orgId }</code> on every call — <code>context</code> for tools and middleware, <code>configurable</code> for backend namespaces.</p>
+<h3 id="how-the-pieces-meet">How the pieces meet</h3>
+<pre class="mermaid">flowchart LR
+  REQ([invoke: messages + configurable.orgId + context]) --&gt; OP[OrgPolicy&lt;br/&gt;wrapModelCall&lt;br/&gt;reads runtime.context]
+  OP --&gt; LLM[(Model)]
+  LLM --&gt;|tool call| AU[AuditTools&lt;br/&gt;wrapToolCall]
+  AU --&gt; TE[toolErrorMiddleware]
+  TE --&gt; T{tool}
+  T --&gt;|read_file /skills/...| SK[(StoreBackend&lt;br/&gt;ns: skills)]
+  T --&gt;|read_file /uploads/...| UP[(StoreBackend&lt;br/&gt;ns: orgId, uploads)]
+  T --&gt;|fetch_logs| API[Logs API]
+  SKM[SkillsMiddleware&lt;br/&gt;lists skill frontmatter] -.system prompt.-&gt; LLM
+</pre>
+<ul>
+<li><strong>Middleware order:</strong> earlier in <code>middleware: [...]</code> means the outer wrapper. <code>AuditTools</code> sits outside <code>toolErrorMiddleware</code>, so it records a failed tool as <code>ok: false</code> instead of seeing an exception.</li>
+<li><strong>Skills:</strong> <code>skills: ["/skills/"]</code> makes <code>SkillsMiddleware</code> list each skill's <code>name</code> + <code>description</code> in the system prompt. The body is loaded only when the model calls <code>read_file</code> on it.</li>
+<li><strong>Multimodal files:</strong> app code uploads bytes into an org-scoped store namespace; the agent opens them with the built-in <code>read_file</code>, which returns a <code>{ type: "file", mimeType: "application/pdf", data }</code> block (images come back as image blocks).</li>
+<li><strong>Two ingress paths for media:</strong> attach it to the user message (one-off) or upload it under <code>/uploads/</code> and let the agent decide when to open it (preferred for long investigations, because summarization drops old media blocks — Ch7).</li>
+</ul>
+<h3 id="the-agent-srcincidentscoutts">The agent — <code>src/incidentscout.ts</code></h3>
+<pre><code class="language-ts">// src/incidentscout.ts — middleware + skills + multimodal files, wired into one Deep Agent.
+// Verified against deepagents@1.14.1 / langchain@1.5.12 by test/wiring.test.ts.
+import * as z from &quot;zod&quot;;
+import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend } from &quot;deepagents&quot;;
+import { createMiddleware, toolErrorMiddleware, modelCallLimitMiddleware, tool } from &quot;langchain&quot;;
+import type { BaseStore, BaseCheckpointSaver } from &quot;@langchain/langgraph&quot;;
+import type { BaseChatModel } from &quot;@langchain/core/language_models/chat_models&quot;;
+
+// ---------- runtime context: set by YOUR auth layer, never from the request body ----------
+export const contextSchema = z.object({ userId: z.string(), orgId: z.string() });
+
+// ---------- skills: seeded by app code into the shared &quot;skills&quot; namespace ----------
+const POSTMORTEM_SKILL = `---
+name: postmortem
+description: Blameless incident postmortem. Use when asked to write up or summarize a resolved incident.
+---
+# Postmortem
+1. Impact first: who was affected, how long, how badly.
+2. Timeline in UTC from first signal to resolution.
+3. Root cause and contributing factors. No blame on individuals.
+4. Action items with owners.
+`;
+
+export async function seedSkills(store: BaseStore) {
+  // The CompositeBackend strips the &quot;/skills/&quot; route prefix before hitting the store,
+  // so the store key is &quot;/postmortem/SKILL.md&quot;, visible to the agent at &quot;/skills/postmortem/SKILL.md&quot;.
+  await new StoreBackend({ namespace: [&quot;skills&quot;], store }).uploadFiles([
+    [&quot;/postmortem/SKILL.md&quot;, new TextEncoder().encode(POSTMORTEM_SKILL)],
+  ]);
+}
+
+// ---------- multimodal uploads: org-scoped binary files the agent opens with read_file ----------
+export async function uploadIncidentFile(store: BaseStore, orgId: string, path: string, bytes: Uint8Array) {
+  const [res] = await new StoreBackend({ namespace: [orgId, &quot;uploads&quot;], store }).uploadFiles([[path, bytes]]);
+  if (res.error) throw new Error(`upload failed: ${res.error}`);
+}
+
+// In deepagents@1.14.1 the namespace factory receives { state, config, assistantId } — NOT a Runtime,
+// so per-run `context` is not visible here. Pass the org id through config.configurable as well.
+const orgScoped = (suffix: string) =&gt;
+  new StoreBackend({
+    namespace: ({ config }) =&gt; {
+      const org = config?.configurable?.orgId;
+      if (typeof org !== &quot;string&quot; || !org) throw new Error(&quot;configurable.orgId is required&quot;);
+      return [org, suffix];
+    },
+  });
+
+// ---------- custom middleware ----------
+export type AuditEvent = { tool: string; ms: number; ok: boolean };
+
+// wrapToolCall: time and record every tool call (built-in file tools included).
+const auditTools = (sink: AuditEvent[]) =&gt;
+  createMiddleware({
+    name: &quot;AuditTools&quot;,
+    wrapToolCall: async (request, handler) =&gt; {
+      const t0 = Date.now();
+      const res: any = await handler(request);
+      const ok = res?.status !== &quot;error&quot;;
+      sink.push({ tool: request.toolCall.name, ms: Date.now() - t0, ok });
+      return res;
+    },
+  });
+
+// wrapModelCall: add per-org policy from runtime context to the system prompt on every model call.
+const orgPolicy = createMiddleware({
+  name: &quot;OrgPolicy&quot;,
+  contextSchema,
+  wrapModelCall: (request, handler) =&gt;
+    handler({
+      ...request,
+      systemMessage: request.systemMessage.concat(
+        `\nOrg: ${request.runtime.context.orgId}. Never page on-call before customer impact is confirmed.`,
+      ),
+    }),
+});
+
+// ---------- the agent ----------
+export function buildAgent(opts: {
+  model: BaseChatModel | string;
+  store: BaseStore;
+  checkpointer: BaseCheckpointSaver;
+  audit?: AuditEvent[];
+  fetchLogsImpl?: (service: string, minutes: number) =&gt; Promise&lt;string&gt;;
+}) {
+  const fetchLogs = tool(
+    async ({ service, minutes }) =&gt;
+      (opts.fetchLogsImpl ?? (async (s, m) =&gt; `[stub] last ${m}m of ${s}: ERROR timeout payments-db`))(service, minutes),
+    {
+      name: &quot;fetch_logs&quot;,
+      description: &quot;Fetch recent error logs for one service. Use when investigating an incident.&quot;,
+      schema: z.object({ service: z.string(), minutes: z.number().default(15) }),
+    },
+  );
+
+  const backend = new CompositeBackend(new StateBackend(), {
+    &quot;/skills/&quot;: new StoreBackend({ namespace: [&quot;skills&quot;] }), // shared, curated by your team
+    &quot;/uploads/&quot;: orgScoped(&quot;uploads&quot;),                         // PDFs, screenshots, exports
+    &quot;/memories/&quot;: orgScoped(&quot;memories&quot;),
+  });
+
+  return createDeepAgent({
+    model: opts.model,
+    systemPrompt: `You are IncidentScout. Customer impact first, then timeline, then cause.
+User-provided files live under /uploads/&lt;incident&gt;/ — open them with read_file.`,
+    tools: [fetchLogs],
+    contextSchema,
+    backend,
+    store: opts.store,
+    checkpointer: opts.checkpointer,
+    skills: [&quot;/skills/&quot;],
+    permissions: [{ operations: [&quot;write&quot;], paths: [&quot;/skills/**&quot;, &quot;/uploads/**&quot;], mode: &quot;deny&quot; }],
+    middleware: [
+      orgPolicy,
+      auditTools(opts.audit ?? []),
+      // Earlier in the list = outer wrapper. AuditTools wraps toolErrorMiddleware,
+      // so a thrown tool error reaches audit as an error ToolMessage (ok: false), not an exception.
+      toolErrorMiddleware({
+        onError: (_err, req) =&gt; `${req.toolCall.name} failed (upstream error). Try another data source.`,
+      }),
+      modelCallLimitMiddleware({ runLimit: 30 }),
+    ],
+  });
+}
+</code></pre>
+<p>What each piece does:</p>
+<ol>
+<li><strong><code>seedSkills</code></strong> writes <code>SKILL.md</code> under the store key <code>/postmortem/SKILL.md</code>. The <code>/skills/</code> route prefix is stripped before the store is hit, so the agent sees <code>/skills/postmortem/SKILL.md</code>. Writing the key <em>with</em> <code>/skills/</code> makes the skill invisible — the most common mistake.</li>
+<li><strong><code>uploadIncidentFile</code></strong> writes raw bytes (<code>Uint8Array</code>) into <code>[orgId, "uploads"]</code>. Nothing is base64-encoded into the conversation until the agent actually reads the file.</li>
+<li><strong><code>orgScoped</code></strong> builds the namespace from <code>config.configurable.orgId</code> and fails closed if it is missing, so a request without an org can never fall back to a shared namespace.</li>
+<li><strong><code>orgPolicy</code></strong> (<code>wrapModelCall</code>) appends per-org policy to the system message on every model call, reading <code>request.runtime.context</code> — this is where runtime context <em>is</em> available.</li>
+<li><strong><code>auditTools</code></strong> (<code>wrapToolCall</code>) times every tool call, including the built-in file tools, into a sink you control (swap for a logger or metrics client).</li>
+<li><strong><code>toolErrorMiddleware</code></strong> turns exceptions from <code>fetch_logs</code> into a model-readable error message <em>without</em> leaking the raw error text (hostnames, stack traces).</li>
+<li><strong><code>permissions</code></strong> make <code>/skills/</code> and <code>/uploads/</code> read-only to the agent: content there is written by app code only, which closes the shared-content prompt-injection path from Ch8.</li>
+</ol>
+<h3 id="calling-it">Calling it</h3>
+<pre><code class="language-ts">import { PostgresStore } from &quot;@langchain/langgraph-checkpoint-postgres/store&quot;;
+import { PostgresSaver } from &quot;@langchain/langgraph-checkpoint-postgres&quot;;
+import { readFile } from &quot;node:fs/promises&quot;;
+import { buildAgent, seedSkills, uploadIncidentFile } from &quot;./incidentscout.ts&quot;;
+
+const store = PostgresStore.fromConnString(process.env.DATABASE_URL!);
+const checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL!);
+await store.setup(); await checkpointer.setup();
+await seedSkills(store); // once, at deploy time
+
+const agent = buildAgent({ model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;, store, checkpointer });
+
+// 1) User uploads a vendor PDF for incident 42 (from your HTTP handler)
+await uploadIncidentFile(store, &quot;acme&quot;, &quot;/inc-42/vendor-report.pdf&quot;, await readFile(&quot;report.pdf&quot;));
+
+// 2) Ask with an inline screenshot as well
+const identity = { userId: &quot;u-42&quot;, orgId: &quot;acme&quot; };           // from your auth layer
+const result = await agent.invoke(
+  { messages: [{ role: &quot;user&quot;, content: [
+      { type: &quot;text&quot;, text: &quot;Checkout p99 spiked. Vendor report is at /uploads/inc-42/vendor-report.pdf. Draft a postmortem.&quot; },
+      { type: &quot;image&quot;, url: &quot;https://grafana.example.com/render/checkout-p99.png&quot; },
+  ] }] },
+  { configurable: { thread_id: &quot;inc-42&quot;, orgId: identity.orgId }, context: identity },
+);
+</code></pre>
+<p><strong>Production swaps</strong> (only these change): <code>InMemoryStore</code> → <code>PostgresStore</code>, <code>MemorySaver</code> → <code>PostgresSaver</code>, <code>fakeModel()</code> → a real model string. <strong>Bedrock caveat (Composition, not from the Deep Agents docs):</strong> Bedrock Converse accepts media as bytes or S3 locations rather than arbitrary public URLs, so for Bedrock prefer the <code>/uploads/</code> path (bytes) or base64 blocks over <code>{ type: "image", url }</code> pointing at a web URL. Check your model's supported MIME types.</p>
+<h3 id="the-tests-testwiringtestts">The tests — <code>test/wiring.test.ts</code></h3>
+<pre><code class="language-ts">// test/wiring.test.ts — proves middleware + skills + multimodal wiring with a scripted fake model.
+import { test } from &quot;node:test&quot;;
+import assert from &quot;node:assert/strict&quot;;
+import { fakeModel, AIMessage } from &quot;langchain&quot;;
+import { InMemoryStore, MemorySaver } from &quot;@langchain/langgraph&quot;;
+import { buildAgent, seedSkills, uploadIncidentFile, type AuditEvent } from &quot;../src/incidentscout.ts&quot;;
+
+const PDF = new TextEncoder().encode(&quot;%PDF-1.4 vendor status report&quot;);
+
+async function setup(model: ReturnType&lt;typeof fakeModel&gt;, fetchLogsImpl?: (s: string) =&gt; Promise&lt;string&gt;) {
+  const store = new InMemoryStore();
+  const audit: AuditEvent[] = [];
+  await seedSkills(store);
+  await uploadIncidentFile(store, &quot;acme&quot;, &quot;/inc-42/vendor-report.pdf&quot;, PDF);
+  const agent = buildAgent({ model, store, checkpointer: new MemorySaver(), audit, fetchLogsImpl });
+  return { agent, audit, store };
+}
+const run = (agent: any, org: string, content: any) =&gt;
+  agent.invoke(
+    { messages: [{ role: &quot;user&quot;, content }] },
+    { configurable: { thread_id: crypto.randomUUID(), orgId: org }, context: { userId: &quot;u-1&quot;, orgId: org } },
+  );
+const toolMsgs = (res: any) =&gt; res.messages.filter((m: any) =&gt; m.type === &quot;tool&quot; || m._getType?.() === &quot;tool&quot;);
+const sysText = (model: any) =&gt; JSON.stringify(model.calls[0].messages[0].content);
+
+test(&quot;skills are listed in the system prompt and org policy middleware injects runtime context&quot;, async () =&gt; {
+  const model = fakeModel().respond(new AIMessage(&quot;ok&quot;));
+  const { agent } = await setup(model);
+  await run(agent, &quot;acme&quot;, &quot;hello&quot;);
+  const sys = sysText(model);
+  assert.match(sys, /postmortem/);
+  assert.match(sys, /Blameless incident postmortem/);
+  assert.match(sys, /Org: acme/);
+});
+
+test(&quot;agent loads a skill body and reads an uploaded PDF as a file content block; audit sees both&quot;, async () =&gt; {
+  const model = fakeModel()
+    .respondWithTools([{ name: &quot;read_file&quot;, args: { file_path: &quot;/skills/postmortem/SKILL.md&quot; } }])
+    .respondWithTools([{ name: &quot;read_file&quot;, args: { file_path: &quot;/uploads/inc-42/vendor-report.pdf&quot; } }])
+    .respond(new AIMessage(&quot;Postmortem drafted.&quot;));
+  const { agent, audit } = await setup(model);
+  const res = await run(agent, &quot;acme&quot;, &quot;Draft a postmortem using the vendor report.&quot;);
+  const [skillMsg, pdfMsg] = toolMsgs(res);
+  assert.match(JSON.stringify(skillMsg.content), /Impact first/);
+  assert.deepEqual(
+    (pdfMsg.content as any[]).map((b) =&gt; [b.type, b.mimeType]),
+    [[&quot;file&quot;, &quot;application/pdf&quot;]],
+  );
+  assert.deepEqual(audit.map((e) =&gt; e.tool), [&quot;read_file&quot;, &quot;read_file&quot;]);
+  assert.equal(res.messages.at(-1).content, &quot;Postmortem drafted.&quot;);
+});
+
+test(&quot;uploads are org-scoped: another org cannot read acme's PDF&quot;, async () =&gt; {
+  const model = fakeModel()
+    .respondWithTools([{ name: &quot;read_file&quot;, args: { file_path: &quot;/uploads/inc-42/vendor-report.pdf&quot; } }])
+    .respond(new AIMessage(&quot;n/a&quot;));
+  const { agent } = await setup(model);
+  const res = await run(agent, &quot;globex&quot;, &quot;read it&quot;);
+  const content = JSON.stringify(toolMsgs(res)[0].content);
+  assert.doesNotMatch(content, /application\/pdf/);
+  assert.match(content, /not found|Error/i);
+});
+
+test(&quot;toolErrorMiddleware turns a throwing tool into an error ToolMessage and the run continues&quot;, async () =&gt; {
+  const model = fakeModel()
+    .respondWithTools([{ name: &quot;fetch_logs&quot;, args: { service: &quot;checkout-api&quot;, minutes: 15 } }])
+    .respond(new AIMessage(&quot;Logs API is down; falling back to metrics.&quot;));
+  const { agent, audit } = await setup(model, async () =&gt; { throw new Error(&quot;ECONNRESET secret-host:9200&quot;); });
+  const res = await run(agent, &quot;acme&quot;, &quot;check logs&quot;);
+  const msg = toolMsgs(res)[0];
+  assert.match(String(msg.content), /fetch_logs failed/);
+  assert.doesNotMatch(String(msg.content), /secret-host/); // raw error text not leaked to the model
+  assert.equal(audit[0].ok, false);
+  assert.equal(res.messages.at(-1).content, &quot;Logs API is down; falling back to metrics.&quot;);
+});
+
+test(&quot;multimodal user input (image + text) reaches the model unchanged&quot;, async () =&gt; {
+  const model = fakeModel().respond(new AIMessage(&quot;Latency spike at 09:12.&quot;));
+  const { agent } = await setup(model);
+  await run(agent, &quot;acme&quot;, [
+    { type: &quot;text&quot;, text: &quot;When did this start?&quot; },
+    { type: &quot;image&quot;, url: &quot;https://grafana.example.com/render/checkout-p99.png&quot; },
+  ]);
+  const human = model.calls[0].messages.find((m: any) =&gt; m.type === &quot;human&quot; || m._getType?.() === &quot;human&quot;);
+  assert.ok((human!.content as any[]).some((b) =&gt; b.type === &quot;image&quot;));
+});
+</code></pre>
+<p>Run with:</p>
+<pre><code class="language-bash">npm i deepagents langchain @langchain/core @langchain/langgraph zod
+npm i -D typescript tsx @types/node
+npx tsx --test test/wiring.test.ts   # 5 pass
+npx tsc -p .                         # strict, clean
+</code></pre>
+<p>What the tests prove:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>skills listed + org policy</td>
+<td><code>SkillsMiddleware</code> put the skill's description in the system prompt; <code>OrgPolicy</code> read <code>runtime.context.orgId</code></td>
+</tr>
+<tr>
+<td>skill body + PDF</td>
+<td><code>read_file</code> loads the skill body on demand and returns the PDF as a <code>file</code> block with <code>application/pdf</code>; audit saw both calls</td>
+</tr>
+<tr>
+<td>org-scoped uploads</td>
+<td><code>globex</code> cannot read <code>acme</code>'s PDF — namespace isolation via <code>configurable.orgId</code> works</td>
+</tr>
+<tr>
+<td>tool errors</td>
+<td>a throwing tool becomes an error message, raw error text is not leaked, audit logs <code>ok: false</code>, the run completes</td>
+</tr>
+<tr>
+<td>multimodal input</td>
+<td>an image content block in the user message reaches the model intact</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="gotchas_6">Gotchas</h3>
+<ul>
+<li><strong>Namespace factory ≠ runtime context</strong> (see corrections above). If isolation silently looks wrong, log what your factory receives.</li>
+<li><strong>Store keys omit the route prefix</strong> for skills, uploads and memories alike.</li>
+<li><strong>Skills need frontmatter</strong> with <code>name</code> and <code>description</code>; the description is what the model uses to decide to load the skill, so write it as "Use when…".</li>
+<li><strong>Custom subagents don't inherit <code>skills</code></strong> — pass them explicitly (Ch9).</li>
+<li><strong>Media and summarization:</strong> old image/PDF blocks disappear when history is summarized; files under <code>/uploads/</code> can be re-read, inline blocks cannot.</li>
+<li><strong><code>fakeModel()</code> is for wiring tests, not quality.</strong> It proves the harness plumbing; evaluate prompt and model behaviour separately with a real model.</li>
+</ul>
+<h3 id="next-problem_10">Next problem</h3>
+<p>The wiring is verified in isolation. Evaluating whether the <em>model</em> uses these pieces well — picks the right skill, opens the PDF before answering — is an evaluation problem, not a unit-test one.</p>
+<p>Sources: executed locally against <a href="https://www.npmjs.com/package/deepagents" target="_blank" rel="noopener">deepagents on npm</a> 1.14.1 and <a href="https://www.npmjs.com/package/langchain" target="_blank" rel="noopener">langchain on npm</a> 1.5.12; <a href="https://docs.langchain.com/oss/javascript/langchain/middleware/custom" target="_blank" rel="noopener">Custom middleware</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/multimodal" target="_blank" rel="noopener">Multimodal inputs and outputs</a>, <a href="https://docs.langchain.com/oss/javascript/langchain/messages" target="_blank" rel="noopener">LangChain messages — multimodal</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/skills" target="_blank" rel="noopener">Skills</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/permissions" target="_blank" rel="noopener">Permissions</a></p>
 <h2 id="glossary">Glossary</h2>
 <div class="tw"><table>
 <thead>
