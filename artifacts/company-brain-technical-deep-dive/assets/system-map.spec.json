@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Company Brain | self-hosted system map",
+    "quality_profile": "showcase",
+    "repository": {"url": "https://github.com/supermemoryai/company-brain", "revision": "d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee"},
+    "viewBox": [1320, 780]
+  },
+  "components": [
+    {"id":"slack","type":"external","label":"Slack workspace","sublabel":"events · OAuth · approvals","pos":[45,205],"size":[175,74]},
+    {"id":"browser","type":"frontend","label":"React web app","sublabel":"sign-in · settings · graph","pos":[45,445],"size":[175,74]},
+    {"id":"worker","type":"backend","label":"Cloudflare Worker","sublabel":"Hono routes · auth · assets","pos":[360,320],"size":[190,82]},
+    {"id":"agent","type":"backend","label":"CompanyBrainAgent","sublabel":"Durable Object · one/org","pos":[670,320],"size":[190,82],"sources":[{"path":"src/brain/turn/agent.ts"}]},
+    {"id":"d1","type":"database","label":"D1","sublabel":"org · member · settings · tools","pos":[675,80],"size":[180,72]},
+    {"id":"kv","type":"database","label":"KV","sublabel":"setup · OAuth · dedupe","pos":[380,80],"size":[170,72]},
+    {"id":"dosql","type":"database","label":"DO SQLite","sublabel":"turns · approvals · schedules","pos":[975,95],"size":[185,72]},
+    {"id":"memory","type":"external","label":"Supermemory API","sublabel":"scoped containers · retrieval","pos":[975,310],"size":[185,72]},
+    {"id":"model","type":"external","label":"Model provider","sublabel":"LLM inference via key","pos":[975,510],"size":[185,72]},
+    {"id":"tools","type":"external","label":"MCP / sandbox","sublabel":"connected tools · optional compute","pos":[675,535],"size":[185,72]}
+  ],
+  "connections": [
+    {"from":"slack","to":"worker","label":"signed events"},
+    {"from":"browser","to":"worker","label":"HTTPS API"},
+    {"from":"worker","to":"agent","label":"org dispatch"},
+    {"from":"worker","to":"kv","label":"temporary state","fromSide":"top","toSide":"bottom"},
+    {"from":"worker","to":"d1","label":"metadata","fromSide":"top","toSide":"left"},
+    {"from":"agent","to":"dosql","label":"agent state","fromSide":"top","toSide":"bottom"},
+    {"from":"agent","to":"memory","label":"write / search"},
+    {"from":"agent","to":"model","label":"inference","fromSide":"right","toSide":"left"},
+    {"from":"agent","to":"tools","label":"actions","fromSide":"bottom","toSide":"top"}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"Edge","items":["Slack callbacks and browser routes terminate in one Worker"]},
+    {"dot":"emerald","title":"Agent","items":["Organization-scoped Durable Object coordinates turns and schedules"]},
+    {"dot":"amber","title":"Data boundary","items":["D1 and DO SQLite are local to deployment; memory and models use external APIs"]}
+  ]
+}
