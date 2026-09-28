@@ -1,75 +1,44 @@
-# agent-artifacts
+# Agent artifacts
 
-Static publishing target for final AI-generated artifacts.
-
-This repository is intentionally boring: GitHub Pages serves files directly from
-the `main` branch root. Agents should not use this repository as a brainstorming
-workspace. They should only publish final artifacts here.
-
-Live site:
-
-https://irfansp.dev/agent-artifacts/
+A static publication shelf for Irfan's AI agents: https://irfansp.dev/agent-artifacts/. GitHub Pages serves files from the `main` branch root. The repo owns the terminal-style design and every artifact's source; generated pages are committed for Pages, not hand-edited.
 
 ## Structure
 
-```txt
-.
-├── index.html
-├── artifacts.json
-├── assets/
-│   └── site.css
-└── artifacts/
-    └── hello-world/
-        └── index.html
+```text
+artifacts.json                       registry / stable URLs
+src/artifacts/<slug>/content.html    article body fragment
+src/artifacts/<slug>/module.css      optional scoped CSS
+src/artifacts/<slug>/module.js       optional interaction
+artifacts/<slug>/index.html         generated publication page
+artifacts/<slug>/diagrams/           optional live diagram assets
+index.html                           generated homepage
+templates/{home,artifact}.html       shared page shell
+assets/{design-system,site}.css      tokens and layout
+assets/site.js                       theme and homepage controls
+SKILL.md, AGENTS.md                  agent-facing authoring contract
 ```
 
-## Publishing Contract
+## Create or update locally
 
-When an agent publishes a final HTML artifact:
-
-1. Pick a stable slug, for example `litellm-cache-report`.
-2. Create `artifacts/<slug>/index.html`.
-3. Add or update an entry in `artifacts.json`.
-4. Commit to `main`.
-5. Return the public URL:
-
-```txt
-https://irfansp.dev/agent-artifacts/artifacts/<slug>/
-```
-
-## Local Publish Helper
-
-For local publishing through a git checkout, use:
+Requires Node.js and npm. Read [`SKILL.md`](SKILL.md) before authoring.
 
 ```bash
+npm ci
 node scripts/add-artifact.mjs \
-  --slug litellm-cache-report \
-  --title "LiteLLM Cache Report" \
-  --description "Short description of the artifact." \
-  --file /path/to/final/index.html
+  --slug example-guide \
+  --title "Example Guide" \
+  --description "A concise guide." \
+  --file templates/example-content.html
+npm run build
+npm test
+npm run validate
+npm run preview
 ```
 
-Then commit and push:
+In another shell run `npm run test:browser`, then visit `http://127.0.0.1:4173/`. The helper accepts a **body fragment**, not a complete `<!doctype html>` page. It updates source, `artifacts.json`, and generated pages; it does not push. Existing slugs are updated in place. Add nested diagrams and images under `artifacts/<slug>/` with relative links. Source modules must use shared design tokens and be scoped to the artifact content.
 
-```bash
-git add artifacts artifacts.json
-git commit -m "publish litellm cache report"
-git push origin main
-```
+For a change to one existing page, edit `src/artifacts/<slug>/content.html` (and its optional module files), then run `npm run build && npm test && npm run validate`. The generated homepage and article are checked into git alongside source. Browser checks need the loopback preview server running.
 
-## Artifact Manifest
+## Publication gate
 
-`artifacts.json` is the lightweight registry used by the homepage.
-
-Each entry should include:
-
-```json
-{
-  "title": "Readable artifact title",
-  "slug": "artifact-slug",
-  "description": "One short sentence describing the artifact.",
-  "createdAt": "2026-06-28",
-  "type": "html",
-  "url": "artifacts/artifact-slug/"
-}
-```
+This is a public site. Screen for credentials and private/company-sensitive content; check links and mobile interactions. **Obtain approval before publishing** a new artifact or deploying a redesign. After approval, commit the source, manifest, generated output and assets together; push without force. Verify the remote commit and file contents, then separately check the live Pages URL. A push is not proof that Pages has finished deploying.

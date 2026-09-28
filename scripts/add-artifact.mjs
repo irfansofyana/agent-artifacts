@@ -1,120 +1,36 @@
 #!/usr/bin/env node
-
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const args = parseArgs(process.argv.slice(2));
-
-if (args.help) {
-  printUsage();
-  process.exit(0);
+import {existsSync,mkdirSync,readFileSync,writeFileSync,rmSync} from 'node:fs';
+import {dirname,join,resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {renderArtifact,renderHome} from './render-site.mjs';
+import {validateEntry} from './site-model.mjs';
+const root=resolve(process.env.ARTIFACT_REPO_ROOT||join(dirname(fileURLToPath(import.meta.url)),'..'));
+function usage(){console.log('Usage: node scripts/add-artifact.mjs --slug name --title "Title" --description "Description" --file /path/to/content-fragment.html [--date YYYY-MM-DD] [--type html]');}
+function parse(argv){const result={};for(let i=0;i<argv.length;i++){
+ const key=argv[i];if(key==='--help'){result.help=true;continue}
+ if(!['--slug','--title','--description','--file','--date','--type'].includes(key)||!argv[i+1]||argv[i+1].startsWith('--'))throw Error(`Invalid or missing argument: ${key}`);
+ result[key.slice(2)]=argv[++i];
+}return result}
+function main(){
+ const args=parse(process.argv.slice(2));if(args.help){usage();return}
+ for(const key of ['slug','title','description','file'])if(!args[key])throw Error(`Missing required --${key}`);
+ const source=resolve(args.file);if(!existsSync(source))throw Error(`Input does not exist: ${source}`);
+ const fragment=readFileSync(source,'utf8');
+ if(/<!doctype\b|<html\b|<head\b|<body\b/i.test(fragment))throw Error('Provide an HTML content fragment, not a full document; migrate body content into src/artifacts/<slug>/content.html.');
+ const manifestPath=join(root,'artifacts.json'),original=readFileSync(manifestPath,'utf8');
+ const manifest=JSON.parse(original);if(!Array.isArray(manifest.artifacts))throw Error('Manifest artifacts must be an array');
+ const prior=manifest.artifacts.find(e=>e.slug===args.slug);
+ const entry={title:args.title,slug:args.slug,description:args.description,createdAt:args.date||prior?.createdAt||new Date().toISOString().slice(0,10),type:args.type||prior?.type||'html',url:`artifacts/${args.slug}/`};
+ validateEntry(entry,root);
+ const artifacts=prior?manifest.artifacts.map(e=>e.slug===entry.slug?entry:e):[entry,...manifest.artifacts];
+ if(new Set(artifacts.map(e=>e.slug)).size!==artifacts.length)throw Error('Duplicate manifest slug');
+ const dest=join(root,'src/artifacts',entry.slug,'content.html'),page=join(root,'artifacts',entry.slug,'index.html'),home=join(root,'index.html');
+ const css=existsSync(join(root,'src/artifacts',entry.slug,'module.css'))?`../../src/artifacts/${entry.slug}/module.css`:'';
+ const js=existsSync(join(root,'src/artifacts',entry.slug,'module.js'))?`../../src/artifacts/${entry.slug}/module.js`:'';
+ const writes=[[dest,fragment],[page,renderArtifact(entry,fragment,{moduleCss:css,moduleJs:js})],[home,renderHome({artifacts})],[manifestPath,JSON.stringify({...manifest,artifacts},null,2)+'\n']];
+ const previous=writes.map(([p])=>existsSync(p)?readFileSync(p):null);
+ try{for(const [p,text] of writes){mkdirSync(dirname(p),{recursive:true});writeFileSync(p,text)}}catch(e){for(let i=0;i<writes.length;i++){const [p]=writes[i];if(previous[i]===null)rmSync(p,{force:true});else writeFileSync(p,previous[i])}throw e}
+ console.log(`Local draft generated: artifacts/${entry.slug}/index.html`);
+ console.log('Run npm test && npm run validate && npm run test:browser before proposing publication. No push performed.');
 }
-
-const required = ["slug", "title", "description", "file"];
-const missing = required.filter((key) => !args[key]);
-
-if (missing.length) {
-  console.error(`Missing required argument(s): ${missing.join(", ")}`);
-  printUsage();
-  process.exit(1);
-}
-
-const slug = validateSlug(args.slug);
-const sourceFile = resolve(args.file);
-
-if (!existsSync(sourceFile)) {
-  console.error(`Artifact file does not exist: ${sourceFile}`);
-  process.exit(1);
-}
-
-const artifactDir = resolve(repoRoot, "artifacts", slug);
-const artifactFile = resolve(artifactDir, "index.html");
-const manifestFile = resolve(repoRoot, "artifacts.json");
-const createdAt = args.date ?? new Date().toISOString().slice(0, 10);
-
-mkdirSync(artifactDir, { recursive: true });
-copyFileSync(sourceFile, artifactFile);
-
-const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
-const artifacts = Array.isArray(manifest.artifacts) ? manifest.artifacts : [];
-const nextEntry = {
-  title: args.title,
-  slug,
-  description: args.description,
-  createdAt,
-  type: args.type ?? "html",
-  url: `artifacts/${slug}/`,
-};
-
-const existingIndex = artifacts.findIndex((artifact) => artifact.slug === slug);
-
-if (existingIndex >= 0) {
-  artifacts[existingIndex] = nextEntry;
-} else {
-  artifacts.unshift(nextEntry);
-}
-
-manifest.artifacts = artifacts;
-writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
-
-console.log(`Published artifact draft: artifacts/${slug}/index.html`);
-console.log(`Public URL after push: https://irfansp.dev/agent-artifacts/artifacts/${slug}/`);
-
-function parseArgs(values) {
-  const parsed = {};
-
-  for (let index = 0; index < values.length; index += 1) {
-    const value = values[index];
-
-    if (value === "--help" || value === "-h") {
-      parsed.help = true;
-      continue;
-    }
-
-    if (!value.startsWith("--")) {
-      console.error(`Unexpected argument: ${value}`);
-      printUsage();
-      process.exit(1);
-    }
-
-    const key = value.slice(2);
-    const next = values[index + 1];
-
-    if (!next || next.startsWith("--")) {
-      console.error(`Missing value for --${key}`);
-      printUsage();
-      process.exit(1);
-    }
-
-    parsed[key] = next;
-    index += 1;
-  }
-
-  return parsed;
-}
-
-function validateSlug(value) {
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
-    console.error("Slug must use lowercase letters, numbers, and hyphens only.");
-    process.exit(1);
-  }
-
-  return value;
-}
-
-function printUsage() {
-  console.log(`
-Usage:
-  node scripts/add-artifact.mjs \\
-    --slug artifact-slug \\
-    --title "Artifact Title" \\
-    --description "Short description." \\
-    --file /path/to/index.html
-
-Optional:
-  --date YYYY-MM-DD
-  --type html
-`);
-}
+try{main()}catch(e){console.error(e.message);process.exitCode=1}
