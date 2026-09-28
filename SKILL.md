@@ -15,7 +15,9 @@ Write a **body fragment**, not a full HTML document. Use headings, anchors, acce
 
 ## Mobile and specialized content
 
-**Mobile** first: at 320px and 390px, a single vertically scrolling page without document-wide horizontal overflow. Put wide tables/code/diagrams in swipeable containers with keyboard-accessible overflow. Preserve interactive controls and visible focus. For **Archify** and other large diagrams, keep the real HTML module under `artifacts/<slug>/diagrams/`, link it relatively, embed it where appropriate, allow internal touch-pan, and provide a full-size link. Mermaid should have readable text/source when its external script cannot load. Never flatten a functional diagram into an image only.
+**Mobile** first: at 320px and 390px, a single vertically scrolling page without document-wide horizontal overflow. Put wide tables/code/diagrams in swipeable containers with keyboard-accessible overflow. Give dense tables a sensible minimum table and minimum column width so labels do not collapse into vertical letters; keep horizontal scroll inside the wrapper rather than the document, give the scroll container keyboard focus and an accessible label, and show a brief visible swipe hint when columns extend offscreen. Preserve interactive controls and visible focus. For **Archify** and other large diagrams, keep the real HTML module under `artifacts/<slug>/diagrams/`, link it relatively, embed it where appropriate, allow internal touch-pan, and provide a full-size link. Mermaid should have readable text/source when its external script cannot load. Never flatten a functional diagram into an image only.
+
+Check foreground/background contrast for prose, inline code, code block text and diagrams in **both dark and paper themes**; normal text needs at least 4.5:1. An accent token such as `--phosphor` is not a safe background behind muted text: use a theme-aware opaque surface such as `--bg-chrome`, keep accent for highlights, and test the computed colors in a browser at mobile widths. When updating a module, test representative populated tables and code, not only the shared shell.
 
 ## Public-content privacy gate (mandatory)
 

@@ -7,7 +7,7 @@
     "validate": "node scripts/validate-site.mjs",
     "test": "node --test tests/*.test.mjs",
     "preview": "python3 -m http.server 4173 --bind 127.0.0.1",
-    "test:browser": "node tests/browser/site-smoke.mjs && node tests/browser/home.mjs && node tests/browser/interactive.mjs && node tests/browser/diagrams.mjs && node tests/browser/review-regressions.mjs"
+    "test:browser": "node tests/browser/site-smoke.mjs && node tests/browser/home.mjs && node tests/browser/interactive.mjs && node tests/browser/diagrams.mjs && node tests/browser/review-regressions.mjs && node tests/browser/mobile-content-contrast.mjs"
   },
   "devDependencies": {
     "parse5": "^8.0.1",

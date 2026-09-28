@@ -37,6 +37,11 @@ test('repo authoring skill blocks sensitive content across page, metadata and as
  for(const term of ['company-confidential','private person','private file','metadata','screenshots','do not publish','anonymize'])assert.match(skill,new RegExp(term,'i'),term);
 });
 
+test('repo authoring contract requires readable code and scrollable mobile tables',()=>{
+ const skill=readFileSync(join(project,'SKILL.md'),'utf8');
+ for(const term of ['4.5:1','code block','inline code','horizontal scroll','minimum column width'])assert.match(skill,new RegExp(term,'i'),term);
+});
+
 test('repo instructions codify shared template, themes, mobile, Archify, validation and publish gate',()=>{
  const skill=readFileSync(join(project,'SKILL.md'),'utf8');
  for(const term of ['templates/artifact.html','theme','mobile','Archify','npm run validate','approval'])assert.match(skill,new RegExp(term,'i'));

@@ -206,7 +206,8 @@ npm install @langchain/mcp-adapters             # MCP tools (Ch6)
 <p>You already know the basic tool-calling loop: send messages plus tool schemas to an LLM, execute whatever tool calls come back, append the results, repeat until the model answers without calling a tool. That loop is fine for "what's the weather in Tokyo". It breaks down for an incident investigation, which is long, multi-step, produces huge intermediate outputs (log dumps), needs a plan, and may need delegation and human sign-off. You end up hand-building planning, scratch storage, context trimming, delegation, and approvals around the loop.</p>
 <h3 id="the-concept-an-agent-harness">The concept: an agent harness</h3>
 <p>The docs position LangChain's three packages as layers:</p>
-<div class="tw"><table>
+<p class="table-scroll-hint">Swipe table horizontally to see all columns →</p>
+<div class="tw" tabindex="0" role="region" aria-label="Package layers table; scroll horizontally to see all columns"><table>
 <thead>
 <tr>
 <th>Layer</th>
