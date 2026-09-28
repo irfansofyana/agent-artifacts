@@ -17,6 +17,12 @@ Write a **body fragment**, not a full HTML document. Use headings, anchors, acce
 
 **Mobile** first: at 320px and 390px, a single vertically scrolling page without document-wide horizontal overflow. Put wide tables/code/diagrams in swipeable containers with keyboard-accessible overflow. Preserve interactive controls and visible focus. For **Archify** and other large diagrams, keep the real HTML module under `artifacts/<slug>/diagrams/`, link it relatively, embed it where appropriate, allow internal touch-pan, and provide a full-size link. Mermaid should have readable text/source when its external script cannot load. Never flatten a functional diagram into an image only.
 
+## Public-content privacy gate (mandatory)
+
+**Do not publish** company-confidential data, a private person's name or other personal info, a private file, or any credential. This applies even if the page is useful or publication was generally approved. Before committing or pushing, inspect **every publication surface**: title, slug, description and other registry metadata; article prose, code, links, diagrams, labels and examples; asset filenames, screenshots/images (including visible UI and EXIF), PDFs and their embedded metadata; generated HTML and build output. Look for internal company names/projects, customer or employee details, private URLs/repo paths, email/phone/address/location, financial or health information, API keys and tokens. Publicly documented third-party names and the site's deliberate publisher credit are not private-person disclosures; verify the source and context.
+
+If anything sensitive appears, **stop**: omit it or anonymize it in both source and generated output, then re-run build, tests and a manual review of the rendered page and assets. If safe anonymization would destroy the artifact, do not publish it. Do not paste sensitive values into review comments, test logs, commit messages or this skill. Automated secret scans are only a supplement: they cannot prove a page is safe. A general approval to publish never waives this gate.
+
 ## Local workflow
 
 ```bash
@@ -31,4 +37,4 @@ npm run preview
 
 The helper validates input and writes source + registry + generated HTML locally; for an existing slug it updates one entry. Add relative assets under `artifacts/<slug>/` and test them. A full standalone HTML document is rejected: extract its body into a fragment first. The helper does not push or publish.
 
-Review content for credentials, private/company-sensitive material, broken links and accessibility. Request **explicit publication approval** for a new artifact; when approved, commit source, registry, generated pages and any assets together, push normally (no force), read back exact committed paths, then verify the live GitHub Pages URL. A successful push alone is not a live deployment.
+Pass the mandatory privacy gate above, then check broken links and accessibility. Request **explicit publication approval** for a new artifact; when approved, commit source, registry, generated pages and any assets together, push normally (no force), read back exact committed paths, then verify the live GitHub Pages URL. A successful push alone is not a live deployment.

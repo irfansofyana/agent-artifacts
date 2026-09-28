@@ -32,6 +32,11 @@ test('rejects full document and unsafe slug before writing anything',()=>withRep
  writeFileSync(source,'<h2>Safe</h2>');assert.notEqual(add(root,source,'../escape').status,0);
  assert.equal(readFileSync(join(root,'artifacts.json'),'utf8'),before);
 }));
+test('repo authoring skill blocks sensitive content across page, metadata and assets',()=>{
+ const skill=readFileSync(join(project,'SKILL.md'),'utf8');
+ for(const term of ['company-confidential','private person','private file','metadata','screenshots','do not publish','anonymize'])assert.match(skill,new RegExp(term,'i'),term);
+});
+
 test('repo instructions codify shared template, themes, mobile, Archify, validation and publish gate',()=>{
  const skill=readFileSync(join(project,'SKILL.md'),'utf8');
  for(const term of ['templates/artifact.html','theme','mobile','Archify','npm run validate','approval'])assert.match(skill,new RegExp(term,'i'));
