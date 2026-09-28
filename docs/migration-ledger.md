@@ -16,3 +16,9 @@ Baseline: commit `2cddb02` (33 registered HTML artifacts). The migration utility
 | litellm-bedrock-model-evaluation-playbook-2026-08-04 | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Four tables need swipe inspection |
 | matt-pocock-skills-ai-assisted-engineering-playbook | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Five tables need swipe inspection |
 | matt-pocock-skills-learning-guide | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Two tables need swipe inspection |
+| openclaw-enterprise-deployment | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Scoped article |
+| openclaw-enterprise-operating-model | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Scoped article |
+| signal-panel | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Example status panel |
+| slack-bot-private-mcp-per-user | migrated | ids/links/code/tables match; 3 diagram URLs preserved | mobile dark/paper: no overflow; 3 iframes; touch pan tested on architecture (scrollLeft 0→161 of 440) | Standalone Archify files retain their own internal theme controls |
+| web-search-for-ai-agents-2026 | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Scoped comparison |
+| wedding-venue-comparison-2026-07-02 | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Table swipe to inspect |

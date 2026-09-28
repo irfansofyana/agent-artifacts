@@ -1,0 +1,55 @@
+
+      .legacy-content .signal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .legacy-content .signal-card {
+        border: 1px solid #d7dde8;
+        border-radius: 8px;
+        padding: 18px;
+        background: var(--surface-output);
+      }
+
+      .legacy-content .signal-value {
+        margin: 10px 0 6px;
+        font-size: 2rem;
+        line-height: 1;
+        font-weight: 700;
+      }
+
+      .legacy-content .signal-label {
+        margin: 0;
+        color: var(--text-secondary);
+      }
+
+      .legacy-content .timeline {
+        display: grid;
+        gap: 12px;
+        margin: 24px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .legacy-content .timeline li {
+        display: grid;
+        grid-template-columns: 84px 1fr;
+        gap: 14px;
+        align-items: start;
+        padding: 14px 0;
+        border-top: 1px solid #e6ebf2;
+      }
+
+      .legacy-content .time {
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
+      }
+
+      @media (max-width: 560px) {
+        .legacy-content .timeline li {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+      }
