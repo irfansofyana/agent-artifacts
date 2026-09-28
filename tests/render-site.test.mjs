@@ -16,6 +16,12 @@ test('artifact shell escapes metadata and retains a relative diagram link', () =
   assert.match(html,/<main\b/);
   assert.match(html,/href="#site-main"/);
 });
+test('short articles without a TOC render in a full-width article column',()=>{
+ const html=renderArtifact(entry,'<div data-artifact-content><h2>Only section</h2><p>Text</p></div>');
+ assert.match(html,/<div class="article-layout article-layout--plain"><div class="artifact-body">/);
+ assert.doesNotMatch(html,/class="article-toc"/);
+});
+
 test('section IDs become shared navigation even when heading has no ID',()=>{
  const entry={slug:'section-test',title:'Guide',description:'Guide',type:'html',createdAt:'2026-01-01',url:'artifacts/section-test/'};
  const fragment='<div class="legacy-content"><section id="first"><h2>First</h2></section><section id="second"><h2>Second</h2></section><section id="third"><h2>Third</h2></section></div>';

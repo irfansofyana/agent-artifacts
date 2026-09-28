@@ -24,7 +24,7 @@
   .legacy-content a { color: var(--purple); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
   .legacy-content a:hover { border-bottom-color: var(--purple); }
   .legacy-content table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
-  .legacy-content th { background: var(--purple); color: var(--text-secondary); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .legacy-content th { background: var(--bg-chrome); color: var(--text-secondary); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
   .legacy-content td { padding: 10px 14px; border-bottom: 1px solid var(--gray-200); }
   .legacy-content tr:nth-child(even) td { background: var(--surface-output); }
   .legacy-content .highlight { background: var(--purple-light); border-left: 4px solid var(--purple); padding: 16px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; }

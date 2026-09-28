@@ -39,7 +39,7 @@ function tocFor(fragment) {
 }
 export function renderArtifact(entry,fragment,{moduleCss='',moduleJs=''}={}) {
   const toc = tocFor(fragment);
-  const content = `<div class="article-layout">${toc.desktop}<div class="artifact-body">${toc.mobile}${fragment}</div></div>`;
+  const content = `<div class="article-layout${toc.desktop ? '' : ' article-layout--plain'}">${toc.desktop}<div class="artifact-body">${toc.mobile}${fragment}</div></div>`;
   return fill(articleTemplate, {
     TITLE:escapeHtml(entry.title), DESCRIPTION:escapeHtml(entry.description),SLUG:escapeHtml(entry.slug),TYPE:escapeHtml(entry.type),DATE:escapeHtml(entry.updatedAt ?? entry.createdAt),
     CONTENT:content,TOC:'', MODULE_CSS: moduleCss ? `<link rel="stylesheet" href="${escapeHtml(moduleCss)}">` : '', MODULE_JS: moduleJs ? `<script src="${escapeHtml(moduleJs)}" defer></script>` : ''

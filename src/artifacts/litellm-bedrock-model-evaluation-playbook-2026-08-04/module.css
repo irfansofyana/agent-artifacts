@@ -67,18 +67,18 @@
     .legacy-content .card .label { color: var(--teal); font-size: 11px; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
     .legacy-content .card h3 { margin: 8px 0 7px; font-size: 19px; }
     .legacy-content .card p { margin: 0; color: var(--text-secondary); font-size: 14px; }
-    .legacy-content .card.warn { border-color: #e1b398; background: var(--orange-soft); }
+    .legacy-content .card.warn { border-color: #e1b398; background: var(--bg-chrome); }
 
-    .legacy-content .callout { margin: 30px 0; padding: 22px 24px; border-left: 5px solid var(--orange); background: var(--orange-soft); }
+    .legacy-content .callout { margin: 30px 0; padding: 22px 24px; border-left: 5px solid var(--orange); background: var(--bg-chrome); }
     .legacy-content .callout p { margin: 0; font-family: var(--font-mono); font-size: 22px; line-height: 1.42; }
 
     .legacy-content table { width: 100%; border-collapse: collapse; margin: 22px 0 30px; background: var(--surface); font-size: 14px; }
-    .legacy-content th { background: var(--navy); color: var(--text-secondary); text-align: left; font-size: 12px; letter-spacing: .035em; text-transform: uppercase; }
+    .legacy-content th { background: var(--bg-chrome); color: var(--text-secondary); text-align: left; font-size: 12px; letter-spacing: .035em; text-transform: uppercase; }
     .legacy-content th,.legacy-content  td { padding: 12px 14px; border: 1px solid var(--line); vertical-align: top; }
     .legacy-content td:first-child { font-weight: 750; }
     .legacy-content tr:nth-child(even) td { background: var(--surface-output); }
 
-    .legacy-content .formula { margin: 28px 0; padding: 26px; border: 1px solid #9dcac3; background: var(--teal-soft); text-align: center; }
+    .legacy-content .formula { margin: 28px 0; padding: 26px; border: 1px solid #9dcac3; background: var(--bg-chrome); text-align: center; }
     .legacy-content .formula span { display: block; color: var(--teal); font-size: 12px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
     .legacy-content .formula strong { display: block; margin-top: 10px; font: 700 clamp(21px, 3vw, 30px)/1.3 Georgia, serif; }
 
@@ -88,7 +88,7 @@
     .legacy-content .step strong { font-size: 16px; }
     .legacy-content .step p { margin: 0; color: var(--text-secondary); font-size: 15px; }
 
-    .legacy-content pre { margin: 20px 0 28px; padding: 20px; overflow-x: auto; border-radius: 2px; background: var(--code); color: var(--text-secondary); box-shadow: none; line-height: 1.55; }
+    .legacy-content pre { margin: 20px 0 28px; padding: 20px; overflow-x: auto; border-radius: 2px; background: var(--bg-chrome); color: var(--text-secondary); box-shadow: none; line-height: 1.55; }
     .legacy-content pre code { font-size: 13px; }
     .legacy-content .checklist { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 28px; padding: 0; list-style: none; }
     .legacy-content .checklist li { position: relative; padding: 9px 0 9px 29px; border-bottom: 1px solid var(--line); }

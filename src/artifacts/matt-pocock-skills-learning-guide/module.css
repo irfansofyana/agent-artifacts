@@ -12,9 +12,9 @@
 .legacy-content code { background:var(--surface-output); color:var(--text-secondary); padding:.15em .35em; border-radius:3px; font-family:var(--font-mono); font-size:.9em; }
 .legacy-content pre { background:var(--surface-output); color:var(--text-secondary); padding:4mm; border-radius:5px; overflow:hidden; }
 .legacy-content table { border-collapse:collapse; width:100%; margin:4mm 0 6mm; font-size:8.2pt; break-inside:avoid; }
-.legacy-content th { background:var(--navy); color:var(--text-secondary); font-weight:700; text-align:left; padding:2.3mm; vertical-align:top; }
+.legacy-content th { background:var(--bg-chrome); color:var(--text-secondary); font-weight:700; text-align:left; padding:2.3mm; vertical-align:top; }
 .legacy-content td { border:1px solid var(--line); padding:2.1mm; vertical-align:top; }
-.legacy-content tr:nth-child(even) td { background:var(--soft); }
+.legacy-content tr:nth-child(even) td { background:var(--bg-chrome); }
 .legacy-content ul,.legacy-content ol { margin:1.5mm 0 4mm 5mm; padding-left:4mm; }
 .legacy-content li { margin:1.2mm 0; }
 .legacy-content blockquote { color:var(--muted); border-left:3px solid var(--blue); padding-left:3mm; margin:4mm 0; }

@@ -44,3 +44,6 @@
     .legacy-content footer { border-top:1px solid var(--line); padding:28px 0 50px; color:var(--muted); font-size:13px; }
     @media (max-width:760px){ .legacy-content .shell{padding:0 20px}.legacy-content .hero{display:block;padding:55px 0 48px}.legacy-content .hero-note{margin-top:42px}.legacy-content .grid{display:block;padding-top:38px}.legacy-content nav{position:static;display:flex;gap:18px;overflow:auto;border-bottom:1px solid var(--line);padding-bottom:16px}.legacy-content nav a{white-space:nowrap}.legacy-content .flow{grid-template-columns:1fr}.legacy-content article h2{font-size:32px;margin-top:52px} }
     @media (prefers-reduced-motion:reduce){.legacy-content{scroll-behavior:auto}}
+    /* The shared artifact shell already supplies section navigation. */
+    .legacy-content .grid > nav { display:none; }
+    .legacy-content .grid { display:block; max-width:680px; margin-inline:auto; }

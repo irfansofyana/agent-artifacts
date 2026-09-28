@@ -18,7 +18,7 @@
     }
     .legacy-content * { box-sizing: border-box; }
     .legacy-content { scroll-behavior: smooth; scroll-padding-top: 88px; }
-    .legacy-content { margin: 0; color: var(--ink); background: var(--paper); font: 18px/1.7 var(--serif); }
+    .legacy-content { margin: 0; color: var(--ink); background: var(--bg-chrome); font: 18px/1.7 var(--serif); }
     .legacy-content a { color: var(--blue); text-underline-offset: .18em; text-decoration-thickness: 1px; }
     .legacy-content a:hover { color: var(--coral); }
     .legacy-content :focus-visible { outline: 3px solid var(--signal); outline-offset: 4px; border-radius: 3px; }
@@ -28,7 +28,7 @@
     .legacy-content .brand { display: flex; align-items: center; gap: 11px; color: var(--blue-deep); text-decoration: none; }
     .legacy-content .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border: 2px solid currentColor; border-radius: 50%; font: 700 17px var(--sans); }
     .legacy-content .top-meta { color: var(--muted); }
-    .legacy-content .hero { position: relative; overflow: hidden; padding: clamp(66px, 10vw, 130px) clamp(22px, 6vw, 96px) clamp(58px, 8vw, 100px); color: var(--text-secondary); background: var(--blue-deep); }
+    .legacy-content .hero { position: relative; overflow: hidden; padding: clamp(66px, 10vw, 130px) clamp(22px, 6vw, 96px) clamp(58px, 8vw, 100px); color: var(--text-secondary); background: var(--bg-chrome); }
     .legacy-content .hero::before { content: ""; position: absolute; inset: 0; opacity: .16; background-image: linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px); background-size: 46px 46px; mask-image: linear-gradient(to right, black, transparent 78%); }
     .legacy-content .hero::after { content: "ORCA / OPS"; position: absolute; right: -28px; bottom: -48px; color: var(--text-secondary); font: 700 clamp(72px, 15vw, 210px)/.8 var(--sans); letter-spacing: -.08em; white-space: nowrap; }
     .legacy-content .hero-inner { position: relative; z-index: 1; max-width: 1120px; margin: auto; }
@@ -50,7 +50,7 @@
     .legacy-content .rail nav { display: grid; border-top: 1px solid var(--line); }
     .legacy-content .rail a { display: grid; grid-template-columns: 31px 1fr; gap: 9px; padding: 8px 5px; border-bottom: 1px solid var(--line); color: var(--muted); font: 500 12px/1.35 var(--sans); text-decoration: none; transition: color .2s, background .2s, padding .2s; }
     .legacy-content .rail a span { color: var(--text-secondary); font: 500 10px var(--mono); }
-    .legacy-content .rail a.active { padding-left: 10px; color: var(--blue-deep); background: var(--blue-soft); }
+    .legacy-content .rail a.active { padding-left: 10px; color: var(--blue-deep); background: var(--bg-chrome); }
     .legacy-content .rail a.active span { color: var(--coral); }
     .legacy-content .rail-note { margin-top: 20px; padding: 15px; border: 1px dashed #9fb6c8; color: var(--muted); background: var(--surface-output); font: 12px/1.5 var(--mono); }
     .legacy-content article { min-width: 0; }
@@ -70,10 +70,10 @@
     .legacy-content .table-wrap { margin: 30px 0; overflow-x: auto; border: 1px solid var(--line); background: var(--surface); box-shadow: none; }
     .legacy-content table { width: 100%; border-collapse: collapse; font: 14px/1.45 var(--sans); }
     .legacy-content th,.legacy-content  td { padding: 13px 15px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-    .legacy-content th { color: var(--text-secondary); background: var(--blue-deep); font: 600 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; }
+    .legacy-content th { color: var(--text-secondary); background: var(--bg-chrome); font: 600 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; }
     .legacy-content tr:last-child td { border-bottom: 0; }
     .legacy-content tr:nth-child(even) td { background: var(--surface-output); }
-    .legacy-content pre { position: relative; margin: 30px 0; padding: 25px 25px 22px; overflow-x: auto; border-radius: 3px; color: var(--text-secondary); background: var(--code); box-shadow: none; font: 13px/1.65 var(--mono); }
+    .legacy-content pre { position: relative; margin: 30px 0; padding: 25px 25px 22px; overflow-x: auto; border-radius: 3px; color: var(--text-secondary); background: var(--bg-chrome); box-shadow: none; font: 13px/1.65 var(--mono); }
     .legacy-content pre::before { content: "RUNBOOK"; display: block; margin-bottom: 17px; color: var(--text-secondary); font: 600 9px var(--mono); letter-spacing: .16em; }
     .legacy-content code { padding: .1em .32em; border-radius: 3px; color: var(--text-secondary); background: var(--surface-output); font: .82em/1.4 var(--mono); overflow-wrap: anywhere; }
     .legacy-content pre code { padding: 0; color: inherit; background: transparent; overflow-wrap: normal; }
@@ -113,3 +113,6 @@
       .legacy-content pre,.legacy-content  table { break-inside: avoid; }
     }
     @media (prefers-reduced-motion: reduce) { .legacy-content { scroll-behavior: auto; } .legacy-content * { transition: none !important; } }
+    /* The shared artifact shell already supplies section navigation. */
+    .legacy-content .rail { display: none; }
+    .legacy-content .shell { display: block; max-width: 790px; }

@@ -20,7 +20,7 @@
     .legacy-content {
       margin: 0;
       color: var(--ink);
-      background: var(--paper);
+      background: var(--bg-chrome);
       font-family: var(--font-mono);
       line-height: 1.58;
     }
@@ -70,7 +70,7 @@
       background: var(--surface); border: 1px solid var(--line); box-shadow: none;
       display: grid; grid-template-columns: 1fr 1.6fr;
     }
-    .legacy-content .recommend-title { padding: 34px; background: var(--green); color: var(--text-secondary); }
+    .legacy-content .recommend-title { padding: 34px; background: var(--bg-chrome); color: var(--text-secondary); }
     .legacy-content .recommend-title .tag { color: var(--lime); }
     .legacy-content .recommend-title h3 { font-size: 2.5rem; margin-top: 14px; }
     .legacy-content .recommend-body { padding: 34px; }
@@ -98,7 +98,7 @@
     .legacy-content .result { margin-top: 20px; padding-top: 18px; border-top: 2px solid var(--ink); display: grid; gap: 7px; }
     .legacy-content .result-row { display: flex; justify-content: space-between; gap: 15px; }
     .legacy-content .result strong { font-variant-numeric: tabular-nums; }
-    .legacy-content .status { margin-top: 14px; padding: 9px 11px; background: var(--code); font-weight: 800; }
+    .legacy-content .status { margin-top: 14px; padding: 9px 11px; background: var(--bg-chrome); font-weight: 800; }
     .legacy-content .status.good { background: var(--surface-output); color: var(--text-secondary); }
     .legacy-content .status.bad { background: var(--surface-output); color: var(--text-secondary); }
     .legacy-content .playbook { display: grid; grid-template-columns: 1fr 1fr; background: var(--ink); color: var(--text-secondary); }
@@ -129,14 +129,14 @@
     .legacy-content .routine ol { padding-left: 19px; color: var(--muted); }
     .legacy-content .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
     .legacy-content .btn { border: 1px solid var(--ink); background: var(--ink); color: var(--text-secondary); padding: 11px 16px; min-height: 46px; cursor: pointer; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; }
-    .legacy-content .btn:hover { background: var(--green); color: var(--text-secondary); }
+    .legacy-content .btn:hover { background: var(--bg-chrome); color: var(--text-secondary); }
     .legacy-content .btn.secondary { background: transparent; color: var(--ink); }
-    .legacy-content .btn.secondary:hover { background: var(--code); }
+    .legacy-content .btn.secondary:hover { background: var(--bg-chrome); }
     .legacy-content .redflags { columns: 2; column-gap: 42px; padding-left: 20px; }
     .legacy-content .redflags li { break-inside: avoid; margin: 0 0 10px; }
     .legacy-content .sources { font-size: .92rem; }
     .legacy-content .sources li { margin-bottom: 10px; }
-    .legacy-content footer { background: var(--green-dark); color: var(--text-secondary); padding: 46px 0; }
+    .legacy-content footer { background: var(--bg-chrome); color: var(--text-secondary); padding: 46px 0; }
     .legacy-content footer .shell { display: flex; justify-content: space-between; gap: 30px; align-items: end; }
     .legacy-content footer h2 { color: var(--lime); font-size: 2rem; }
     .legacy-content footer p { max-width: 610px; margin-bottom: 0; }

@@ -80,7 +80,7 @@
       font-weight: 700;
       text-decoration: none;
     }
-    .legacy-content nav a:hover { background: var(--paper-2); color: var(--ink); }
+    .legacy-content nav a:hover { background: var(--bg-chrome); color: var(--ink); }
 
     .legacy-content .hero {
       padding: 72px 0 46px;
@@ -111,7 +111,7 @@
     .legacy-content .hero-card {
       padding: 24px;
       color: var(--text-secondary);
-      background: var(--deep);
+      background: var(--bg-chrome);
       border-radius: 28px 28px 28px 4px;
       box-shadow: none;
     }
@@ -135,7 +135,7 @@
       display: grid;
       grid-template-columns: auto 1fr;
       gap: 18px;
-      background: var(--signal-soft);
+      background: var(--bg-chrome);
       border: 1px solid #f2b29d;
       border-left: 7px solid var(--signal);
       border-radius: 14px;
@@ -168,7 +168,7 @@
       gap: 8px;
       padding: 28px;
       overflow-x: auto;
-      background: var(--paper-2);
+      background: var(--bg-chrome);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: none;
@@ -177,7 +177,7 @@
     .legacy-content .route-card b { display: block; font-size: 16px; }
     .legacy-content .route-card span { color: var(--muted); font-size: 12px; }
     .legacy-content .route-arrow { color: var(--signal); font: 900 22px/1 ui-monospace, monospace; }
-    .legacy-content .route-card.primary { padding: 15px; color: var(--text-secondary); background: var(--deep); border-radius: 12px; }
+    .legacy-content .route-card.primary { padding: 15px; color: var(--text-secondary); background: var(--bg-chrome); border-radius: 12px; }
     .legacy-content .route-card.primary span { color: var(--text-secondary); }
 
     .legacy-content .grid { display: grid; gap: 18px; }
@@ -185,7 +185,7 @@
     .legacy-content .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .legacy-content .card {
       padding: 24px;
-      background: var(--paper-2);
+      background: var(--bg-chrome);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: none;
@@ -205,7 +205,7 @@
       text-transform: uppercase;
     }
     .legacy-content .tag.safe { color: var(--safe); border-color: #98c9b9; background: var(--surface-output); }
-    .legacy-content .tag.caution { color: var(--warn); border-color: #e4b29e; background: var(--signal-soft); }
+    .legacy-content .tag.caution { color: var(--warn); border-color: #e4b29e; background: var(--bg-chrome); }
 
     .legacy-content .steps { counter-reset: bridge-step; display: grid; gap: 14px; }
     .legacy-content .step {
@@ -214,7 +214,7 @@
       grid-template-columns: 52px minmax(0, 1fr);
       gap: 18px;
       padding: 22px;
-      background: var(--paper-2);
+      background: var(--bg-chrome);
       border: 1px solid var(--line);
       border-radius: var(--radius);
     }
@@ -225,7 +225,7 @@
       display: grid;
       place-items: center;
       color: var(--text-secondary);
-      background: var(--deep);
+      background: var(--bg-chrome);
       border-radius: 50%;
       font: 800 13px/1 ui-monospace, monospace;
     }
@@ -243,7 +243,7 @@
       margin: 14px 0;
       border-radius: 13px;
       overflow: hidden;
-      background: var(--code);
+      background: var(--bg-chrome);
       color: var(--text-secondary);
     }
     .legacy-content .command pre { margin: 0; padding: 20px 58px 20px 20px; overflow-x: auto; font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -265,7 +265,7 @@
 
     .legacy-content .generator {
       padding: 28px;
-      background: var(--deep-2);
+      background: var(--bg-chrome);
       color: var(--text-secondary);
       border-radius: 24px;
       box-shadow: none;
@@ -300,29 +300,29 @@
     .legacy-content .button {
       padding: 9px 12px;
       color: var(--text-secondary);
-      background: var(--deep);
+      background: var(--bg-chrome);
       border: 0;
       border-radius: 9px;
       font-weight: 750;
       cursor: pointer;
     }
-    .legacy-content .button:hover { background: var(--signal); }
+    .legacy-content .button:hover { background: var(--bg-chrome); }
 
     .legacy-content .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
-    .legacy-content table { width: 100%; border-collapse: collapse; background: var(--paper-2); }
+    .legacy-content table { width: 100%; border-collapse: collapse; background: var(--bg-chrome); }
     .legacy-content th,.legacy-content  td { padding: 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
     .legacy-content th { color: var(--muted); background: var(--surface-output); font: 800 11px/1.2 ui-monospace, monospace; letter-spacing: .07em; text-transform: uppercase; }
     .legacy-content tr:last-child td { border-bottom: 0; }
 
     .legacy-content .ladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; overflow-x: auto; }
-    .legacy-content .ladder div { min-width: 155px; padding: 18px; background: var(--deep); color: var(--text-secondary); }
+    .legacy-content .ladder div { min-width: 155px; padding: 18px; background: var(--bg-chrome); color: var(--text-secondary); }
     .legacy-content .ladder div:first-child { border-radius: 14px 0 0 14px; }
-    .legacy-content .ladder div:last-child { border-radius: 0 14px 14px 0; background: var(--signal); }
+    .legacy-content .ladder div:last-child { border-radius: 0 14px 14px 0; background: var(--bg-chrome); }
     .legacy-content .ladder b { display: block; margin-bottom: 5px; }
     .legacy-content .ladder span { color: var(--text-secondary); font-size: 12px; }
     .legacy-content .ladder div:last-child span { color: var(--text-secondary); }
 
-    .legacy-content details { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; }
+    .legacy-content details { background: var(--bg-chrome); border: 1px solid var(--line); border-radius: 12px; }
     .legacy-content details + details { margin-top: 10px; }
     .legacy-content summary { padding: 16px 18px; cursor: pointer; font-weight: 800; }
     .legacy-content details > div { padding: 0 18px 18px; color: var(--muted); }
