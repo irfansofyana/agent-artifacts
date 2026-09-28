@@ -1,28 +1,8 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Deep Agents (TypeScript): From First Agent to Production on AWS</title>
-<meta name="description" content="Chapter-by-chapter guide to LangChain Deep Agents for TypeScript, building IncidentScout from a single tool call to a production service on AWS (Aurora, ECS, sandboxes, MCP, HITL).">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
-<style>
-:root{--bg:#0f1117;--panel:#171a23;--border:#2a2f3d;--text:#e8e6e3;--muted:#9aa0b0;--accent:#8ab4ff;--code:#1c2030}
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
-a{color:var(--accent)}
-.layout{display:grid;grid-template-columns:290px minmax(0,1fr);max-width:1400px;margin:auto}
-nav.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:24px 18px;border-right:1px solid var(--border);font-size:.85rem}
-nav.toc ul{list-style:none;padding-left:12px;margin:4px 0}nav.toc>div>ul{padding-left:0}
-nav.toc a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}nav.toc a:hover{color:var(--text)}
-nav.toc .home{display:block;margin-bottom:14px;color:var(--accent);font-weight:600}
-main{padding:32px 48px 80px;max-width:980px}
-h1{font-size:2.1rem;line-height:1.2}h2{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border)}h3{margin-top:2rem}
-code{background:var(--code);padding:.1em .35em;border-radius:4px;font-size:.88em}
-pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:14px;overflow:auto}pre code{background:none;padding:0}
-pre.mermaid{background:#fff;color:#000;text-align:center}
-.tw{overflow-x:auto;margin:1rem 0}table{border-collapse:collapse;width:100%;font-size:.92rem}
-th,td{border:1px solid var(--border);padding:8px 10px;vertical-align:top;text-align:left}th{background:var(--panel)}
-blockquote{border-left:3px solid var(--accent);margin:0;padding-left:14px;color:var(--muted)}
-@media(max-width:900px){.layout{grid-template-columns:1fr}nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}main{padding:20px}}
-</style></head><body>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="Chapter-by-chapter guide to LangChain Deep Agents for TypeScript: build IncidentScout from one tool call to a production AWS service — filesystem, Postgres backends, sandboxes, MCP, subagents, HITL, ECS/Aurora deployment, plus a tested chapter wiring middleware, skills and multimodal files."><title>Deep Agents (TypeScript): From First Agent to Production on AWS · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script><link rel="stylesheet" href="../../src/artifacts/deep-agents-typescript-guide/module.css"></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/deep-agents-typescript-guide</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>Deep Agents (TypeScript): From First Agent to Production on AWS</h1><p class="lede">Chapter-by-chapter guide to LangChain Deep Agents for TypeScript: build IncidentScout from one tool call to a production AWS service — filesystem, Postgres backends, sandboxes, MCP, subagents, HITL, ECS/Aurora deployment, plus a tested chapter wiring middleware, skills and multimodal files.</p><div class="artifact-meta"><span>2026-09-27</span><span>html</span></div></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#how-to-read-this-guide">How to read this guide</a><a href="#what-the-docs-do-not-cover-read-this-first">What the docs do not cover (read this first)</a><a href="#chapter-1-what-a-deep-agent-is-and-isnt">Chapter 1 — What a Deep Agent is (and isn&#39;t)</a><a href="#the-problem">The problem</a><a href="#the-concept-an-agent-harness">The concept: an agent harness</a><a href="#incidentscout-v1">IncidentScout v1</a><a href="#gotchas">Gotchas</a><a href="#next-problem">Next problem</a><a href="#chapter-2-architecture-the-loop-the-stack-and-where-state-lives">Chapter 2 — Architecture: the loop, the stack, and where state lives</a><a href="#the-problem_1">The problem</a><a href="#the-loop">The loop</a><a href="#the-deep-agents-stack">The Deep Agents stack</a><a href="#how-state-flows">How state flows</a><a href="#incidentscout-v2-threads-and-users">IncidentScout v2: threads and users</a><a href="#gotchas_1">Gotchas</a><a href="#next-problem_1">Next problem</a><a href="#chapter-3-the-virtual-filesystem">Chapter 3 — The virtual filesystem</a><a href="#the-problem_2">The problem</a><a href="#the-concept">The concept</a><a href="#incidentscout-v3-notes-on-disk-a-seeded-runbook">IncidentScout v3: notes on disk, a seeded runbook</a><a href="#gotchas_2">Gotchas</a><a href="#next-problem_2">Next problem</a><a href="#chapter-4-backends-deciding-where-files-actually-live">Chapter 4 — Backends: deciding where files actually live</a><a href="#the-problem_3">The problem</a><a href="#the-concept_1">The concept</a><a href="#41-statebackend-default-made-durable-with-postgres">4.1 StateBackend (default) — made durable with Postgres</a><a href="#42-storebackend-cross-thread-storage-on-postgres">4.2 StoreBackend — cross-thread storage on Postgres</a><a href="#43-compositebackend-incidentscout-v4">4.3 CompositeBackend — IncidentScout v4</a><a href="#44-filesystembackend-local-disk">4.4 FilesystemBackend (local disk)</a><a href="#45-localshellbackend-local-shell">4.5 LocalShellBackend (local shell)</a><a href="#46-contexthubbackend">4.6 ContextHubBackend</a><a href="#47-custom-backends-and-policy-hooks">4.7 Custom backends and policy hooks</a><a href="#48-deploying-backends-on-aws-aws-docs">4.8 Deploying backends on AWS — [AWS docs]</a><a href="#next-problem_3">Next problem</a><a href="#chapter-5-sandboxes-letting-the-agent-run-code-safely">Chapter 5 — Sandboxes: letting the agent run code safely</a><a href="#the-problem_4">The problem</a><a href="#the-concept_2">The concept</a><a href="#51-langsmith-sandboxes-first-party">5.1 LangSmith sandboxes (first-party)</a><a href="#52-daytona-langchaindaytona">5.2 Daytona (@langchain/daytona)</a><a href="#53-deno-langchaindeno">5.3 Deno (@langchain/deno)</a><a href="#54-modal-langchainmodal">5.4 Modal (@langchain/modal)</a><a href="#55-node-vfs-langchainnode-vfs">5.5 Node VFS (@langchain/node-vfs)</a><a href="#56-bedrock-agentcore-build-your-own-no-official-js-backend-yet">5.6 Bedrock AgentCore — build-your-own (no official JS backend yet)</a><a href="#57-community-providers">5.7 Community providers</a><a href="#security-considerations-all-providers">Security considerations (all providers)</a><a href="#58-sandboxes-and-postgres-whats-actually-documented">5.8 Sandboxes and Postgres: what&#39;s actually documented</a><a href="#deploying-sandboxes-on-aws">Deploying sandboxes on AWS</a><a href="#next-problem_4">Next problem</a><a href="#chapter-6-tools-and-mcp">Chapter 6 — Tools and MCP</a><a href="#the-problem_5">The problem</a><a href="#the-concept_3">The concept</a><a href="#incidentscout-v6-mcp-observability-a-host-side-credentialed-tool">IncidentScout v6: MCP observability + a host-side credentialed tool</a><a href="#gotchas_3">Gotchas</a><a href="#next-problem_5">Next problem</a><a href="#chapter-7-multimodal-inputs">Chapter 7 — Multimodal inputs</a><a href="#the-problem_6">The problem</a><a href="#the-concept_4">The concept</a><a href="#how-compression-treats-media-important">How compression treats media (important)</a><a href="#gotchas-and-recommended-patterns">Gotchas and recommended patterns</a><a href="#next-problem_6">Next problem</a><a href="#chapter-8-context-engineering-what-the-model-sees-and-for-how-long">Chapter 8 — Context engineering: what the model sees, and for how long</a><a href="#the-problem_7">The problem</a><a href="#the-concept-five-kinds-of-context">The concept: five kinds of context</a><a href="#input-context-prompt-memory-skills">Input context: prompt, memory, skills</a><a href="#compression-offloading-then-summarization">Compression: offloading, then summarization</a><a href="#incidentscout-v8-memory-skills-on-postgres-backed-paths">IncidentScout v8: memory + skills on Postgres-backed paths</a><a href="#scoping-long-term-memory">Scoping long-term memory</a><a href="#gotchas_4">Gotchas</a><a href="#next-problem_7">Next problem</a><a href="#chapter-9-subagents-delegation-and-context-isolation">Chapter 9 — Subagents: delegation and context isolation</a><a href="#the-problem_8">The problem</a><a href="#the-concept_5">The concept</a><a href="#defining-subagents">Defining subagents</a><a href="#incidentscout-v9-specialist-investigators">IncidentScout v9: specialist investigators</a><a href="#context-between-parent-and-child">Context between parent and child</a><a href="#streaming-and-tracing-subagents">Streaming and tracing subagents</a><a href="#beyond-synchronous-subagents">Beyond synchronous subagents</a><a href="#gotchas-from-the-troubleshooting-section">Gotchas (from the troubleshooting section)</a><a href="#next-problem_8">Next problem</a><a href="#chapter-10-steering-and-guardrails-planning-human-in-the-loop-permissions-fault-tolerance">Chapter 10 — Steering and guardrails: planning, human-in-the-loop, permissions, fault tolerance</a><a href="#the-problem_9">The problem</a><a href="#101-planning-with-write_todos-opt-in">10.1 Planning with write_todos (opt-in)</a><a href="#102-human-in-the-loop">10.2 Human-in-the-loop</a><a href="#103-filesystem-permissions-deepagents191">10.3 Filesystem permissions (deepagents&amp;gt;=1.9.1)</a><a href="#104-fault-tolerance">10.4 Fault tolerance</a><a href="#105-streaming">10.5 Streaming</a><a href="#106-interpreters-optional">10.6 Interpreters (optional)</a><a href="#next-problem_9">Next problem</a><a href="#chapter-11-production-architecture">Chapter 11 — Production architecture</a><a href="#the-problem_10">The problem</a><a href="#three-production-primitives">Three production primitives</a><a href="#components-required-vs-optional">Components: required vs optional</a><a href="#deployment-options-described-by-the-docs">Deployment options described by the docs</a><a href="#architecture">Architecture</a><a href="#reference-aws-deployment-aws-docs-composition">Reference AWS deployment — [AWS docs] + Composition</a><a href="#gotchas_5">Gotchas</a><a href="#next">Next</a><a href="#chapter-12-the-complete-incidentscout">Chapter 12 — The complete IncidentScout</a><a href="#recap-what-each-concept-contributed">Recap: what each concept contributed</a><a href="#chapter-13-wiring-it-together-middleware-skills-and-multimodal-files">Chapter 13 — Wiring it together: middleware, skills, and multimodal files</a><a href="#the-problem_11">The problem</a><a href="#two-corrections-found-while-running-it">Two corrections found while running it</a><a href="#how-the-pieces-meet">How the pieces meet</a><a href="#the-agent-srcincidentscoutts">The agent — src/incidentscout.ts</a><a href="#calling-it">Calling it</a><a href="#the-tests-testwiringtestts">The tests — test/wiring.test.ts</a><a href="#gotchas_6">Gotchas</a><a href="#next-problem_10">Next problem</a><a href="#glossary">Glossary</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#how-to-read-this-guide">How to read this guide</a><a href="#what-the-docs-do-not-cover-read-this-first">What the docs do not cover (read this first)</a><a href="#chapter-1-what-a-deep-agent-is-and-isnt">Chapter 1 — What a Deep Agent is (and isn&#39;t)</a><a href="#the-problem">The problem</a><a href="#the-concept-an-agent-harness">The concept: an agent harness</a><a href="#incidentscout-v1">IncidentScout v1</a><a href="#gotchas">Gotchas</a><a href="#next-problem">Next problem</a><a href="#chapter-2-architecture-the-loop-the-stack-and-where-state-lives">Chapter 2 — Architecture: the loop, the stack, and where state lives</a><a href="#the-problem_1">The problem</a><a href="#the-loop">The loop</a><a href="#the-deep-agents-stack">The Deep Agents stack</a><a href="#how-state-flows">How state flows</a><a href="#incidentscout-v2-threads-and-users">IncidentScout v2: threads and users</a><a href="#gotchas_1">Gotchas</a><a href="#next-problem_1">Next problem</a><a href="#chapter-3-the-virtual-filesystem">Chapter 3 — The virtual filesystem</a><a href="#the-problem_2">The problem</a><a href="#the-concept">The concept</a><a href="#incidentscout-v3-notes-on-disk-a-seeded-runbook">IncidentScout v3: notes on disk, a seeded runbook</a><a href="#gotchas_2">Gotchas</a><a href="#next-problem_2">Next problem</a><a href="#chapter-4-backends-deciding-where-files-actually-live">Chapter 4 — Backends: deciding where files actually live</a><a href="#the-problem_3">The problem</a><a href="#the-concept_1">The concept</a><a href="#41-statebackend-default-made-durable-with-postgres">4.1 StateBackend (default) — made durable with Postgres</a><a href="#42-storebackend-cross-thread-storage-on-postgres">4.2 StoreBackend — cross-thread storage on Postgres</a><a href="#43-compositebackend-incidentscout-v4">4.3 CompositeBackend — IncidentScout v4</a><a href="#44-filesystembackend-local-disk">4.4 FilesystemBackend (local disk)</a><a href="#45-localshellbackend-local-shell">4.5 LocalShellBackend (local shell)</a><a href="#46-contexthubbackend">4.6 ContextHubBackend</a><a href="#47-custom-backends-and-policy-hooks">4.7 Custom backends and policy hooks</a><a href="#48-deploying-backends-on-aws-aws-docs">4.8 Deploying backends on AWS — [AWS docs]</a><a href="#next-problem_3">Next problem</a><a href="#chapter-5-sandboxes-letting-the-agent-run-code-safely">Chapter 5 — Sandboxes: letting the agent run code safely</a><a href="#the-problem_4">The problem</a><a href="#the-concept_2">The concept</a><a href="#51-langsmith-sandboxes-first-party">5.1 LangSmith sandboxes (first-party)</a><a href="#52-daytona-langchaindaytona">5.2 Daytona (@langchain/daytona)</a><a href="#53-deno-langchaindeno">5.3 Deno (@langchain/deno)</a><a href="#54-modal-langchainmodal">5.4 Modal (@langchain/modal)</a><a href="#55-node-vfs-langchainnode-vfs">5.5 Node VFS (@langchain/node-vfs)</a><a href="#56-bedrock-agentcore-build-your-own-no-official-js-backend-yet">5.6 Bedrock AgentCore — build-your-own (no official JS backend yet)</a><a href="#57-community-providers">5.7 Community providers</a><a href="#security-considerations-all-providers">Security considerations (all providers)</a><a href="#58-sandboxes-and-postgres-whats-actually-documented">5.8 Sandboxes and Postgres: what&#39;s actually documented</a><a href="#deploying-sandboxes-on-aws">Deploying sandboxes on AWS</a><a href="#next-problem_4">Next problem</a><a href="#chapter-6-tools-and-mcp">Chapter 6 — Tools and MCP</a><a href="#the-problem_5">The problem</a><a href="#the-concept_3">The concept</a><a href="#incidentscout-v6-mcp-observability-a-host-side-credentialed-tool">IncidentScout v6: MCP observability + a host-side credentialed tool</a><a href="#gotchas_3">Gotchas</a><a href="#next-problem_5">Next problem</a><a href="#chapter-7-multimodal-inputs">Chapter 7 — Multimodal inputs</a><a href="#the-problem_6">The problem</a><a href="#the-concept_4">The concept</a><a href="#how-compression-treats-media-important">How compression treats media (important)</a><a href="#gotchas-and-recommended-patterns">Gotchas and recommended patterns</a><a href="#next-problem_6">Next problem</a><a href="#chapter-8-context-engineering-what-the-model-sees-and-for-how-long">Chapter 8 — Context engineering: what the model sees, and for how long</a><a href="#the-problem_7">The problem</a><a href="#the-concept-five-kinds-of-context">The concept: five kinds of context</a><a href="#input-context-prompt-memory-skills">Input context: prompt, memory, skills</a><a href="#compression-offloading-then-summarization">Compression: offloading, then summarization</a><a href="#incidentscout-v8-memory-skills-on-postgres-backed-paths">IncidentScout v8: memory + skills on Postgres-backed paths</a><a href="#scoping-long-term-memory">Scoping long-term memory</a><a href="#gotchas_4">Gotchas</a><a href="#next-problem_7">Next problem</a><a href="#chapter-9-subagents-delegation-and-context-isolation">Chapter 9 — Subagents: delegation and context isolation</a><a href="#the-problem_8">The problem</a><a href="#the-concept_5">The concept</a><a href="#defining-subagents">Defining subagents</a><a href="#incidentscout-v9-specialist-investigators">IncidentScout v9: specialist investigators</a><a href="#context-between-parent-and-child">Context between parent and child</a><a href="#streaming-and-tracing-subagents">Streaming and tracing subagents</a><a href="#beyond-synchronous-subagents">Beyond synchronous subagents</a><a href="#gotchas-from-the-troubleshooting-section">Gotchas (from the troubleshooting section)</a><a href="#next-problem_8">Next problem</a><a href="#chapter-10-steering-and-guardrails-planning-human-in-the-loop-permissions-fault-tolerance">Chapter 10 — Steering and guardrails: planning, human-in-the-loop, permissions, fault tolerance</a><a href="#the-problem_9">The problem</a><a href="#101-planning-with-write_todos-opt-in">10.1 Planning with write_todos (opt-in)</a><a href="#102-human-in-the-loop">10.2 Human-in-the-loop</a><a href="#103-filesystem-permissions-deepagents191">10.3 Filesystem permissions (deepagents&amp;gt;=1.9.1)</a><a href="#104-fault-tolerance">10.4 Fault tolerance</a><a href="#105-streaming">10.5 Streaming</a><a href="#106-interpreters-optional">10.6 Interpreters (optional)</a><a href="#next-problem_9">Next problem</a><a href="#chapter-11-production-architecture">Chapter 11 — Production architecture</a><a href="#the-problem_10">The problem</a><a href="#three-production-primitives">Three production primitives</a><a href="#components-required-vs-optional">Components: required vs optional</a><a href="#deployment-options-described-by-the-docs">Deployment options described by the docs</a><a href="#architecture">Architecture</a><a href="#reference-aws-deployment-aws-docs-composition">Reference AWS deployment — [AWS docs] + Composition</a><a href="#gotchas_5">Gotchas</a><a href="#next">Next</a><a href="#chapter-12-the-complete-incidentscout">Chapter 12 — The complete IncidentScout</a><a href="#recap-what-each-concept-contributed">Recap: what each concept contributed</a><a href="#chapter-13-wiring-it-together-middleware-skills-and-multimodal-files">Chapter 13 — Wiring it together: middleware, skills, and multimodal files</a><a href="#the-problem_11">The problem</a><a href="#two-corrections-found-while-running-it">Two corrections found while running it</a><a href="#how-the-pieces-meet">How the pieces meet</a><a href="#the-agent-srcincidentscoutts">The agent — src/incidentscout.ts</a><a href="#calling-it">Calling it</a><a href="#the-tests-testwiringtestts">The tests — test/wiring.test.ts</a><a href="#gotchas_6">Gotchas</a><a href="#next-problem_10">Next problem</a><a href="#glossary">Glossary</a></details><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
+<div class="legacy-content" data-artifact-content>
+
 <div class="layout">
 <nav class="toc" aria-label="Table of contents"><a class="home" href="../../">← Agent artifacts</a><div class="toc">
 <ul>
@@ -258,9 +238,9 @@ npm install @langchain/mcp-adapters             # MCP tools (Ch6)
 <p>Analogy: <code>createAgent</code> is an engine; <code>createDeepAgent</code> is the engine already mounted in a car with a boot (filesystem), a sat-nav (planning), a crew (subagents), and a driver who can radio base for approval (HITL).</p>
 <h3 id="incidentscout-v1">IncidentScout v1</h3>
 <pre><code class="language-ts">// src/v1.ts — based on the Deep Agents quickstart (overview page)
-import * as z from &quot;zod&quot;;
-import { createDeepAgent } from &quot;deepagents&quot;;
-import { tool } from &quot;langchain&quot;;
+import * as z from "zod";
+import { createDeepAgent } from "deepagents";
+import { tool } from "langchain";
 
 // A plain LangChain tool: name + description + Zod schema.
 // The description tells the model WHEN to use it.
@@ -268,25 +248,25 @@ const fetchLogs = tool(
   async ({ service, minutes }) =&gt;
     `[stub] last ${minutes}m of logs for ${service}: ERROR timeout calling payments-db ...`,
   {
-    name: &quot;fetch_logs&quot;,
+    name: "fetch_logs",
     description:
-      &quot;Fetch recent error logs for one service. Use when investigating an incident.&quot;,
+      "Fetch recent error logs for one service. Use when investigating an incident.",
     schema: z.object({
-      service: z.string().describe(&quot;Service name, e.g. checkout-api&quot;),
-      minutes: z.number().default(15).describe(&quot;Look-back window in minutes&quot;),
+      service: z.string().describe("Service name, e.g. checkout-api"),
+      minutes: z.number().default(15).describe("Look-back window in minutes"),
     }),
   },
 );
 
 const agent = createDeepAgent({
-  // provider:model string; the docs show &quot;bedrock:...&quot; for Amazon Bedrock Converse
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  // provider:model string; the docs show "bedrock:..." for Amazon Bedrock Converse
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   tools: [fetchLogs],
-  systemPrompt: &quot;You are IncidentScout, an on-call incident investigator.&quot;,
+  systemPrompt: "You are IncidentScout, an on-call incident investigator.",
 });
 
 const result = await agent.invoke({
-  messages: [{ role: &quot;user&quot;, content: &quot;checkout-api is throwing 500s. What's going on?&quot; }],
+  messages: [{ role: "user", content: "checkout-api is throwing 500s. What's going on?" }],
 });
 console.log(result.messages.at(-1)?.content);
 </code></pre>
@@ -373,11 +353,11 @@ console.log(result.messages.at(-1)?.content);
 <p>Runtime context is <strong>not</strong> automatically shown to the model; a tool, middleware, or dynamic prompt must read it. The final system prompt is assembled from: your <code>systemPrompt</code>, the base agent prompt, the memory prompt, the skills prompt, the filesystem prompt, the subagent (<code>task</code>) prompt, your middleware prompts, and the HITL prompt.</p>
 <h3 id="incidentscout-v2-threads-and-users">IncidentScout v2: threads and users</h3>
 <pre><code class="language-ts">// src/v2.ts — threads + runtime context (Going to production, Context engineering pages)
-import { createDeepAgent } from &quot;deepagents&quot;;
-import { MemorySaver } from &quot;@langchain/langgraph&quot;;
-import { tool } from &quot;langchain&quot;;
-import type { ToolRuntime } from &quot;@langchain/core/tools&quot;;
-import * as z from &quot;zod&quot;;
+import { createDeepAgent } from "deepagents";
+import { MemorySaver } from "@langchain/langgraph";
+import { tool } from "langchain";
+import type { ToolRuntime } from "@langchain/core/tools";
+import * as z from "zod";
 
 const contextSchema = z.object({ userId: z.string(), orgId: z.string() });
 
@@ -387,24 +367,24 @@ const fetchLogs = tool(
     const org = runtime.context?.orgId;
     return `[stub] logs for ${service} in org ${org}`;
   },
-  { name: &quot;fetch_logs&quot;, description: &quot;Fetch recent error logs for a service.&quot;,
+  { name: "fetch_logs", description: "Fetch recent error logs for a service.",
     schema: z.object({ service: z.string() }) },
 );
 
 const agent = createDeepAgent({
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   tools: [fetchLogs],
   contextSchema,
   checkpointer: new MemorySaver(), // dev only: RAM, lost on restart (Ch4 swaps in Postgres)
 });
 
 const config = { configurable: { thread_id: crypto.randomUUID() } };
-const ctx = { userId: &quot;u-42&quot;, orgId: &quot;acme&quot; };
+const ctx = { userId: "u-42", orgId: "acme" };
 
-await agent.invoke({ messages: [{ role: &quot;user&quot;, content: &quot;Investigate checkout-api 500s&quot; }] },
+await agent.invoke({ messages: [{ role: "user", content: "Investigate checkout-api 500s" }] },
   { ...config, context: ctx });
 // Same thread_id =&gt; same conversation, message history is restored from the checkpointer
-await agent.invoke({ messages: [{ role: &quot;user&quot;, content: &quot;Was it the DB?&quot; }] },
+await agent.invoke({ messages: [{ role: "user", content: "Was it the DB?" }] },
   { ...config, context: ctx });
 </code></pre>
 <h3 id="gotchas_1">Gotchas</h3>
@@ -465,16 +445,16 @@ await agent.invoke({ messages: [{ role: &quot;user&quot;, content: &quot;Was it 
 <p>In the default setup (<code>StateBackend</code>) files live in graph state for the current thread and are checkpointed with it. That backend is also <strong>shared</strong> between the supervisor and its subagents: files a subagent writes remain visible to the supervisor after the subagent finishes.</p>
 <h3 id="incidentscout-v3-notes-on-disk-a-seeded-runbook">IncidentScout v3: notes on disk, a seeded runbook</h3>
 <pre><code class="language-ts">// src/v3.ts — seeding files uses the StateBackend pattern from the Customization page
-import { createDeepAgent, type FileData } from &quot;deepagents&quot;;
-import { MemorySaver } from &quot;@langchain/langgraph&quot;;
+import { createDeepAgent, type FileData } from "deepagents";
+import { MemorySaver } from "@langchain/langgraph";
 
 function fileData(content: string): FileData {
   const now = new Date().toISOString();
-  return { content, mimeType: &quot;text/plain&quot;, created_at: now, modified_at: now };
+  return { content, mimeType: "text/plain", created_at: now, modified_at: now };
 }
 
 const agent = createDeepAgent({
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   tools: [fetchLogs], // from Ch2; now returns large dumps
   checkpointer: new MemorySaver(),
   systemPrompt: `You are IncidentScout.
@@ -483,12 +463,12 @@ When a tool result is saved to a file, use grep and read_file with offset/limit 
 Consult /runbooks/ before proposing remediation.`,
 });
 
-const config = { configurable: { thread_id: &quot;inc-2026-0912&quot; } };
+const config = { configurable: { thread_id: "inc-2026-0912" } };
 await agent.invoke(
   {
-    messages: [{ role: &quot;user&quot;, content: &quot;checkout-api 500s since 09:12 UTC. Investigate.&quot; }],
-    // Seed the default StateBackend's filesystem; virtual paths must start with &quot;/&quot;
-    files: { &quot;/runbooks/checkout-api.md&quot;: fileData(&quot;# checkout-api\n1. Check payments-db pool...&quot;) },
+    messages: [{ role: "user", content: "checkout-api 500s since 09:12 UTC. Investigate." }],
+    // Seed the default StateBackend's filesystem; virtual paths must start with "/"
+    files: { "/runbooks/checkout-api.md": fileData("# checkout-api\n1. Check payments-db pool...") },
   },
   config,
 );
@@ -586,18 +566,18 @@ await agent.invoke(
 <h3 id="41-statebackend-default-made-durable-with-postgres">4.1 StateBackend (default) — made durable with Postgres</h3>
 <p>Files live in LangGraph state for the current thread and persist across turns <strong>via your checkpointer</strong>. So "deploying StateBackend" really means deploying a persistent checkpointer. The LangGraph docs name <code>PostgresSaver</code> as the production choice.</p>
 <pre><code class="language-ts">// src/persistence.ts — Composition: PostgresSaver API (LangGraph JS reference) + createDeepAgent checkpointer param
-import { PostgresSaver } from &quot;@langchain/langgraph-checkpoint-postgres&quot;;
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 
 export const checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL!, {
-  schema: &quot;agent_checkpoints&quot;, // optional; defaults to &quot;public&quot;
+  schema: "agent_checkpoints", // optional; defaults to "public"
 });
 await checkpointer.setup(); // MUST be called the first time (creates tables/migrations)
 </code></pre>
-<pre><code class="language-ts">import { createDeepAgent, StateBackend } from &quot;deepagents&quot;;
-import { checkpointer } from &quot;./persistence&quot;;
+<pre><code class="language-ts">import { createDeepAgent, StateBackend } from "deepagents";
+import { checkpointer } from "./persistence";
 
 const agent = createDeepAgent({
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   backend: new StateBackend(), // same as omitting it
   checkpointer,               // thread state (messages + files) now survives restarts
 });
@@ -607,19 +587,19 @@ const agent = createDeepAgent({
 <h3 id="42-storebackend-cross-thread-storage-on-postgres">4.2 StoreBackend — cross-thread storage on Postgres</h3>
 <p><code>StoreBackend</code> stores files in a LangGraph <code>BaseStore</code>. Locally you use <code>InMemoryStore</code>; the docs list a PostgreSQL store in <code>@langchain/langgraph-checkpoint-postgres/store</code>.</p>
 <pre><code class="language-ts">// Composition: PostgresStore (LangChain long-term memory page + API reference) + StoreBackend (Backends page)
-import { createDeepAgent, StoreBackend } from &quot;deepagents&quot;;
-import { PostgresStore } from &quot;@langchain/langgraph-checkpoint-postgres/store&quot;;
+import { createDeepAgent, StoreBackend } from "deepagents";
+import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
 
 export const store = PostgresStore.fromConnString(process.env.DATABASE_URL!, {
-  schema: &quot;agent_store&quot;, // optional; PostgresStoreConfig also has ttl, index (pgvector), ensureTables
+  schema: "agent_store", // optional; PostgresStoreConfig also has ttl, index (pgvector), ensureTables
 });
 await store.setup();
 
 const agent = createDeepAgent({
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   backend: new StoreBackend({
     // Namespace factory: receives a LangGraph Runtime, returns a tuple of strings
-    namespace: (rt) =&gt; [rt.context.orgId, rt.context.userId, &quot;filesystem&quot;],
+    namespace: (rt) =&gt; [rt.context.orgId, rt.context.userId, "filesystem"],
   }),
   store,
   contextSchema, // from Ch2: { userId, orgId }
@@ -637,19 +617,19 @@ const agent = createDeepAgent({
 <h3 id="43-compositebackend-incidentscout-v4">4.3 CompositeBackend — IncidentScout v4</h3>
 <p><code>CompositeBackend(default, routes)</code> routes operations by path prefix; listings and search aggregate and keep original prefixes; the longest prefix wins. The docs recommend <code>StateBackend</code> as the default so internal artifacts (offloaded results, conversation history) stay ephemeral.</p>
 <pre><code class="language-ts">// src/v4.ts — thread scratch + durable, per-user incident memory on Postgres
-import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend } from &quot;deepagents&quot;;
-import { checkpointer } from &quot;./persistence&quot;;
-import { store } from &quot;./store&quot;;
+import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend } from "deepagents";
+import { checkpointer } from "./persistence";
+import { store } from "./store";
 
 export const backend = new CompositeBackend(new StateBackend(), {
   // /memories/ = what this user's team learned from past incidents
-  &quot;/memories/&quot;: new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, &quot;memories&quot;] }),
+  "/memories/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "memories"] }),
   // /runbooks/ = org-wide, written by app code only (made read-only in Ch10)
-  &quot;/runbooks/&quot;: new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, &quot;runbooks&quot;] }),
+  "/runbooks/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "runbooks"] }),
 });
 
 export const agent = createDeepAgent({
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   tools: [fetchLogs],
   backend,
   store,
@@ -661,19 +641,19 @@ When you learn a durable fact (root cause, fix, flaky dependency), append it to 
 });
 </code></pre>
 <h3 id="44-filesystembackend-local-disk">4.4 FilesystemBackend (local disk)</h3>
-<pre><code class="language-ts">import { createDeepAgent, CompositeBackend, FilesystemBackend, StateBackend } from &quot;deepagents&quot;;
+<pre><code class="language-ts">import { createDeepAgent, CompositeBackend, FilesystemBackend, StateBackend } from "deepagents";
 
 // Recommended wrapping: project files on disk, internal agent data in ephemeral state
 const agent = createDeepAgent({
   backend: new CompositeBackend(new StateBackend(), {
-    &quot;/workspace/&quot;: new FilesystemBackend({ rootDir: &quot;/srv/incident-reports&quot;, virtualMode: true }),
+    "/workspace/": new FilesystemBackend({ rootDir: "/srv/incident-reports", virtualMode: true }),
   }),
 });
 </code></pre>
 <p><strong>When:</strong> local dev CLIs, CI pipelines, mounted persistent volumes. <strong>When not:</strong> web servers or HTTP APIs, and the production page says not to use it in deployed agents. <strong>Security:</strong> agents can read any accessible file including <code>.env</code>; combined with network tools that enables exfiltration; writes are irreversible. Always set <code>virtualMode: true</code> with <code>rootDir</code> (blocks <code>..</code>, <code>~</code>, and absolute paths outside root) — without it <code>rootDir</code> provides no security. <code>rootDir</code> must be absolute.</p>
 <h3 id="45-localshellbackend-local-shell">4.5 LocalShellBackend (local shell)</h3>
-<pre><code class="language-ts">import { createDeepAgent, LocalShellBackend } from &quot;deepagents&quot;;
-const agent = createDeepAgent({ backend: new LocalShellBackend({ workingDirectory: &quot;.&quot; }) });
+<pre><code class="language-ts">import { createDeepAgent, LocalShellBackend } from "deepagents";
+const agent = createDeepAgent({ backend: new LocalShellBackend({ workingDirectory: "." }) });
 </code></pre>
 <p>Extends <code>FilesystemBackend</code> with <code>execute</code> running directly on the host (default timeout 120s, output capped at 100,000 bytes, configurable env). <strong>When:</strong> trusted local coding tools. <strong>When not:</strong> production, multi-tenant, or untrusted input — commands run with your user's permissions and <code>virtualMode</code> provides no protection once a shell exists. Pair with HITL if you use it at all.</p>
 <h3 id="46-contexthubbackend">4.6 ContextHubBackend</h3>
@@ -682,12 +662,12 @@ const agent = createDeepAgent({ backend: new LocalShellBackend({ workingDirector
 <p>Implement <code>BackendProtocolV2</code> (or <code>SandboxBackendProtocol</code> for <code>execute</code>). Methods must return result objects with an optional <code>error</code> field and must not throw for missing files or bad patterns. The docs provide an <strong>S3-style skeleton</strong> that maps paths to object keys, and two policy patterns: subclass <code>FilesystemBackend</code> to block writes under prefixes, or wrap any backend in a <code>PolicyWrapper</code> that denies <code>write</code>/<code>edit</code> for listed prefixes (audit logging, rate limits, content inspection go here too).</p>
 <pre><code class="language-ts">// Abbreviated from the Backends page — fill each method with your storage client
 class S3Backend implements BackendProtocolV2 {
-  constructor(private bucket: string, private prefix = &quot;&quot;) {}
+  constructor(private bucket: string, private prefix = "") {}
   async ls(path: string): Promise&lt;LsResult&gt; { /* list keys under prefix+path */ }
   async read(filePath: string, offset?: number, limit?: number): Promise&lt;ReadResult&gt; { /* ... */ }
   async readRaw(filePath: string): Promise&lt;ReadRawResult&gt; { /* ... */ }
   async grep(pattern: string, path?: string | null, glob?: string | null): Promise&lt;GrepResult&gt; { /* ... */ }
-  async glob(pattern: string, path = &quot;/&quot;): Promise&lt;GlobResult&gt; { /* ... */ }
+  async glob(pattern: string, path = "/"): Promise&lt;GlobResult&gt; { /* ... */ }
   async write(filePath: string, content: string): Promise&lt;WriteResult&gt; { /* create-only */ }
   async edit(filePath: string, oldString: string, newString: string, replaceAll?: boolean): Promise&lt;EditResult&gt; { /* ... */ }
 }
@@ -766,9 +746,9 @@ class S3Backend implements BackendProtocolV2 {
 <p><strong>Lifecycle.</strong> Pick <strong>thread-scoped</strong> (fresh sandbox per conversation, reused across its turns, removed by TTL — the common case) or <strong>assistant-scoped</strong> (one shared sandbox; repo clones and installed packages persist, so you must add TTLs, snapshots, or cleanup). Sandboxes cost money until shut down.</p>
 <h3 id="51-langsmith-sandboxes-first-party">5.1 LangSmith sandboxes (first-party)</h3>
 <pre><code class="language-ts">// IncidentScout v5 — thread-scoped sandbox via an async graph factory (Going to production)
-import { createDeepAgent, LangSmithSandbox } from &quot;deepagents&quot;;
-import { SandboxClient } from &quot;langsmith/sandbox&quot;;
-import type { LangGraphRunnableConfig } from &quot;@langchain/langgraph&quot;;
+import { createDeepAgent, LangSmithSandbox } from "deepagents";
+import { SandboxClient } from "langsmith/sandbox";
+import type { LangGraphRunnableConfig } from "@langchain/langgraph";
 
 const client = new SandboxClient();
 
@@ -779,40 +759,40 @@ export async function agent(config: LangGraphRunnableConfig) {
   const existing = (await client.listSandboxes()).filter((sb) =&gt; sb.name === name);
   const sandbox = existing[0] ?? (await client.createSandbox({ name, idleTtlSeconds: 3600 }));
   return createDeepAgent({
-    model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+    model: "bedrock:anthropic.claude-sonnet-4-6",
     backend: new LangSmithSandbox({ sandbox }),
   });
 }
 </code></pre>
 <p>A graph factory is an async function the server calls per run with the run config; it doesn't get a full <code>Runtime</code>, so read <code>thread_id</code> / <code>assistant_id</code> from <code>config.configurable</code>. For one-off scripts, create the sandbox, run, and <code>client.deleteSandbox(sandbox.name)</code> in <code>finally</code>. <strong>When:</strong> you want managed sandboxes without a third-party account, plus LangSmith snapshots, service URLs, and the <strong>auth proxy</strong> that injects credentials into outbound requests so secrets never enter the sandbox.</p>
 <h3 id="52-daytona-langchaindaytona">5.2 Daytona (<code>@langchain/daytona</code>)</h3>
-<pre><code class="language-ts">import { DaytonaSandbox } from &quot;@langchain/daytona&quot;;
-const sandbox = await DaytonaSandbox.create({ language: &quot;typescript&quot;, timeout: 300, autoStopInterval: 15 });
+<pre><code class="language-ts">import { DaytonaSandbox } from "@langchain/daytona";
+const sandbox = await DaytonaSandbox.create({ language: "typescript", timeout: 300, autoStopInterval: 15 });
 try {
   const agent = createDeepAgent({ model, backend: sandbox });
-  await agent.invoke({ messages: [{ role: &quot;user&quot;, content: &quot;Parse /data/app.log and count timeouts/minute&quot; }] });
+  await agent.invoke({ messages: [{ role: "user", content: "Parse /data/app.log and count timeouts/minute" }] });
 } finally {
   await sandbox.close(); // delete permanently; stop()/start() pause and resume
 }
 </code></pre>
 <p>Fast cold starts, TypeScript/Python/JavaScript runtimes, custom images (<code>image</code>) or <code>snapshot</code>, CPU/memory/disk via <code>resources</code> (requires <code>image</code>), regions <code>us</code>/<code>eu</code>, <code>initialFiles</code>, reconnect with <code>DaytonaSandbox.connect(id)</code>. Auth: <code>DAYTONA_API_KEY</code>. <strong>When:</strong> general coding and data work with quick startup and git-style workflows.</p>
 <h3 id="53-deno-langchaindeno">5.3 Deno (<code>@langchain/deno</code>)</h3>
-<pre><code class="language-ts">import { DenoSandbox } from &quot;@langchain/deno&quot;;
-const sandbox = await DenoSandbox.create({ memoryMb: 1024, lifetime: &quot;10m&quot; });
+<pre><code class="language-ts">import { DenoSandbox } from "@langchain/deno";
+const sandbox = await DenoSandbox.create({ memoryMb: 1024, lifetime: "10m" });
 </code></pre>
 <p>Linux microVMs; 768–4096 MB memory, 10 GB disk, 2 vCPU, working dir <code>/home/app</code>, <strong>full network access by default</strong>; regions <code>ams</code>/<code>ord</code>. <code>lifetime: "session"</code> ends on close; a duration lifetime is required to reconnect later. The SDK can expose HTTP/SSH ports. Auth: <code>DENO_DEPLOY_TOKEN</code>. <strong>When:</strong> Deno/JavaScript workloads.</p>
 <h3 id="54-modal-langchainmodal">5.4 Modal (<code>@langchain/modal</code>)</h3>
-<pre><code class="language-ts">import { ModalSandbox } from &quot;@langchain/modal&quot;;
+<pre><code class="language-ts">import { ModalSandbox } from "@langchain/modal";
 const sandbox = await ModalSandbox.create({
-  imageName: &quot;python:3.12-slim&quot;,
+  imageName: "python:3.12-slim",
   timeoutMs: 600_000,
   blockNetwork: true, // cut the exfiltration path when the task needs no network
 });
 </code></pre>
 <p>Serverless containers with GPUs (<code>T4</code>, <code>L4</code>, <code>A10G</code>, <code>A100</code>, <code>H100</code>), volumes for persistence, Modal secrets, <code>initialFiles</code>, <code>blockNetwork</code>. Auth: <code>MODAL_TOKEN_ID</code> / <code>MODAL_TOKEN_SECRET</code>. <strong>When:</strong> ML/AI and Python-heavy work.</p>
 <h3 id="55-node-vfs-langchainnode-vfs">5.5 Node VFS (<code>@langchain/node-vfs</code>)</h3>
-<pre><code class="language-ts">import { VfsSandbox } from &quot;@langchain/node-vfs&quot;;
-const sandbox = await VfsSandbox.create({ initialFiles: { &quot;/src/index.js&quot;: &quot;console.log('hi')&quot; } });
+<pre><code class="language-ts">import { VfsSandbox } from "@langchain/node-vfs";
+const sandbox = await VfsSandbox.create({ initialFiles: { "/src/index.js": "console.log('hi')" } });
 // ... agent run ...
 await sandbox.stop();
 </code></pre>
@@ -825,12 +805,12 @@ from bedrock_agentcore.tools.code_interpreter_client import CodeInterpreter
 from deepagents import create_deep_agent
 from langchain_agentcore_codeinterpreter import AgentCoreSandbox
 
-interpreter = CodeInterpreter(region=&quot;us-west-2&quot;)
+interpreter = CodeInterpreter(region="us-west-2")
 interpreter.start()
 backend = AgentCoreSandbox(interpreter=interpreter)
 agent = create_deep_agent(model=model, backend=backend)
 try:
-    agent.invoke({&quot;messages&quot;: [...]})
+    agent.invoke({"messages": [...]})
 finally:
     interpreter.stop()  # sessions cannot be reconnected after stop()
 </code></pre>
@@ -840,20 +820,20 @@ finally:
 // Verify BaseSandbox's exact method/type names against reference.langchain.com/javascript/deepagents
 // before relying on this — it has not been run.
 import { BedrockAgentCoreClient, InvokeCodeInterpreterCommand,
-         StartCodeInterpreterSessionCommand, StopCodeInterpreterSessionCommand } from &quot;@aws-sdk/client-bedrock-agentcore&quot;;
+         StartCodeInterpreterSessionCommand, StopCodeInterpreterSessionCommand } from "@aws-sdk/client-bedrock-agentcore";
 
 class AgentCoreSandboxJS extends BaseSandbox {
-  private client = new BedrockAgentCoreClient({ region: &quot;us-east-1&quot; });
+  private client = new BedrockAgentCoreClient({ region: "us-east-1" });
   private sessionId?: string;
   async start() {
     const { sessionId } = await this.client.send(new StartCodeInterpreterSessionCommand({
-      codeInterpreterIdentifier: &quot;&lt;your-vpc-mode-interpreter-arn&gt;&quot;, sessionTimeoutSeconds: 1800 }));
+      codeInterpreterIdentifier: "&lt;your-vpc-mode-interpreter-arn&gt;", sessionTimeoutSeconds: 1800 }));
     this.sessionId = sessionId;
   }
   async execute(command: string) {
     const res = await this.client.send(new InvokeCodeInterpreterCommand({
-      codeInterpreterIdentifier: &quot;&lt;same-arn&gt;&quot;, sessionId: this.sessionId,
-      name: &quot;executeCommand&quot;, arguments: { command } }));
+      codeInterpreterIdentifier: "&lt;same-arn&gt;", sessionId: this.sessionId,
+      name: "executeCommand", arguments: { command } }));
     // drain res.stream, map stdout/stderr/exit code into the BaseSandbox result shape
   }
   async stop() { await this.client.send(new StopCodeInterpreterSessionCommand({ sessionId: this.sessionId! })); }
@@ -898,15 +878,15 @@ class AgentCoreSandboxJS extends BaseSandbox {
 <p>Tool metadata <strong>is prompt</strong>. The docs ask for a clear name, a description that says <em>when</em> to use the tool, and a description for every argument.</p>
 <h3 id="incidentscout-v6-mcp-observability-a-host-side-credentialed-tool">IncidentScout v6: MCP observability + a host-side credentialed tool</h3>
 <pre><code class="language-ts">// src/tools.ts — MCP pattern from the Tools page; context-aware tool from Context engineering
-import { tool } from &quot;langchain&quot;;
-import type { ToolRuntime } from &quot;@langchain/core/tools&quot;;
-import * as z from &quot;zod&quot;;
+import { tool } from "langchain";
+import type { ToolRuntime } from "@langchain/core/tools";
+import * as z from "zod";
 
-const { MultiServerMCPClient } = await import(&quot;@langchain/mcp-adapters&quot;);
+const { MultiServerMCPClient } = await import("@langchain/mcp-adapters");
 
 export const mcp = new MultiServerMCPClient({
-  observability: { transport: &quot;http&quot;, url: process.env.OBS_MCP_URL! }, // e.g. metrics + traces
-  deploys:       { transport: &quot;http&quot;, url: process.env.DEPLOY_MCP_URL! },
+  observability: { transport: "http", url: process.env.OBS_MCP_URL! }, // e.g. metrics + traces
+  deploys:       { transport: "http", url: process.env.DEPLOY_MCP_URL! },
 });
 export const mcpTools = await mcp.getTools(); // async network call — do it at startup / in a factory
 
@@ -918,18 +898,18 @@ export const pageOncall = tool(
     return `Paged on-call for ${service} in ${org}: ${summary}`;
   },
   {
-    name: &quot;page_oncall&quot;,
+    name: "page_oncall",
     description:
-      &quot;Page the on-call engineer for a service. Use only when impact is confirmed and ongoing.&quot;,
+      "Page the on-call engineer for a service. Use only when impact is confirmed and ongoing.",
     schema: z.object({
-      service: z.string().describe(&quot;Service to page for&quot;),
-      summary: z.string().describe(&quot;One-paragraph impact summary&quot;),
+      service: z.string().describe("Service to page for"),
+      summary: z.string().describe("One-paragraph impact summary"),
     }),
   },
 );
 </code></pre>
 <pre><code class="language-ts">const agent = createDeepAgent({
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   tools: [fetchLogs, pageOncall, ...mcpTools],
   backend, store, checkpointer, contextSchema,
 });
@@ -959,10 +939,10 @@ export const pageOncall = tool(
 <pre><code class="language-ts">// User input with an image (Multimodal page)
 await agent.invoke({
   messages: [{
-    role: &quot;user&quot;,
+    role: "user",
     content: [
-      { type: &quot;text&quot;, text: &quot;This is the checkout latency panel. When did it start?&quot; },
-      { type: &quot;image&quot;, url: &quot;https://grafana.example.com/render/checkout-p99.png&quot; },
+      { type: "text", text: "This is the checkout latency panel. When did it start?" },
+      { type: "image", url: "https://grafana.example.com/render/checkout-p99.png" },
     ],
   }],
 }, { ...config, context: ctx });
@@ -970,16 +950,16 @@ await agent.invoke({
 // A tool that returns text + image blocks
 const captureDashboard = tool(
   async ({ panel }) =&gt; [
-    { type: &quot;text&quot;, text: `Snapshot of ${panel}:` },
-    { type: &quot;image&quot;, url: `https://grafana.example.com/render/${panel}.png` },
+    { type: "text", text: `Snapshot of ${panel}:` },
+    { type: "image", url: `https://grafana.example.com/render/${panel}.png` },
   ],
-  { name: &quot;capture_dashboard&quot;, description: &quot;Snapshot a Grafana panel.&quot;,
+  { name: "capture_dashboard", description: "Snapshot a Grafana panel.",
     schema: z.object({ panel: z.string() }) },
 );
 
 // Reading a binary file directly from a backend in app code
-const res = await backend.read(&quot;/workspace/screenshot.png&quot;);
-if (!res.error &amp;&amp; res.content instanceof Uint8Array) console.log(res.mimeType); // &quot;image/png&quot;
+const res = await backend.read("/workspace/screenshot.png");
+if (!res.error &amp;&amp; res.content instanceof Uint8Array) console.log(res.mimeType); // "image/png"
 </code></pre>
 <h3 id="how-compression-treats-media-important">How compression treats media (important)</h3>
 <ul>
@@ -1055,23 +1035,23 @@ if (!res.error &amp;&amp; res.content instanceof Uint8Array) console.log(res.mim
 <h3 id="incidentscout-v8-memory-skills-on-postgres-backed-paths">IncidentScout v8: memory + skills on Postgres-backed paths</h3>
 <pre><code class="language-ts">// src/v8.ts — Composition of: memory/skills params (Customization), CompositeBackend + StoreBackend (Backends)
 const backend = new CompositeBackend(new StateBackend(), {
-  &quot;/memories/&quot;: new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, &quot;memories&quot;] }),
-  &quot;/skills/&quot;:   new StoreBackend({ namespace: () =&gt; [&quot;skills&quot;] }), // shared, curated by your team
+  "/memories/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "memories"] }),
+  "/skills/":   new StoreBackend({ namespace: () =&gt; ["skills"] }), // shared, curated by your team
 });
 
 export const agent = createDeepAgent({
-  model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,
+  model: "bedrock:anthropic.claude-sonnet-4-6",
   tools: [fetchLogs, pageOncall, ...mcpTools],
   backend, store, checkpointer, contextSchema,
-  memory: [&quot;/memories/AGENTS.md&quot;],  // always in the prompt: team conventions, known flaky deps
-  skills: [&quot;/skills/&quot;],             // e.g. /skills/postgres-locks/SKILL.md, /skills/postmortem/SKILL.md
-  systemPrompt: &quot;You are IncidentScout. Customer impact first, then timeline, then cause.&quot;,
+  memory: ["/memories/AGENTS.md"],  // always in the prompt: team conventions, known flaky deps
+  skills: ["/skills/"],             // e.g. /skills/postgres-locks/SKILL.md, /skills/postmortem/SKILL.md
+  systemPrompt: "You are IncidentScout. Customer impact first, then timeline, then cause.",
 });
 </code></pre>
 <p>Seeding skills from app code, as documented for a standalone <code>StoreBackend</code>:</p>
-<pre><code class="language-ts">const skillsBackend = new StoreBackend({ namespace: () =&gt; [&quot;skills&quot;], store });
+<pre><code class="language-ts">const skillsBackend = new StoreBackend({ namespace: () =&gt; ["skills"], store });
 await skillsBackend.uploadFiles([
-  [&quot;/skills/postmortem/SKILL.md&quot;, new TextEncoder().encode(postmortemSkillMarkdown)],
+  ["/skills/postmortem/SKILL.md", new TextEncoder().encode(postmortemSkillMarkdown)],
 ]);
 </code></pre>
 <p>Confirmed: the Skills page states the <code>/skills/</code> route prefix is stripped before records are read from the store — so a store key must be written as <code>/postmortem/SKILL.md</code> (not <code>/skills/postmortem/SKILL.md</code>) for it to appear at <code>/skills/postmortem/SKILL.md</code> through the <code>CompositeBackend</code> route. The same stripping applies to any <code>CompositeBackend</code> route, including <code>/memories/</code>. Skills also require <code>deepagents&gt;=1.7.0</code> and load in three levels — frontmatter (<code>name</code>/<code>description</code>) at startup, the full <code>SKILL.md</code> body when the skill is invoked, and <code>scripts/</code>/<code>references/</code>/<code>assets/</code> only as the instructions call for them — so keep frontmatter short and the body under ~5,000 tokens.</p>
@@ -1109,9 +1089,9 @@ await skillsBackend.uploadFiles([
 <li><strong>Shared memory is a prompt-injection vector.</strong> If one user can write memory another user's run reads, they can inject instructions. Make org-wide paths read-only for the agent (permissions, Ch10) and write them from app code.</li>
 <li><strong>Streamed tokens include summarization output.</strong> Filter them by metadata:</li>
 </ul>
-<pre><code class="language-ts">for await (const [namespace, chunk] of await agent.stream(input, { streamMode: &quot;messages&quot; })) {
+<pre><code class="language-ts">for await (const [namespace, chunk] of await agent.stream(input, { streamMode: "messages" })) {
   const [message, metadata] = chunk;
-  if (metadata?.lcSource === &quot;summarization&quot;) continue; // skip summary tokens in the UI
+  if (metadata?.lcSource === "summarization") continue; // skip summary tokens in the UI
   render(message);
 }
 </code></pre>
@@ -1205,32 +1185,32 @@ await skillsBackend.uploadFiles([
 <p>Every deep agent also has a <strong><code>general-purpose</code></strong> subagent (same tools, same model unless overridden, inherits skills). Replace it by defining a subagent named <code>general-purpose</code>; disable it via the harness profile's general-purpose subagent <code>enabled</code> flag, and with no other synchronous subagents the <code>task</code> tool disappears.</p>
 <h3 id="incidentscout-v9-specialist-investigators">IncidentScout v9: specialist investigators</h3>
 <pre><code class="language-ts">// src/subagents.ts — fields per the Subagents page
-import { z } from &quot;zod&quot;;
-import type { SubAgent } from &quot;deepagents&quot;;
+import { z } from "zod";
+import type { SubAgent } from "deepagents";
 
 const DbFindings = z.object({
   suspectedCause: z.string(),
-  confidence: z.number().describe(&quot;0..1&quot;),
-  evidence: z.array(z.string()).describe(&quot;Queries/metrics that support the cause&quot;),
+  confidence: z.number().describe("0..1"),
+  evidence: z.array(z.string()).describe("Queries/metrics that support the cause"),
 });
 
 export const subagents: SubAgent[] = [
   {
-    name: &quot;log-analyst&quot;,
-    description: &quot;Analyzes error logs for ONE service over a time window and reports error patterns. Use one call per service.&quot;,
+    name: "log-analyst",
+    description: "Analyzes error logs for ONE service over a time window and reports error patterns. Use one call per service.",
     systemPrompt: `Fetch and analyze logs for the service you are given.
 Write raw extracts to /notes/logs-&lt;service&gt;.md. Return under 300 words: top error signatures, first-seen time, counts.
 Do NOT include raw log lines.`,
     tools: [fetchLogs],
   },
   {
-    name: &quot;db-analyst&quot;,
-    description: &quot;Investigates database-side causes (locks, pool exhaustion, slow queries). Use when errors mention DB timeouts.&quot;,
-    systemPrompt: &quot;Use the observability tools to inspect DB metrics. Load the postgres-locks skill if lock contention is suspected.&quot;,
-    tools: mcpTools.filter((t) =&gt; t.name.startsWith(&quot;db_&quot;)), // minimal tool set
-    skills: [&quot;/skills/postgres-locks/&quot;],                       // custom subagents don't inherit skills
+    name: "db-analyst",
+    description: "Investigates database-side causes (locks, pool exhaustion, slow queries). Use when errors mention DB timeouts.",
+    systemPrompt: "Use the observability tools to inspect DB metrics. Load the postgres-locks skill if lock contention is suspected.",
+    tools: mcpTools.filter((t) =&gt; t.name.startsWith("db_")), // minimal tool set
+    skills: ["/skills/postgres-locks/"],                       // custom subagents don't inherit skills
     responseFormat: DbFindings,                              // parent receives JSON
-    permissions: [{ operations: [&quot;write&quot;], paths: [&quot;/**&quot;], mode: &quot;deny&quot; }], // read-only
+    permissions: [{ operations: ["write"], paths: ["/**"], mode: "deny" }], // read-only
   },
 ];
 </code></pre>
@@ -1250,12 +1230,12 @@ and db-analyst when DB symptoms appear. Synthesize their reports; don't redo the
 </ul>
 <h3 id="streaming-and-tracing-subagents">Streaming and tracing subagents</h3>
 <p><code>agent.streamEvents(input, { version: "v3" })</code> gives typed projections; iterate <code>stream.subagents</code> to get a handle per delegated task with <code>.name</code>, <code>.messages</code>, <code>.tool_calls</code>, <code>.output</code>. In LangSmith, every run carries <code>lc_agent_name</code>, so you can filter traces per subagent.</p>
-<pre><code class="language-ts">const stream = await agent.streamEvents(input, { version: &quot;v3&quot; });
+<pre><code class="language-ts">const stream = await agent.streamEvents(input, { version: "v3" });
 await Promise.all([
   (async () =&gt; { for await (const m of stream.messages) ui.coordinator(await m.text); })(),
   (async () =&gt; {
     for await (const sub of stream.subagents) {
-      ui.card(sub.name, &quot;started&quot;);
+      ui.card(sub.name, "started");
       for await (const m of sub.messages) ui.card(sub.name, await m.text);
     }
   })(),
@@ -1294,7 +1274,7 @@ await Promise.all([
 <p>IncidentScout now acts: it pages people and can post updates. On-call leads want to see its plan, approve anything that notifies humans, stop it from rewriting org runbooks, and not have it die when Bedrock throttles.</p>
 <h3 id="101-planning-with-write_todos-opt-in">10.1 Planning with <code>write_todos</code> (opt-in)</h3>
 <p>Since v0.7 planning is opt-in. Add <code>todoListMiddleware()</code> to get a <code>write_todos</code> tool; tasks have <code>pending</code> / <code>in_progress</code> / <code>completed</code> status and live in agent state, which UIs can stream as a live checklist. The docs suggest it for long multi-step tasks, less capable models, and progress UIs.</p>
-<pre><code class="language-ts">import { todoListMiddleware } from &quot;langchain&quot;;
+<pre><code class="language-ts">import { todoListMiddleware } from "langchain";
 const agent = createDeepAgent({ /* ... */ middleware: [todoListMiddleware()] });
 </code></pre>
 <h3 id="102-human-in-the-loop">10.2 Human-in-the-loop</h3>
@@ -1331,13 +1311,13 @@ const agent = createDeepAgent({ /* ... */ middleware: [todoListMiddleware()] });
 </tbody>
 </table></div>
 <pre><code class="language-ts">// IncidentScout v10 — HITL wiring (Human-in-the-loop page)
-import { Command } from &quot;@langchain/langgraph&quot;;
+import { Command } from "@langchain/langgraph";
 
 const agent = createDeepAgent({
   // ...v9...
   interruptOn: {
-    page_oncall: { allowedDecisions: [&quot;approve&quot;, &quot;edit&quot;, &quot;reject&quot;] },
-    post_incident_update: { allowedDecisions: [&quot;approve&quot;, &quot;reject&quot;] },
+    page_oncall: { allowedDecisions: ["approve", "edit", "reject"] },
+    post_incident_update: { allowedDecisions: ["approve", "reject"] },
   },
   checkpointer, // required
 });
@@ -1347,7 +1327,7 @@ if (result.__interrupt__) {
   const { actionRequests, reviewConfigs } = result.__interrupt__[0].value;
   // Show actionRequests[i].name / .args to the human; collect ONE decision per request, in order
   const decisions = [
-    { type: &quot;reject&quot;, message: &quot;Impact not confirmed yet. Do not page. Gather error-rate data first.&quot; },
+    { type: "reject", message: "Impact not confirmed yet. Do not page. Gather error-rate data first." },
   ];
   result = await agent.invoke(new Command({ resume: { decisions } }), { ...config, context: ctx }); // same thread_id!
 }
@@ -1356,8 +1336,8 @@ if (result.__interrupt__) {
 <h3 id="103-filesystem-permissions-deepagents191">10.3 Filesystem permissions (<code>deepagents&gt;=1.9.1</code>)</h3>
 <p>Declarative rules for the built-in file tools: <code>{ operations: ["read" | "write"], paths: [globs], mode: "allow" | "deny" }</code>. <strong>First match wins; no match = allowed.</strong> Paths must be absolute, without <code>..</code> or <code>~</code>. <code>read</code> covers <code>ls</code>, <code>read_file</code>, <code>glob</code>, <code>grep</code>; <code>write</code> covers <code>write_file</code>, <code>edit_file</code>.</p>
 <pre><code class="language-ts">permissions: [
-  { operations: [&quot;write&quot;], paths: [&quot;/runbooks/**&quot;, &quot;/skills/**&quot;], mode: &quot;deny&quot; }, // org content is app-managed
-  { operations: [&quot;read&quot;, &quot;write&quot;], paths: [&quot;/notes/**&quot;, &quot;/memories/**&quot;], mode: &quot;allow&quot; },
+  { operations: ["write"], paths: ["/runbooks/**", "/skills/**"], mode: "deny" }, // org content is app-managed
+  { operations: ["read", "write"], paths: ["/notes/**", "/memories/**"], mode: "allow" },
 ],
 </code></pre>
 <p>Specific rules must come before broad ones. Subagents inherit rules unless they set their own (which replace, not merge). Permissions <strong>don't</strong> apply to custom/MCP tools or to sandbox <code>execute</code>; with a sandbox as the composite default, every rule path must fall under a route or construction throws. For audit logging, rate limits, or content inspection, use backend policy hooks (Ch4).</p>
@@ -1401,16 +1381,16 @@ if (result.__interrupt__) {
 <p>The docs demonstrate these with <code>createAgent</code>; Deep Agents accepts any LangChain middleware through <code>middleware</code>, where it is appended after <code>PatchToolCallsMiddleware</code>.</p>
 <pre><code class="language-ts">// Composition: documented LangChain middleware passed to createDeepAgent's middleware param
 import { modelRetryMiddleware, toolRetryMiddleware, modelFallbackMiddleware,
-         modelCallLimitMiddleware, toolCallLimitMiddleware, piiMiddleware } from &quot;langchain&quot;;
+         modelCallLimitMiddleware, toolCallLimitMiddleware, piiMiddleware } from "langchain";
 
 middleware: [
   todoListMiddleware(),
   modelRetryMiddleware({ maxRetries: 3, backoffFactor: 2.0, initialDelayMs: 1000 }),
-  toolRetryMiddleware({ maxRetries: 2, tools: [&quot;fetch_logs&quot;] }),
-  modelFallbackMiddleware(&quot;bedrock:anthropic.claude-sonnet-4-6&quot;), // pick a different model/provider in practice
+  toolRetryMiddleware({ maxRetries: 2, tools: ["fetch_logs"] }),
+  modelFallbackMiddleware("bedrock:anthropic.claude-sonnet-4-6"), // pick a different model/provider in practice
   modelCallLimitMiddleware({ runLimit: 50 }),
   toolCallLimitMiddleware({ runLimit: 200 }),
-  piiMiddleware(&quot;email&quot;, { strategy: &quot;redact&quot;, applyToInput: true }),
+  piiMiddleware("email", { strategy: "redact", applyToInput: true }),
 ],
 </code></pre>
 <p>Gotchas: <code>ToolErrorMiddleware</code> is not yet available in JS, so a throwing tool halts the run — catch errors inside your tools and return an error string the model can act on. Chat models already retry transient API failures with backoff. <code>thread_limit</code> style caps need a checkpointer. For long subagent-heavy runs from a UI, set a high <code>recursionLimit</code>.</p>
@@ -1577,16 +1557,16 @@ middleware: [
 <h2 id="chapter-12-the-complete-incidentscout">Chapter 12 — The complete IncidentScout</h2>
 <p>This file is a <strong>Composition</strong>: every API in it appears in the docs cited in earlier chapters, assembled for a self-hosted Node service (for example on ECS). On LangSmith Deployment you would export <code>buildAgent</code> as an async graph factory, read <code>thread_id</code> from <code>config.configurable</code>, and drop <code>store</code>/<code>checkpointer</code>.</p>
 <pre><code class="language-ts">// src/incidentscout.ts
-import * as z from &quot;zod&quot;;
+import * as z from "zod";
 import { tool, todoListMiddleware, modelRetryMiddleware, toolRetryMiddleware,
-         modelCallLimitMiddleware, toolCallLimitMiddleware } from &quot;langchain&quot;;
-import type { ToolRuntime } from &quot;@langchain/core/tools&quot;;
-import { Command } from &quot;@langchain/langgraph&quot;;
-import { PostgresSaver } from &quot;@langchain/langgraph-checkpoint-postgres&quot;;
-import { PostgresStore } from &quot;@langchain/langgraph-checkpoint-postgres/store&quot;;
+         modelCallLimitMiddleware, toolCallLimitMiddleware } from "langchain";
+import type { ToolRuntime } from "@langchain/core/tools";
+import { Command } from "@langchain/langgraph";
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
 import { createDeepAgent, CompositeBackend, StoreBackend, LangSmithSandbox,
-         type SubAgent } from &quot;deepagents&quot;;
-import { SandboxClient } from &quot;langsmith/sandbox&quot;;
+         type SubAgent } from "deepagents";
+import { SandboxClient } from "langsmith/sandbox";
 
 // ---------- Ch2: per-run context (from your auth layer, never from the request body) ----------
 const contextSchema = z.object({ userId: z.string(), orgId: z.string() });
@@ -1594,8 +1574,8 @@ type Ctx = z.infer&lt;typeof contextSchema&gt;;
 
 // ---------- Ch4: durable persistence on Aurora PostgreSQL ----------
 const DB = process.env.DATABASE_URL!; // assembled from Secrets Manager-injected values
-const checkpointer = PostgresSaver.fromConnString(DB, { schema: &quot;agent_checkpoints&quot; });
-const store = PostgresStore.fromConnString(DB, { schema: &quot;agent_store&quot; });
+const checkpointer = PostgresSaver.fromConnString(DB, { schema: "agent_checkpoints" });
+const store = PostgresStore.fromConnString(DB, { schema: "agent_store" });
 await checkpointer.setup();
 await store.setup();
 
@@ -1608,43 +1588,43 @@ const fetchLogs = tool(
       return `fetch_logs failed: ${(e as Error).message}`; // JS has no ToolErrorMiddleware yet
     }
   },
-  { name: &quot;fetch_logs&quot;,
-    description: &quot;Fetch recent error logs for one service. Use when investigating an incident.&quot;,
+  { name: "fetch_logs",
+    description: "Fetch recent error logs for one service. Use when investigating an incident.",
     schema: z.object({ service: z.string(), minutes: z.number().default(15) }) },
 );
 
 const pageOncall = tool(
   async ({ service, summary }) =&gt; pagingApi.page(service, summary),
-  { name: &quot;page_oncall&quot;,
-    description: &quot;Page on-call for a service. Only when impact is confirmed and ongoing.&quot;,
+  { name: "page_oncall",
+    description: "Page on-call for a service. Only when impact is confirmed and ongoing.",
     schema: z.object({ service: z.string(), summary: z.string() }) },
 );
 
 const postIncidentUpdate = tool(
   async ({ channel, text }) =&gt; chatApi.post(channel, text),
-  { name: &quot;post_incident_update&quot;,
-    description: &quot;Post a status update to the incident channel.&quot;,
+  { name: "post_incident_update",
+    description: "Post a status update to the incident channel.",
     schema: z.object({ channel: z.string(), text: z.string() }) },
 );
 
-const { MultiServerMCPClient } = await import(&quot;@langchain/mcp-adapters&quot;);
+const { MultiServerMCPClient } = await import("@langchain/mcp-adapters");
 const mcp = new MultiServerMCPClient({
-  observability: { transport: &quot;http&quot;, url: process.env.OBS_MCP_URL! },
+  observability: { transport: "http", url: process.env.OBS_MCP_URL! },
 });
 const mcpTools = await mcp.getTools();
 
 // ---------- Ch9: specialists ----------
 const subagents: SubAgent[] = [
   {
-    name: &quot;log-analyst&quot;,
-    description: &quot;Analyzes error logs for ONE service; one call per service.&quot;,
-    systemPrompt: &quot;Write raw extracts to /notes/logs-&lt;service&gt;.md. Return &lt;300 words: signatures, first-seen, counts.&quot;,
+    name: "log-analyst",
+    description: "Analyzes error logs for ONE service; one call per service.",
+    systemPrompt: "Write raw extracts to /notes/logs-&lt;service&gt;.md. Return &lt;300 words: signatures, first-seen, counts.",
     tools: [fetchLogs],
   },
   {
-    name: &quot;data-cruncher&quot;,
-    description: &quot;Runs Python/shell analysis over exported data in the sandbox. Use for counts, histograms, correlations.&quot;,
-    systemPrompt: &quot;Use execute to run scripts. Save outputs to /notes/analysis/. Return findings, not raw output.&quot;,
+    name: "data-cruncher",
+    description: "Runs Python/shell analysis over exported data in the sandbox. Use for counts, histograms, correlations.",
+    systemPrompt: "Use execute to run scripts. Save outputs to /notes/analysis/. Return findings, not raw output.",
     tools: [], // only the built-in file tools + execute from the sandbox backend
   },
 ];
@@ -1663,13 +1643,13 @@ export async function buildAgent(threadId: string) {
 
   // Ch3/4/5/8: sandbox is the default (scratch + execute); durable paths route to Postgres
   const backend = new CompositeBackend(new LangSmithSandbox({ sandbox }), {
-    &quot;/memories/&quot;: new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, &quot;memories&quot;] }),
-    &quot;/runbooks/&quot;: new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, &quot;runbooks&quot;] }),
-    &quot;/skills/&quot;:   new StoreBackend({ namespace: () =&gt; [&quot;skills&quot;] }),
+    "/memories/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "memories"] }),
+    "/runbooks/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "runbooks"] }),
+    "/skills/":   new StoreBackend({ namespace: () =&gt; ["skills"] }),
   });
 
   return createDeepAgent({
-    model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;,           // Ch1 (+ automatic Bedrock prompt caching)
+    model: "bedrock:anthropic.claude-sonnet-4-6",           // Ch1 (+ automatic Bedrock prompt caching)
     systemPrompt: `You are the IncidentScout coordinator.
 Customer impact first, then timeline, then cause. Read /memories/AGENTS.md conventions and /runbooks/.
 Delegate per-service log work to log-analyst (in parallel) and heavy analysis to data-cruncher.
@@ -1677,20 +1657,20 @@ Append durable learnings to /memories/incidents.md.`,
     tools: [fetchLogs, pageOncall, postIncidentUpdate, ...mcpTools], // Ch6
     contextSchema,                                          // Ch2
     backend, store, checkpointer,                           // Ch4/5
-    memory: [&quot;/memories/AGENTS.md&quot;],                        // Ch8
-    skills: [&quot;/skills/&quot;],                                   // Ch8
+    memory: ["/memories/AGENTS.md"],                        // Ch8
+    skills: ["/skills/"],                                   // Ch8
     subagents,                                              // Ch9
     permissions: [                                          // Ch10 (paths under routes: required with a sandbox default)
-      { operations: [&quot;write&quot;], paths: [&quot;/runbooks/**&quot;, &quot;/skills/**&quot;], mode: &quot;deny&quot; },
+      { operations: ["write"], paths: ["/runbooks/**", "/skills/**"], mode: "deny" },
     ],
     interruptOn: {                                          // Ch10
-      page_oncall: { allowedDecisions: [&quot;approve&quot;, &quot;edit&quot;, &quot;reject&quot;] },
-      post_incident_update: { allowedDecisions: [&quot;approve&quot;, &quot;reject&quot;] },
+      page_oncall: { allowedDecisions: ["approve", "edit", "reject"] },
+      post_incident_update: { allowedDecisions: ["approve", "reject"] },
     },
     middleware: [                                           // Ch10
       todoListMiddleware(),
       modelRetryMiddleware({ maxRetries: 3, backoffFactor: 2.0, initialDelayMs: 1000 }),
-      toolRetryMiddleware({ maxRetries: 2, tools: [&quot;fetch_logs&quot;] }),
+      toolRetryMiddleware({ maxRetries: 2, tools: ["fetch_logs"] }),
       modelCallLimitMiddleware({ runLimit: 50 }),
       toolCallLimitMiddleware({ runLimit: 200 }),
     ],
@@ -1701,7 +1681,7 @@ Append durable learnings to /memories/incidents.md.`,
 export async function handleTurn(threadId: string, ctx: Ctx, text: string) {
   const agent = await buildAgent(threadId);
   const config = { configurable: { thread_id: threadId }, context: ctx };
-  const result = await agent.invoke({ messages: [{ role: &quot;user&quot;, content: text }] }, config);
+  const result = await agent.invoke({ messages: [{ role: "user", content: text }] }, config);
   if (result.__interrupt__) {
     // Return pending actions to the UI; the human's decisions come back via resumeTurn
     return { pending: result.__interrupt__[0].value.actionRequests };
@@ -1835,16 +1815,16 @@ export async function resumeTurn(threadId: string, ctx: Ctx, decisions: unknown[
 <h3 id="the-agent-srcincidentscoutts">The agent — <code>src/incidentscout.ts</code></h3>
 <pre><code class="language-ts">// src/incidentscout.ts — middleware + skills + multimodal files, wired into one Deep Agent.
 // Verified against deepagents@1.14.1 / langchain@1.5.12 by test/wiring.test.ts.
-import * as z from &quot;zod&quot;;
-import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend } from &quot;deepagents&quot;;
-import { createMiddleware, toolErrorMiddleware, modelCallLimitMiddleware, tool } from &quot;langchain&quot;;
-import type { BaseStore, BaseCheckpointSaver } from &quot;@langchain/langgraph&quot;;
-import type { BaseChatModel } from &quot;@langchain/core/language_models/chat_models&quot;;
+import * as z from "zod";
+import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend } from "deepagents";
+import { createMiddleware, toolErrorMiddleware, modelCallLimitMiddleware, tool } from "langchain";
+import type { BaseStore, BaseCheckpointSaver } from "@langchain/langgraph";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 // ---------- runtime context: set by YOUR auth layer, never from the request body ----------
 export const contextSchema = z.object({ userId: z.string(), orgId: z.string() });
 
-// ---------- skills: seeded by app code into the shared &quot;skills&quot; namespace ----------
+// ---------- skills: seeded by app code into the shared "skills" namespace ----------
 const POSTMORTEM_SKILL = `---
 name: postmortem
 description: Blameless incident postmortem. Use when asked to write up or summarize a resolved incident.
@@ -1857,16 +1837,16 @@ description: Blameless incident postmortem. Use when asked to write up or summar
 `;
 
 export async function seedSkills(store: BaseStore) {
-  // The CompositeBackend strips the &quot;/skills/&quot; route prefix before hitting the store,
-  // so the store key is &quot;/postmortem/SKILL.md&quot;, visible to the agent at &quot;/skills/postmortem/SKILL.md&quot;.
-  await new StoreBackend({ namespace: [&quot;skills&quot;], store }).uploadFiles([
-    [&quot;/postmortem/SKILL.md&quot;, new TextEncoder().encode(POSTMORTEM_SKILL)],
+  // The CompositeBackend strips the "/skills/" route prefix before hitting the store,
+  // so the store key is "/postmortem/SKILL.md", visible to the agent at "/skills/postmortem/SKILL.md".
+  await new StoreBackend({ namespace: ["skills"], store }).uploadFiles([
+    ["/postmortem/SKILL.md", new TextEncoder().encode(POSTMORTEM_SKILL)],
   ]);
 }
 
 // ---------- multimodal uploads: org-scoped binary files the agent opens with read_file ----------
 export async function uploadIncidentFile(store: BaseStore, orgId: string, path: string, bytes: Uint8Array) {
-  const [res] = await new StoreBackend({ namespace: [orgId, &quot;uploads&quot;], store }).uploadFiles([[path, bytes]]);
+  const [res] = await new StoreBackend({ namespace: [orgId, "uploads"], store }).uploadFiles([[path, bytes]]);
   if (res.error) throw new Error(`upload failed: ${res.error}`);
 }
 
@@ -1876,7 +1856,7 @@ const orgScoped = (suffix: string) =&gt;
   new StoreBackend({
     namespace: ({ config }) =&gt; {
       const org = config?.configurable?.orgId;
-      if (typeof org !== &quot;string&quot; || !org) throw new Error(&quot;configurable.orgId is required&quot;);
+      if (typeof org !== "string" || !org) throw new Error("configurable.orgId is required");
       return [org, suffix];
     },
   });
@@ -1887,11 +1867,11 @@ export type AuditEvent = { tool: string; ms: number; ok: boolean };
 // wrapToolCall: time and record every tool call (built-in file tools included).
 const auditTools = (sink: AuditEvent[]) =&gt;
   createMiddleware({
-    name: &quot;AuditTools&quot;,
+    name: "AuditTools",
     wrapToolCall: async (request, handler) =&gt; {
       const t0 = Date.now();
       const res: any = await handler(request);
-      const ok = res?.status !== &quot;error&quot;;
+      const ok = res?.status !== "error";
       sink.push({ tool: request.toolCall.name, ms: Date.now() - t0, ok });
       return res;
     },
@@ -1899,7 +1879,7 @@ const auditTools = (sink: AuditEvent[]) =&gt;
 
 // wrapModelCall: add per-org policy from runtime context to the system prompt on every model call.
 const orgPolicy = createMiddleware({
-  name: &quot;OrgPolicy&quot;,
+  name: "OrgPolicy",
   contextSchema,
   wrapModelCall: (request, handler) =&gt;
     handler({
@@ -1922,16 +1902,16 @@ export function buildAgent(opts: {
     async ({ service, minutes }) =&gt;
       (opts.fetchLogsImpl ?? (async (s, m) =&gt; `[stub] last ${m}m of ${s}: ERROR timeout payments-db`))(service, minutes),
     {
-      name: &quot;fetch_logs&quot;,
-      description: &quot;Fetch recent error logs for one service. Use when investigating an incident.&quot;,
+      name: "fetch_logs",
+      description: "Fetch recent error logs for one service. Use when investigating an incident.",
       schema: z.object({ service: z.string(), minutes: z.number().default(15) }),
     },
   );
 
   const backend = new CompositeBackend(new StateBackend(), {
-    &quot;/skills/&quot;: new StoreBackend({ namespace: [&quot;skills&quot;] }), // shared, curated by your team
-    &quot;/uploads/&quot;: orgScoped(&quot;uploads&quot;),                         // PDFs, screenshots, exports
-    &quot;/memories/&quot;: orgScoped(&quot;memories&quot;),
+    "/skills/": new StoreBackend({ namespace: ["skills"] }), // shared, curated by your team
+    "/uploads/": orgScoped("uploads"),                         // PDFs, screenshots, exports
+    "/memories/": orgScoped("memories"),
   });
 
   return createDeepAgent({
@@ -1943,8 +1923,8 @@ User-provided files live under /uploads/&lt;incident&gt;/ — open them with rea
     backend,
     store: opts.store,
     checkpointer: opts.checkpointer,
-    skills: [&quot;/skills/&quot;],
-    permissions: [{ operations: [&quot;write&quot;], paths: [&quot;/skills/**&quot;, &quot;/uploads/**&quot;], mode: &quot;deny&quot; }],
+    skills: ["/skills/"],
+    permissions: [{ operations: ["write"], paths: ["/skills/**", "/uploads/**"], mode: "deny" }],
     middleware: [
       orgPolicy,
       auditTools(opts.audit ?? []),
@@ -1969,118 +1949,118 @@ User-provided files live under /uploads/&lt;incident&gt;/ — open them with rea
 <li><strong><code>permissions</code></strong> make <code>/skills/</code> and <code>/uploads/</code> read-only to the agent: content there is written by app code only, which closes the shared-content prompt-injection path from Ch8.</li>
 </ol>
 <h3 id="calling-it">Calling it</h3>
-<pre><code class="language-ts">import { PostgresStore } from &quot;@langchain/langgraph-checkpoint-postgres/store&quot;;
-import { PostgresSaver } from &quot;@langchain/langgraph-checkpoint-postgres&quot;;
-import { readFile } from &quot;node:fs/promises&quot;;
-import { buildAgent, seedSkills, uploadIncidentFile } from &quot;./incidentscout.ts&quot;;
+<pre><code class="language-ts">import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+import { readFile } from "node:fs/promises";
+import { buildAgent, seedSkills, uploadIncidentFile } from "./incidentscout.ts";
 
 const store = PostgresStore.fromConnString(process.env.DATABASE_URL!);
 const checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL!);
 await store.setup(); await checkpointer.setup();
 await seedSkills(store); // once, at deploy time
 
-const agent = buildAgent({ model: &quot;bedrock:anthropic.claude-sonnet-4-6&quot;, store, checkpointer });
+const agent = buildAgent({ model: "bedrock:anthropic.claude-sonnet-4-6", store, checkpointer });
 
 // 1) User uploads a vendor PDF for incident 42 (from your HTTP handler)
-await uploadIncidentFile(store, &quot;acme&quot;, &quot;/inc-42/vendor-report.pdf&quot;, await readFile(&quot;report.pdf&quot;));
+await uploadIncidentFile(store, "acme", "/inc-42/vendor-report.pdf", await readFile("report.pdf"));
 
 // 2) Ask with an inline screenshot as well
-const identity = { userId: &quot;u-42&quot;, orgId: &quot;acme&quot; };           // from your auth layer
+const identity = { userId: "u-42", orgId: "acme" };           // from your auth layer
 const result = await agent.invoke(
-  { messages: [{ role: &quot;user&quot;, content: [
-      { type: &quot;text&quot;, text: &quot;Checkout p99 spiked. Vendor report is at /uploads/inc-42/vendor-report.pdf. Draft a postmortem.&quot; },
-      { type: &quot;image&quot;, url: &quot;https://grafana.example.com/render/checkout-p99.png&quot; },
+  { messages: [{ role: "user", content: [
+      { type: "text", text: "Checkout p99 spiked. Vendor report is at /uploads/inc-42/vendor-report.pdf. Draft a postmortem." },
+      { type: "image", url: "https://grafana.example.com/render/checkout-p99.png" },
   ] }] },
-  { configurable: { thread_id: &quot;inc-42&quot;, orgId: identity.orgId }, context: identity },
+  { configurable: { thread_id: "inc-42", orgId: identity.orgId }, context: identity },
 );
 </code></pre>
 <p><strong>Production swaps</strong> (only these change): <code>InMemoryStore</code> → <code>PostgresStore</code>, <code>MemorySaver</code> → <code>PostgresSaver</code>, <code>fakeModel()</code> → a real model string. <strong>Bedrock caveat (Composition, not from the Deep Agents docs):</strong> Bedrock Converse accepts media as bytes or S3 locations rather than arbitrary public URLs, so for Bedrock prefer the <code>/uploads/</code> path (bytes) or base64 blocks over <code>{ type: "image", url }</code> pointing at a web URL. Check your model's supported MIME types.</p>
 <h3 id="the-tests-testwiringtestts">The tests — <code>test/wiring.test.ts</code></h3>
 <pre><code class="language-ts">// test/wiring.test.ts — proves middleware + skills + multimodal wiring with a scripted fake model.
-import { test } from &quot;node:test&quot;;
-import assert from &quot;node:assert/strict&quot;;
-import { fakeModel, AIMessage } from &quot;langchain&quot;;
-import { InMemoryStore, MemorySaver } from &quot;@langchain/langgraph&quot;;
-import { buildAgent, seedSkills, uploadIncidentFile, type AuditEvent } from &quot;../src/incidentscout.ts&quot;;
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { fakeModel, AIMessage } from "langchain";
+import { InMemoryStore, MemorySaver } from "@langchain/langgraph";
+import { buildAgent, seedSkills, uploadIncidentFile, type AuditEvent } from "../src/incidentscout.ts";
 
-const PDF = new TextEncoder().encode(&quot;%PDF-1.4 vendor status report&quot;);
+const PDF = new TextEncoder().encode("%PDF-1.4 vendor status report");
 
 async function setup(model: ReturnType&lt;typeof fakeModel&gt;, fetchLogsImpl?: (s: string) =&gt; Promise&lt;string&gt;) {
   const store = new InMemoryStore();
   const audit: AuditEvent[] = [];
   await seedSkills(store);
-  await uploadIncidentFile(store, &quot;acme&quot;, &quot;/inc-42/vendor-report.pdf&quot;, PDF);
+  await uploadIncidentFile(store, "acme", "/inc-42/vendor-report.pdf", PDF);
   const agent = buildAgent({ model, store, checkpointer: new MemorySaver(), audit, fetchLogsImpl });
   return { agent, audit, store };
 }
 const run = (agent: any, org: string, content: any) =&gt;
   agent.invoke(
-    { messages: [{ role: &quot;user&quot;, content }] },
-    { configurable: { thread_id: crypto.randomUUID(), orgId: org }, context: { userId: &quot;u-1&quot;, orgId: org } },
+    { messages: [{ role: "user", content }] },
+    { configurable: { thread_id: crypto.randomUUID(), orgId: org }, context: { userId: "u-1", orgId: org } },
   );
-const toolMsgs = (res: any) =&gt; res.messages.filter((m: any) =&gt; m.type === &quot;tool&quot; || m._getType?.() === &quot;tool&quot;);
+const toolMsgs = (res: any) =&gt; res.messages.filter((m: any) =&gt; m.type === "tool" || m._getType?.() === "tool");
 const sysText = (model: any) =&gt; JSON.stringify(model.calls[0].messages[0].content);
 
-test(&quot;skills are listed in the system prompt and org policy middleware injects runtime context&quot;, async () =&gt; {
-  const model = fakeModel().respond(new AIMessage(&quot;ok&quot;));
+test("skills are listed in the system prompt and org policy middleware injects runtime context", async () =&gt; {
+  const model = fakeModel().respond(new AIMessage("ok"));
   const { agent } = await setup(model);
-  await run(agent, &quot;acme&quot;, &quot;hello&quot;);
+  await run(agent, "acme", "hello");
   const sys = sysText(model);
   assert.match(sys, /postmortem/);
   assert.match(sys, /Blameless incident postmortem/);
   assert.match(sys, /Org: acme/);
 });
 
-test(&quot;agent loads a skill body and reads an uploaded PDF as a file content block; audit sees both&quot;, async () =&gt; {
+test("agent loads a skill body and reads an uploaded PDF as a file content block; audit sees both", async () =&gt; {
   const model = fakeModel()
-    .respondWithTools([{ name: &quot;read_file&quot;, args: { file_path: &quot;/skills/postmortem/SKILL.md&quot; } }])
-    .respondWithTools([{ name: &quot;read_file&quot;, args: { file_path: &quot;/uploads/inc-42/vendor-report.pdf&quot; } }])
-    .respond(new AIMessage(&quot;Postmortem drafted.&quot;));
+    .respondWithTools([{ name: "read_file", args: { file_path: "/skills/postmortem/SKILL.md" } }])
+    .respondWithTools([{ name: "read_file", args: { file_path: "/uploads/inc-42/vendor-report.pdf" } }])
+    .respond(new AIMessage("Postmortem drafted."));
   const { agent, audit } = await setup(model);
-  const res = await run(agent, &quot;acme&quot;, &quot;Draft a postmortem using the vendor report.&quot;);
+  const res = await run(agent, "acme", "Draft a postmortem using the vendor report.");
   const [skillMsg, pdfMsg] = toolMsgs(res);
   assert.match(JSON.stringify(skillMsg.content), /Impact first/);
   assert.deepEqual(
     (pdfMsg.content as any[]).map((b) =&gt; [b.type, b.mimeType]),
-    [[&quot;file&quot;, &quot;application/pdf&quot;]],
+    [["file", "application/pdf"]],
   );
-  assert.deepEqual(audit.map((e) =&gt; e.tool), [&quot;read_file&quot;, &quot;read_file&quot;]);
-  assert.equal(res.messages.at(-1).content, &quot;Postmortem drafted.&quot;);
+  assert.deepEqual(audit.map((e) =&gt; e.tool), ["read_file", "read_file"]);
+  assert.equal(res.messages.at(-1).content, "Postmortem drafted.");
 });
 
-test(&quot;uploads are org-scoped: another org cannot read acme's PDF&quot;, async () =&gt; {
+test("uploads are org-scoped: another org cannot read acme's PDF", async () =&gt; {
   const model = fakeModel()
-    .respondWithTools([{ name: &quot;read_file&quot;, args: { file_path: &quot;/uploads/inc-42/vendor-report.pdf&quot; } }])
-    .respond(new AIMessage(&quot;n/a&quot;));
+    .respondWithTools([{ name: "read_file", args: { file_path: "/uploads/inc-42/vendor-report.pdf" } }])
+    .respond(new AIMessage("n/a"));
   const { agent } = await setup(model);
-  const res = await run(agent, &quot;globex&quot;, &quot;read it&quot;);
+  const res = await run(agent, "globex", "read it");
   const content = JSON.stringify(toolMsgs(res)[0].content);
   assert.doesNotMatch(content, /application\/pdf/);
   assert.match(content, /not found|Error/i);
 });
 
-test(&quot;toolErrorMiddleware turns a throwing tool into an error ToolMessage and the run continues&quot;, async () =&gt; {
+test("toolErrorMiddleware turns a throwing tool into an error ToolMessage and the run continues", async () =&gt; {
   const model = fakeModel()
-    .respondWithTools([{ name: &quot;fetch_logs&quot;, args: { service: &quot;checkout-api&quot;, minutes: 15 } }])
-    .respond(new AIMessage(&quot;Logs API is down; falling back to metrics.&quot;));
-  const { agent, audit } = await setup(model, async () =&gt; { throw new Error(&quot;ECONNRESET secret-host:9200&quot;); });
-  const res = await run(agent, &quot;acme&quot;, &quot;check logs&quot;);
+    .respondWithTools([{ name: "fetch_logs", args: { service: "checkout-api", minutes: 15 } }])
+    .respond(new AIMessage("Logs API is down; falling back to metrics."));
+  const { agent, audit } = await setup(model, async () =&gt; { throw new Error("ECONNRESET secret-host:9200"); });
+  const res = await run(agent, "acme", "check logs");
   const msg = toolMsgs(res)[0];
   assert.match(String(msg.content), /fetch_logs failed/);
   assert.doesNotMatch(String(msg.content), /secret-host/); // raw error text not leaked to the model
   assert.equal(audit[0].ok, false);
-  assert.equal(res.messages.at(-1).content, &quot;Logs API is down; falling back to metrics.&quot;);
+  assert.equal(res.messages.at(-1).content, "Logs API is down; falling back to metrics.");
 });
 
-test(&quot;multimodal user input (image + text) reaches the model unchanged&quot;, async () =&gt; {
-  const model = fakeModel().respond(new AIMessage(&quot;Latency spike at 09:12.&quot;));
+test("multimodal user input (image + text) reaches the model unchanged", async () =&gt; {
+  const model = fakeModel().respond(new AIMessage("Latency spike at 09:12."));
   const { agent } = await setup(model);
-  await run(agent, &quot;acme&quot;, [
-    { type: &quot;text&quot;, text: &quot;When did this start?&quot; },
-    { type: &quot;image&quot;, url: &quot;https://grafana.example.com/render/checkout-p99.png&quot; },
+  await run(agent, "acme", [
+    { type: "text", text: "When did this start?" },
+    { type: "image", url: "https://grafana.example.com/render/checkout-p99.png" },
   ]);
-  const human = model.calls[0].messages.find((m: any) =&gt; m.type === &quot;human&quot; || m._getType?.() === &quot;human&quot;);
-  assert.ok((human!.content as any[]).some((b) =&gt; b.type === &quot;image&quot;));
+  const human = model.calls[0].messages.find((m: any) =&gt; m.type === "human" || m._getType?.() === "human");
+  assert.ok((human!.content as any[]).some((b) =&gt; b.type === "image"));
 });
 </code></pre>
 <p>Run with:</p>
@@ -2283,4 +2263,6 @@ npx tsc -p .                         # strict, clean
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <script>document.querySelectorAll('pre code').forEach(el=>hljs.highlightElement(el));</script>
 <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true,theme:'default'});</script>
-</body></html>
+
+</div>
+</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · deep-agents-typescript-guide</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>

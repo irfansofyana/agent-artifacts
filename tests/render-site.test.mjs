@@ -14,7 +14,7 @@ test('artifact shell escapes metadata and retains a relative diagram link', () =
   assert.match(html,/data-theme-toggle/);
   assert.match(html,/href="\.\.\/\.\.\/"/);
   assert.match(html,/<main\b/);
-  assert.match(html,/href="#main"/);
+  assert.match(html,/href="#site-main"/);
 });
 test('theme button remains usable when storage is unavailable', () => {
   const script = readFileSync(new URL('../assets/site.js',import.meta.url),'utf8');

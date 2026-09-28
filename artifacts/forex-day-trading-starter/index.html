@@ -1,182 +1,8 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A risk-first, six-week forex day-trading starter course for Indonesian beginners using locally regulated brokers and demo accounts.">
-  <title>Forex Day Trading — A Risk-First Starter Course for Indonesia</title>
-  <style>
-    :root {
-      --paper: #f4f0e7;
-      --surface: #fffdf8;
-      --ink: #17221d;
-      --muted: #5e6b64;
-      --line: #c9d0c8;
-      --green: #1e6244;
-      --green-dark: #104832;
-      --lime: #d7e85b;
-      --amber: #b96318;
-      --red: #a6382c;
-      --code: #e5e9df;
-      --shadow: 0 12px 34px rgba(30, 48, 38, .09);
-      --radius: 6px;
-      --max: 1180px;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      color: var(--ink);
-      background: var(--paper);
-      font-family: "Aptos", "Segoe UI", Arial, sans-serif;
-      line-height: 1.58;
-    }
-    a { color: var(--green-dark); text-decoration-thickness: 1px; text-underline-offset: 3px; }
-    a:hover { color: var(--amber); }
-    button, input { font: inherit; }
-    button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
-    .topline { height: 8px; background: var(--green); }
-    .shell { width: min(var(--max), calc(100% - 36px)); margin: 0 auto; }
-    nav {
-      display: flex; align-items: center; justify-content: space-between; gap: 22px;
-      min-height: 68px; border-bottom: 1px solid var(--line);
-    }
-    .brand { font-weight: 900; letter-spacing: .12em; font-size: .78rem; text-decoration: none; color: var(--ink); }
-    .navlinks { display: flex; gap: 18px; flex-wrap: wrap; font-size: .87rem; }
-    .navlinks a { text-decoration: none; }
-    .hero {
-      display: grid; grid-template-columns: 1.35fr .65fr; gap: 48px;
-      padding: 82px 0 70px; align-items: end;
-    }
-    .eyebrow { color: var(--green); text-transform: uppercase; font-weight: 800; letter-spacing: .16em; font-size: .77rem; }
-    h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; line-height: 1.08; margin: 0; }
-    h1 { font-size: clamp(3.4rem, 8vw, 7.7rem); letter-spacing: -.055em; max-width: 900px; }
-    h1 em { color: var(--green); font-weight: 400; }
-    .hero-copy { font-size: 1.15rem; margin: 26px 0 0; max-width: 710px; color: #344039; }
-    .edition { border-top: 4px solid var(--ink); padding-top: 18px; font-size: .92rem; }
-    .edition strong { display: block; font-size: 1.15rem; margin-bottom: 8px; }
-    .warning {
-      background: var(--ink); color: #f7f3e9; padding: 30px 0;
-    }
-    .warning-grid { display: grid; grid-template-columns: .7fr 1.3fr; gap: 34px; align-items: start; }
-    .warning h2 { color: var(--lime); font-size: clamp(1.6rem, 3vw, 2.4rem); }
-    .warning p { margin: 0; font-size: 1.05rem; }
-    section { padding: 76px 0; border-bottom: 1px solid var(--line); }
-    .section-head { display: grid; grid-template-columns: 260px 1fr; gap: 42px; margin-bottom: 42px; }
-    .section-no { font: 800 .77rem/1.2 "Aptos", sans-serif; color: var(--green); letter-spacing: .16em; text-transform: uppercase; }
-    h2 { font-size: clamp(2.2rem, 4vw, 4.4rem); letter-spacing: -.035em; }
-    h3 { font-size: 1.6rem; letter-spacing: -.02em; }
-    .lead { font-size: 1.12rem; color: #39463f; max-width: 800px; }
-    .truth-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
-    .truth { padding: 28px 26px 10px 0; border-right: 1px solid var(--line); }
-    .truth + .truth { padding-left: 26px; }
-    .truth:last-child { border-right: 0; }
-    .truth b { display: block; font-size: 2.4rem; color: var(--green); font-family: Georgia, serif; }
-    .truth p { margin: 8px 0; color: var(--muted); }
-    .recommend {
-      background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
-      display: grid; grid-template-columns: 1fr 1.6fr;
-    }
-    .recommend-title { padding: 34px; background: var(--green); color: white; }
-    .recommend-title .tag { color: var(--lime); }
-    .recommend-title h3 { font-size: 2.5rem; margin-top: 14px; }
-    .recommend-body { padding: 34px; }
-    .tag { text-transform: uppercase; font-size: .72rem; letter-spacing: .14em; font-weight: 850; }
-    .checkline { display: flex; gap: 11px; margin: 11px 0; }
-    .checkline::before { content: "✓"; color: var(--green); font-weight: 900; }
-    table { width: 100%; border-collapse: collapse; margin-top: 34px; background: rgba(255,255,255,.3); }
-    th, td { padding: 16px 13px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
-    th { font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-    td:first-child { font-weight: 800; }
-    .note { color: var(--muted); font-size: .88rem; }
-    .steps { counter-reset: step; display: grid; grid-template-columns: 1fr 1fr; gap: 0 48px; }
-    .step { counter-increment: step; display: grid; grid-template-columns: 52px 1fr; gap: 18px; padding: 26px 0; border-top: 1px solid var(--line); }
-    .step::before { content: counter(step, decimal-leading-zero); font: 850 1rem/1 "Aptos", sans-serif; color: var(--green); padding-top: 5px; }
-    .step p { margin: 7px 0 0; color: var(--muted); }
-    .glossary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    details { background: var(--surface); border: 1px solid var(--line); padding: 0 19px; }
-    summary { cursor: pointer; font-weight: 800; min-height: 54px; display: flex; align-items: center; }
-    details p { color: var(--muted); margin-top: 0; }
-    .calculator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-    .calculator { background: var(--surface); border: 1px solid var(--line); padding: 28px; }
-    .calculator h3 { margin-bottom: 19px; }
-    label { display: block; color: var(--muted); font-size: .8rem; font-weight: 750; margin: 13px 0 5px; }
-    input[type="number"] { width: 100%; min-height: 46px; padding: 9px 11px; border: 1px solid #aeb7ae; background: white; color: var(--ink); }
-    .result { margin-top: 20px; padding-top: 18px; border-top: 2px solid var(--ink); display: grid; gap: 7px; }
-    .result-row { display: flex; justify-content: space-between; gap: 15px; }
-    .result strong { font-variant-numeric: tabular-nums; }
-    .status { margin-top: 14px; padding: 9px 11px; background: var(--code); font-weight: 800; }
-    .status.good { background: #d8ead9; color: #184f32; }
-    .status.bad { background: #f2d8d2; color: #7a241d; }
-    .playbook { display: grid; grid-template-columns: 1fr 1fr; background: var(--ink); color: white; }
-    .playbook > div { padding: 36px; }
-    .playbook > div:first-child { border-right: 1px solid #566059; }
-    .playbook h3 { color: var(--lime); }
-    .rule-list { padding: 0; margin: 22px 0 0; list-style: none; }
-    .rule-list li { border-top: 1px solid #4a564f; padding: 13px 0; }
-    .rule-list b { color: var(--lime); }
-    .week-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-    .week { background: var(--surface); border: 1px solid var(--line); padding: 24px; min-height: 250px; }
-    .week .week-no { font-weight: 900; color: var(--green); font-size: .78rem; letter-spacing: .11em; }
-    .week h3 { margin: 16px 0 12px; }
-    .week ul { padding-left: 19px; margin: 0; color: var(--muted); }
-    .gate { margin-top: 24px; border: 3px solid var(--green); padding: 28px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 30px; }
-    .gate h3 { font-size: 2rem; }
-    .tracker { background: var(--surface); border: 1px solid var(--line); padding: 26px; }
-    .tracker-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 15px; }
-    .progress { height: 10px; background: #dfe2da; margin-bottom: 18px; overflow: hidden; }
-    .progress > span { display: block; height: 100%; width: 0; background: var(--green); transition: width .2s ease; }
-    .task { display: flex; gap: 12px; padding: 13px 0; border-top: 1px solid var(--line); align-items: start; }
-    .task input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--green); }
-    .task label { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 600; cursor: pointer; }
-    .routine { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid var(--line); }
-    .routine > div { padding: 26px; border-right: 1px solid var(--line); }
-    .routine > div:last-child { border-right: 0; }
-    .routine .time { color: var(--green); font-weight: 900; font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; }
-    .routine ol { padding-left: 19px; color: var(--muted); }
-    .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-    .btn { border: 1px solid var(--ink); background: var(--ink); color: white; padding: 11px 16px; min-height: 46px; cursor: pointer; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; }
-    .btn:hover { background: var(--green); color: white; }
-    .btn.secondary { background: transparent; color: var(--ink); }
-    .btn.secondary:hover { background: var(--code); }
-    .redflags { columns: 2; column-gap: 42px; padding-left: 20px; }
-    .redflags li { break-inside: avoid; margin: 0 0 10px; }
-    .sources { font-size: .92rem; }
-    .sources li { margin-bottom: 10px; }
-    footer { background: var(--green-dark); color: #e9ede4; padding: 46px 0; }
-    footer .shell { display: flex; justify-content: space-between; gap: 30px; align-items: end; }
-    footer h2 { color: var(--lime); font-size: 2rem; }
-    footer p { max-width: 610px; margin-bottom: 0; }
-    .back { color: white; }
-    .hide-print { display: initial; }
-    @media (max-width: 850px) {
-      .hero, .warning-grid, .section-head, .recommend, .calculator-grid, .playbook, .gate { grid-template-columns: 1fr; }
-      .hero { padding-top: 54px; }
-      .section-head { gap: 12px; }
-      .truth-grid, .week-grid { grid-template-columns: 1fr; }
-      .truth { border-right: 0; border-bottom: 1px solid var(--line); padding-left: 0 !important; }
-      .steps { grid-template-columns: 1fr; }
-      .glossary { grid-template-columns: 1fr; }
-      .routine { grid-template-columns: 1fr; }
-      .routine > div { border-right: 0; border-bottom: 1px solid var(--line); }
-      .playbook > div:first-child { border-right: 0; border-bottom: 1px solid #566059; }
-      .navlinks { display: none; }
-      .redflags { columns: 1; }
-      footer .shell { display: block; }
-    }
-    @media print {
-      body { background: white; font-size: 11pt; }
-      .topline, nav, .button-row, .tracker .progress, footer { display: none !important; }
-      .shell { width: 100%; }
-      section { padding: 28px 0; break-inside: avoid; }
-      .hero { padding: 30px 0; }
-      h1 { font-size: 44pt; }
-      .week, .calculator, .recommend { box-shadow: none; }
-    }
-    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
-  </style>
-</head>
-<body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="An interactive six-week beginner course for learning forex day trading with locally regulated Indonesian broker demos, strict risk controls, a testable playbook, calculators, and a go-live gate."><title>Forex Day Trading — A Risk-First Starter Course for Indonesia · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script><link rel="stylesheet" href="../../src/artifacts/forex-day-trading-starter/module.css"></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/forex-day-trading-starter</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>Forex Day Trading — A Risk-First Starter Course for Indonesia</h1><p class="lede">An interactive six-week beginner course for learning forex day trading with locally regulated Indonesian broker demos, strict risk controls, a testable playbook, calculators, and a go-live gate.</p><div class="artifact-meta"><span>2026-07-17</span><span>html</span></div></header><div class="article-layout"><div class="artifact-body">
+<div class="legacy-content" data-artifact-content>
+
   <div class="topline"></div>
   <header class="shell">
     <nav aria-label="Primary navigation">
@@ -354,7 +180,7 @@
         <div class="section-head"><div class="section-no">07 / Six-week course</div><div><h2>Learn in the right order.</h2><p class="lead">Do not compress this into a weekend. Familiarity is not competence.</p></div></div>
         <div class="week-grid">
           <article class="week"><div class="week-no">WEEK 01</div><h3>Mechanics</h3><ul><li>Complete broker demo onboarding</li><li>Learn pair, pip, lot, spread, margin</li><li>Practice market/limit/stop orders</li><li>Place 10 no-stakes practice orders</li></ul></article>
-          <article class="week"><div class="week-no">WEEK 02</div><h3>Charts & risk</h3><ul><li>Mark trend and swing structure</li><li>Calculate R and risk budget</li><li>Place stop before target</li><li>Never move stop farther away</li></ul></article>
+          <article class="week"><div class="week-no">WEEK 02</div><h3>Charts &amp; risk</h3><ul><li>Mark trend and swing structure</li><li>Calculate R and risk budget</li><li>Place stop before target</li><li>Never move stop farther away</li></ul></article>
           <article class="week"><div class="week-no">WEEK 03</div><h3>Replay</h3><ul><li>Study 20 historical examples</li><li>Screenshot valid and invalid setups</li><li>Apply the same checklist</li><li>Ignore P&amp;L; score rule clarity</li></ul></article>
           <article class="week"><div class="week-no">WEEK 04</div><h3>Demo execution</h3><ul><li>Trade one fixed session</li><li>Maximum two trades/day</li><li>Record every valid and skipped trade</li><li>Stop at daily loss limit</li></ul></article>
           <article class="week"><div class="week-no">WEEK 05</div><h3>Build evidence</h3><ul><li>Continue toward 40 valid trades</li><li>Calculate win rate and expectancy</li><li>Tag every rule violation</li><li>Do not change rules mid-sample</li></ul></article>
@@ -492,5 +318,8 @@
       const a = document.createElement('a'); a.href = url; a.download = 'forex-trading-journal-template.csv'; a.click(); URL.revokeObjectURL(url);
     });
   </script>
-</body>
-</html>
+
+
+
+</div>
+</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · forex-day-trading-starter</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>

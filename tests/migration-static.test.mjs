@@ -8,7 +8,7 @@ import { renderArtifact } from '../scripts/render-site.mjs';
 import { readSite } from '../scripts/site-model.mjs';
 
 const root=new URL('..',import.meta.url).pathname;
-const selected=(process.env.MIGRATION_SLUGS || 'amp-coding-agent-deep-research,bedrock-mantle-vs-runtime-2026-07-09,build-first-agentic-ai-roadmap,deepseek-harness-brief,goal-loop-engineering,headroom-how-it-works,headroom-litellm-eks-runbook,hello-world,hermes-dashboard-inspiration,litellm-bedrock-model-evaluation-playbook-2026-08-04,matt-pocock-skills-ai-assisted-engineering-playbook,matt-pocock-skills-learning-guide,openclaw-enterprise-deployment,openclaw-enterprise-operating-model,signal-panel,slack-bot-private-mcp-per-user,web-search-for-ai-agents-2026,wedding-venue-comparison-2026-07-02').split(',');
+const selected=(process.env.MIGRATION_SLUGS || readSite(root).artifacts.map(e=>e.slug).join(',')).split(',');
 const manifest=new Map(readSite(root,{allowLegacy:true}).artifacts.map(e=>[e.slug,e]));
 function descendants(node,fn,out=[]){if(fn(node))out.push(node);for(const child of node.childNodes||[])descendants(child,fn,out);return out}
 function attrs(node){return Object.fromEntries((node.attrs||[]).map(x=>[x.name,x.value]))}

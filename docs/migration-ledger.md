@@ -22,3 +22,18 @@ Baseline: commit `2cddb02` (33 registered HTML artifacts). The migration utility
 | slack-bot-private-mcp-per-user | migrated | ids/links/code/tables match; 3 diagram URLs preserved | mobile dark/paper: no overflow; 3 iframes; touch pan tested on architecture (scrollLeft 0→161 of 440) | Standalone Archify files retain their own internal theme controls |
 | web-search-for-ai-agents-2026 | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Scoped comparison |
 | wedding-venue-comparison-2026-07-02 | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Table swipe to inspect |
+| ai-agent-git-worktrees | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| aws-ai-practitioner-journey | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| company-brain-technical-deep-dive | migrated | ids/links/code/tables match | mobile theme and Mermaid source smoke passed | Mermaid CDN dependence; readable source retained |
+| deep-agents-typescript-guide | migrated | ids/links/code/tables match | mobile theme and Mermaid source smoke passed | Mermaid/highlight CDN dependence; readable source retained |
+| deepagents-use-case-atlas-2026 | migrated | ids/links/code/tables match | mobile search/no-results/theme passed | Original script retained |
+| ecs-fargate-terraform-field-guide | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| firstmate-pi-herdr-gitlab-runbook | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| forex-day-trading-starter | migrated | ids/links/code/tables match | mobile risk calculator/theme passed | Original script retained |
+| frontier-llm-prompt-field-guide-2026 | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| graphify-daily-coding-field-guide | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| langchain-agent-engineer-fieldbook | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| langgraph-learning-resources-2026 | migrated | ids/links/code/tables match | mobile search/no-results/theme passed | Original script retained |
+| litellm-coding-agents | migrated | ids/links/code/tables match | mobile tabs/theme passed | Original script retained |
+| mcp-evaluation-private-stack-2026 | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |
+| orca-ai-development-runbook | migrated | ids/links/code/tables match | mobile theme and script smoke passed | Original script retained |

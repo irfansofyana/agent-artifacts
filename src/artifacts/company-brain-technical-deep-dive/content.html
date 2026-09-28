@@ -1,0 +1,280 @@
+
+<div class="legacy-content" data-artifact-content>
+<header><div class="eyebrow">Agent artifacts / engineering study / September 2026</div><h1>Inside Company Brain</h1><p>A source-pinned map of the Slack agent: request lifecycle, Durable Object coordination, permission graph, memory stores and deployment boundaries.</p><div class="meta"><span class="pill">Pinned d76cc1c</span><span class="pill">Static code review</span><span class="pill">Source-linked</span></div></header><div class="layout"><nav class="toc" aria-label="Page sections"><b>On this page</b><a href="#1-what-problem-is-it-solving">1. Problem</a><a href="#2-system-architecture">2. Architecture</a><a href="#3-security-identity-roles-and-permission-surfaces">3. Security</a><a href="#4-where-the-information-lives">4. Data</a><a href="#5-deployment-and-operations">5. Deployment</a><a href="#6-what-to-study-next-engineering-take">6. Engineering take</a><a href="#7-follow-one-message-worker-durable-object-model-loop">7. Message flow</a><a href="#8-how-knowledge-is-added-checked-stored-and-retrieved">8. Knowledge lifecycle</a><a href="#9-aws-hosted-replication-proposed-design-not-a-lift-and-shift">9. AWS alternative</a><a href="assets/aws-deepagents-proposal.html">AWS / DeepAgents proposal ↗</a><a href="assets/system-map.html">Interactive system map ↗</a><a href="https://github.com/supermemoryai/company-brain/tree/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee">Pinned source ↗</a></nav><main><h1 id="company-brain-technical-deep-dive">Company Brain — technical deep dive<a class="headerlink" href="#company-brain-technical-deep-dive" title="Permanent link">¶</a></h1>
+<p>A code-first study of Supermemory’s open-sourced Slack agent. Reviewed at commit <code>d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee</code> (September 27, 2026). This describes the checked-in implementation, not a deployed production assessment. <a href="https://github.com/supermemoryai/company-brain/tree/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee">Repository</a>.</p>
+<blockquote>
+<p>The central design move: use Slack as the interaction surface, a per-organization Durable Object as the long-running coordinator, D1 for identity and integration metadata, and scoped Supermemory containers for extracted long-term knowledge. This is open-source orchestration, not an offline/self-contained memory system: the <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/README.md#L99-L127">README</a> requires both Supermemory and model-provider API keys.</p>
+</blockquote>
+<h2 id="1-what-problem-is-it-solving">1. What problem is it solving?<a class="headerlink" href="#1-what-problem-is-it-solving" title="Permanent link">¶</a></h2>
+<p>Knowledge is scattered across conversations and systems; normal search requires someone to know where to look, and a generic chatbot lacks team-specific history and the authority to do follow-up work. Company Brain combines passive Slack observation, scoped memory extraction/retrieval, live connected-app tools, an approval-gated action loop, and scheduled/proactive work. The intended jobs include answering decisions and ownership questions, citing context, creating an issue or investigating a repo, and speaking up in a channel when useful. The <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/README.md#L34-L68">README's feature map</a> is a product claim; the <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L738-L865">event router</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L81-L132">agent shell</a> and <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/mcp/policy.ts#L79-L185">tool policy</a> demonstrate the corresponding mechanisms.</p>
+<p>A useful mental model is <strong>four planes</strong>: (1) interaction: Slack + browser; (2) control: Worker + org-scoped Agent; (3) state: D1/KV/DO SQLite + Supermemory; (4) execution: model provider, MCP/Google/Slack tools and optional code sandbox. The Worker owns HTTP edges; the DO owns multi-step work. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/worker.ts#L1-L54">Worker composition</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L1-L83">Cloudflare bindings</a>.</p>
+<h2 id="2-system-architecture">2. System architecture<a class="headerlink" href="#2-system-architecture" title="Permanent link">¶</a></h2>
+<p><a href="assets/system-map.html">Open the interactive architecture map</a> (full-screen, searchable, light/dark, pan and zoom). It is a structural diagram; arrows omit some cross-cutting auth/control calls to keep the main path readable.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Responsibility</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slack app</td>
+<td>Events, mentions, DMs, channel history, OAuth install, interactive approval cards. Its requested scopes include message/history, read, posting, files and user information.</td>
+<td><a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L67-L90">Scopes and callbacks</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L535-L557">handlers</a></td>
+</tr>
+<tr>
+<td>React app</td>
+<td>Sign-in, memory graph, configuration, integrations, automations and skills. Static build is served by the same Worker; <code>/brain/*</code> is its API.</td>
+<td><a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/worker.ts#L39-L52">Worker routes</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L12-L27">assets config</a></td>
+</tr>
+<tr>
+<td>Hono Worker</td>
+<td>Hydrates secrets, applies pending D1 migrations, sets session context and exposes setup/auth/brain/Slack routes. Verifies signed Slack requests and returns promptly while dispatching work with <code>waitUntil</code>.</td>
+<td><a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/worker.ts#L26-L52">Worker bootstrap</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L816-L865">dispatch</a></td>
+</tr>
+<tr>
+<td>CompanyBrainAgent DO</td>
+<td>One keyed instance per org; orchestrates Slack turns, resumable fibers, approval decisions, scheduling, onboarding, automations, proactivity and memory operations. Heavy implementation is dynamically loaded.</td>
+<td><a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L81-L206">Agent shell/fibers</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L637-L746">methods</a></td>
+</tr>
+<tr>
+<td>Supermemory API</td>
+<td>Stores extracted documents/memories and serves container-tagged search; not hosted in your Worker/D1.</td>
+<td><a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/memory/client.ts#L5-L20">API client</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L116-L125">write scope</a></td>
+</tr>
+<tr>
+<td>Tool/model layer</td>
+<td>Selects provider, assembles personal/connected tools, classifies MCP calls by effect; write or ambiguous effects pause for approval. QuickJS runs Code Mode; optional Daytona/Cloudflare container provides shell-like work.</td>
+<td><a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/package.json#L17-L66">Model deps</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/mcp/policy.ts#L103-L185">effect policy</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/README.md#L116-L127">README plans</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="slack-to-answer-sequence">Slack-to-answer sequence<a class="headerlink" href="#slack-to-answer-sequence" title="Permanent link">¶</a></h3>
+<ol>
+<li>Slack sends a signed event. The Worker verifies the raw-body HMAC, parses the envelope, deduplicates by event ID in KV, and resolves workspace → organization. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L535-L665">Handler</a>.</li>
+<li>It classifies explicit mention/DM, possible proactive chime, passive context-only event, or ignore; locks the channel+timestamp turn key, sends to the org Agent, and acknowledges immediately. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L738-L865">Routing/dispatch</a>.</li>
+<li>The DO creates an idempotent fiber, stashes recovery checkpoints, lazily loads the implementation, and runs the turn. Recovery may finalize an interrupted answer or attempt the turn again, rather than merely relying on Slack retries. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L97-L255">Fiber lifecycle</a>.</li>
+<li>The turn resolves read containers from Slack scope, retrieves relevant memory, optionally invokes live tools and the model, then sends the reply. Any consequential/unknown connected-app call is paused, presented to the original requester and resumed on an approved interaction. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/read-scope.ts#L12-L32">Read scope</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/mcp/policy.ts#L162-L185">MCP policy</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/approval.ts#L12-L67">approval record</a>.</li>
+</ol>
+<p><strong>Retrieval and model internals.</strong> <code>searchBrain</code> resolves the permitted container set first, runs a hybrid search with up to 40 hits per container, fans out six containers at a time, deduplicates by memory ID and returns the top 40 by similarity. This keeps peak query load bounded but means a DM spanning many private channels can still be latency- and API-call-heavy; the first 40 per container and final 40 are retrieval limits, not a completeness guarantee. Model access supports Anthropic, OpenAI, Google and xAI directly or through OpenRouter; an optional Cloudflare AI Gateway can hold provider keys and supply fallback candidates. Without that configured gateway, the code takes the first candidate directly. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/search-brain.ts#L51-L126">Search path</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/brain-model.ts#L35-L94">model routing</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/brain-model.ts#L144-L175">gateway behavior</a>.</p>
+<pre class="flow">Slack event ──HMAC/parse──▶ Worker ──org ID──▶ Durable Object ──scope──▶ Memory
+                               │                 │                 ├─────▶ Model
+                               └─KV dedupe       └─approval gate──▶ Tools
+                                                   │
+                                                   └─Slack reply / scheduled continuation</pre>
+
+<h2 id="3-security-identity-roles-and-permission-surfaces">3. Security: identity, roles and permission surfaces<a class="headerlink" href="#3-security-identity-roles-and-permission-surfaces" title="Permanent link">¶</a></h2>
+<p><strong>Identity and sessions.</strong> Sign-in uses Slack OpenID <code>openid email profile</code>; a KV-held state expires after 10 minutes. The first successful sign-in creates the organization and gains <code>owner</code>; later sign-ins must match that Slack workspace and become <code>member</code>. A 30-day HttpOnly, SameSite=Lax, HMAC-signed cookie carries user/org IDs; membership and role are re-read from D1 on every request, so removing a member takes effect without waiting for expiry. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/auth/routes.ts#L107-L135">OpenID flow</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/auth/routes.ts#L170-L228">first-owner and team restriction</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/auth/session.ts#L69-L129">session middleware</a>.</p>
+<p><strong>RBAC.</strong> <code>owner &gt; admin &gt; member</code> is a simple rank check, backed by the D1 <code>member.role</code> string (not a policy engine). Owners/admins can install or disconnect Slack and change organization-level settings/integrations/skills; members manage their own connections and personal resources. There is no promotion UI in this build, according to its own guide. Do not conflate this org RBAC with the more important <strong>data-scope rules</strong> below. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/compat/repo-lib/permissions.ts#L1-L18">Role helper</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/db/schema/auth.ts#L44-L64">schema</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L1152-L1160">install gate</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/docs/guide/permissions.md#L72-L79">permission guide</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Conversation</th>
+<th>Write to one container</th>
+<th>Read surface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Public Slack channel</td>
+<td><code>sm_org_shared</code></td>
+<td>Shared team memory</td>
+</tr>
+<tr>
+<td>Private channel</td>
+<td><code>slack_channel_&lt;channelId&gt;</code></td>
+<td>That private channel + shared</td>
+</tr>
+<tr>
+<td>Personal DM</td>
+<td><code>user_&lt;userId&gt;</code></td>
+<td>Own personal + shared + private channels in which the asker is a member</td>
+</tr>
+</tbody>
+</table>
+<p>The write resolver returns no DM tag without a mapped user ID; the read resolver takes the shared tag, current scope and the DM requester's membership-derived private-channel tags. Membership is stored in DO SQLite, updated from Slack join/leave events and periodically reconciled with Slack; if that cache is stale until reconciliation, DM visibility can lag a membership removal. The graph/home pages expose only shared + personal containers, not private-channel DM aggregation. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L94-L125">Write resolver</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/read-scope.ts#L6-L32">read resolver</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-membership.ts#L184-L260">membership reconciliation</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/graph.ts#L31-L69">graph response</a>.</p>
+<p><strong>Connected-app rights are separate.</strong> MCP connections are either org-shared (<code>userId = null</code>) or personal. Although the guide describes org-shared read fallback, ordinary Slack turns set <code>personalConnectionsOnly: true</code>, so do not assume a shared connection is available in that path; other scheduled/admin surfaces may use different assembly flags. The policy allows read/metadata effects; read-only connections deny writes; write and unknown effects are paused. Effects are inferred from a trusted annotation, operation-name verbs, or a classifier—useful but not a formal proof of side-effect freedom. Pending approval state and tool inputs persist in DO SQLite; approval expires after 15 minutes. A signed Slack interaction is checked against the original asker, current org membership and the pending/expiry state before resuming. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/turn.ts#L2625-L2640">Slack turn actor</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/turn.ts#L654-L765">approval checks</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/db/schema/brain/mcp.ts#L86-L137">Connection schema</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/mcp/policy.ts#L79-L151">classification</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/mcp/policy.ts#L162-L185">decision</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/approval.ts#L90-L113">approval persistence</a>.</p>
+<h3 id="security-review-priorities-static-findings-not-proven-exploits">Security review priorities (static findings, not proven exploits)<a class="headerlink" href="#security-review-priorities-static-findings-not-proven-exploits" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>High: claim race at bootstrap.</strong> <code>/setup/slack</code> accepts credentials without authentication until an organization exists; the first successful Slack OpenID sign-in becomes <code>owner</code>, with no Slack-admin check in that path. A publicly reachable unclaimed deployment can be claimed by an unintended Slack member or by whoever controls the initial app configuration. Complete provisioning in a controlled window and restrict exposure until ownership is established. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/setup/routes.ts#L73-L95">Setup gate</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/auth/routes.ts#L170-L228">first-owner logic</a>.</li>
+<li><strong>Medium: workspace invariant differs across flows.</strong> Sign-in rejects a team different from the claimed Slack workspace, but the Slack install callback upserts the OAuth-returned <code>teamId</code> without checking it against the claimed team. An authorized admin who can install the app in another workspace could attach that workspace’s bot/events to this organization. This is a code-path inconsistency, not a demonstrated exploit. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/auth/routes.ts#L189-L193">Sign-in restriction</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L1194-L1226">install callback</a>.</li>
+<li><strong>Medium: permissions depend on local snapshots and semantic classification.</strong> A missed private-channel leave event can leave DM retrieval authorized until periodic membership reconciliation; DM lookup reads DO SQL rather than live Slack. The method-name/annotation classifier can mislabel a mutating connected-app method as a read, bypassing approval. Unknown effects fail to an approval pause, but that does not cure falsely classified reads. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-membership.ts#L232-L251">Membership read</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-membership.ts#L184-L229">reconcile</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/mcp/policy.ts#L79-L185">effect classification</a>.</li>
+<li><strong>Review browser-write CSRF and graph payloads before high-trust rollout.</strong> The cookie is SameSite=Lax; this review did not establish explicit anti-CSRF tokens across every mutating route. The graph route filters memory entries but spreads remaining document fields after removing <code>content</code>; inspect the upstream response shape before treating this as a complete field-level allowlist. Neither point is a confirmed data exposure. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/auth/session.ts#L79-L85">Cookie flags</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/graph.ts#L49-L67">graph mapping</a>.</li>
+</ul>
+<p><strong>Controls enforced in the reviewed paths:</strong> Slack events and interactions verify signed raw requests with a timestamp window; approval decisions check team, requester, pending/expiry status, current turn and membership before resuming. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/verify.ts#L3-L26">Signature verification</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/turn.ts#L660-L765">decision guards</a>.</p>
+<h2 id="4-where-the-information-lives">4. Where the information lives<a class="headerlink" href="#4-where-the-information-lives" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Store</th>
+<th>What goes there</th>
+<th>Durability / boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cloudflare D1 (Drizzle/SQLite)</td>
+<td>Single-tenant org/user/member/settings, installed Slack workspace and encrypted bot token, MCP connections and encrypted OAuth tokens, OAuth state, grants.</td>
+<td>Deployer's Cloudflare account; relational metadata, not primary semantic memory. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/db/schema/auth.ts#L12-L109">Identity schema</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/db/schema/brain/mcp.ts#L35-L137">MCP schema</a></td>
+</tr>
+<tr>
+<td>Durable Object SQLite</td>
+<td>Per-org turn/fiber checkpoints, approvals, private-channel memberships, schedules, skills and other agent-owned state.</td>
+<td>DO-local state keyed by org ID; cross-request coordination. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/approval.ts#L90-L113">Approval SQL</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-membership.ts#L10-L27">membership SQL</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L83-L132">Agent</a></td>
+</tr>
+<tr>
+<td>Workers KV</td>
+<td>Short-lived Slack auth/install state and event/turn dedupe; caching/setup state.</td>
+<td>Eventually consistent KV, not source-of-truth membership or long-term memory. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/auth/routes.ts#L107-L135">Sign-in state</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L656-L676">event/turn keys</a></td>
+</tr>
+<tr>
+<td>Supermemory cloud API</td>
+<td>Documents, extracted memory entries and searchable container tags: shared, per-user, per-private-channel.</td>
+<td>External account/API; moving the Worker does not automatically move this data. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/memory/client.ts#L5-L20">Client</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L136-L219">write request/metadata</a></td>
+</tr>
+<tr>
+<td>External systems</td>
+<td>Slack conversation history, tool-provider content and model inference; sandbox files are execution artifacts.</td>
+<td>Remain governed by their own accounts and retention policies; connected actions are not magically transacted with memory writes. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L67-L88">Slack scopes</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L85-L98">sandbox config</a></td>
+</tr>
+</tbody>
+</table>
+<p>A model-produced durable memory is normalized into a dated document with a title, content, source URLs, taxonomy tags, container tag and deterministic custom ID; Supermemory handles extraction/indexing behind the API. A <code>queued</code> document submission is not proof extraction is complete. Public-channel rollout also packages bounded thread history into shared-container documents; channel observation distills batches. Connected-app results in a turn trajectory are not automatically equivalent to durable memory ingestion. The code prevents a DM without mapped user ID from falling back to the shared container. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L30-L92">Memory doc schema and IDs</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L136-L219">scoped request</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/compat/routes/memories/handler-effect.ts#L45-L99">API adapter</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/history-document.ts#L184-L265">history packaging</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/state.ts#L147-L230">trajectory</a>.</p>
+<p>The DM private-channel membership query has a default <strong>1,000-channel limit</strong>, despite adjacent prose calling the set uncapped; beyond that limit, older channels are omitted from the read surface. The DO retains a short Slack-event ring (50 events/channel, text capped at 2,000 characters); events older than seven days are purged during opportunistic cleanup rather than by a guaranteed timer. This is not a corpus-wide retention policy for Supermemory documents. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-membership.ts#L232-L251">Membership query</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/event-store.ts#L240-L296">event cleanup</a>.</p>
+<p>The app’s export endpoint downloads up to 2,000 shared plus 2,000 personal memories as Markdown; this is <strong>not</strong> a complete backup of private-channel memories, source documents, D1, DO state or credentials. Deleting a document calls the Supermemory API and relies on its cascade; clearing local memory registries does not clear the Supermemory corpus, and disconnecting Slack resets selected local state without invoking a corpus wipe. Treat backup, disconnection and deletion/retention as separate multi-store operations. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/memories.ts#L11-L88">Export endpoint</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/compat/routes/memories/handlers.ts#L4-L27">document deletion</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.impl.ts#L290-L321">registry reset</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/workspace.ts#L469-L533">disconnect</a>.</p>
+<h2 id="5-deployment-and-operations">5. Deployment and operations<a class="headerlink" href="#5-deployment-and-operations" title="Permanent link">¶</a></h2>
+<pre><code class="language-text">Your Cloudflare account
+ ├─ Worker (Hono API + React static assets)
+ ├─ D1: org identity, installed Slack app, integrations
+ ├─ Workers KV: OAuth state and event dedupe
+ ├─ Durable Object: one CompanyBrainAgent per org + SQLite/schedules
+ ├─ Workers AI binding (configured)
+ └─ Optional Paid: Cloudflare Sandbox container
+
+Outside your account: Slack ⇄ Worker; Supermemory memory API; model provider API;
+connected MCP/Google/GitHub/etc.; optional Daytona sandbox.
+</code></pre>
+<p>The one-click deploy requires <code>SUPERMEMORY_API_KEY</code> and <code>MODEL_API_KEY</code>; <code>/setup</code> produces the Slack manifest and stores Slack app credentials after deployment; the first Slack sign-in claims the org and can install the app. The Slack credentials are encrypted in D1 unless supplied as Worker secrets. By default, <code>ENCRYPTION_SECRET</code> is generated and held in KV: back up and protect that KV value with D1, or the encrypted records cannot be recovered after losing the key. Keep <code>PUBLIC_URL</code> stable for OAuth callbacks; absent an explicit value, the Worker remembers a visited public origin in KV. The Worker bundles/applies D1 migrations on first request, using Wrangler's <code>d1_migrations</code> bookkeeping; migration errors are logged for retry but not rethrown by the ensure wrapper, so <code>/health</code> is not proof the database is ready. For local development the README uses Bun and Wrangler; an externally reachable tunnel is needed for Slack callbacks. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/README.md#L99-L141">README deployment</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/setup/secrets.ts#L1-L89">secret hydration</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L1-L83">bindings</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/db/migrate.ts#L35-L76">migration logic</a>.</p>
+<p>On Cloudflare Workers Free, the documented 50-outbound-call/request limit can truncate long tool loops; Code Mode now runs on QuickJS inside the Worker. The optional code sandbox uses Daytona with a key on Free, or a Cloudflare container after enabling the commented Workers Paid block and <code>CONTAINER_SANDBOX=on</code>; when both are configured, Daytona has precedence. The <code>AI</code> binding is configured, but main model inference selects external providers or an optional AI Gateway, not Workers AI. Workers Paid does not include Supermemory/model-provider charges. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/README.md#L116-L127">README constraints</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L39-L98">container toggle</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/sandbox/availability.ts#L1-L24">sandbox precedence</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/brain-model.ts#L108-L175">model routing</a>.</p>
+<p><strong>Delivery and verification caveat.</strong> The Slack route writes a turn dedupe key before asynchronous DO completion, but writes the event-seen key after success. If dispatch fails after the first write, a retry may encounter the turn lock; do not interpret this as transactional exactly-once delivery. Build, typecheck and Vitest scripts exist in <code>package.json</code>, but no tracked <code>.github/workflows</code> CI was found in this snapshot. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L816-L865">Turn dedupe/dispatch</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/package.json#L6-L15">scripts</a>.</p>
+<p><strong>Operational posture:</strong> back up D1 and DO state separately from Supermemory exports; test restore, secret rotation, Slack token revocation, failed migration recovery and approval-resume paths before production use. These are recommendations inferred from the state boundaries, not guarantees from the repository. The current <code>/health</code> handler only returns <code>{ok:true}</code> and does not check downstream stores. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/worker.ts#L46-L52">Health handler</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L45-L83">store topology</a>.</p>
+<h2 id="6-what-to-study-next-engineering-take">6. What to study next / engineering take<a class="headerlink" href="#6-what-to-study-next-engineering-take" title="Permanent link">¶</a></h2>
+<ol>
+<li><strong>Trace one Slack event end-to-end.</strong> Start at <code>src/routes/slack/index.ts</code>, follow <code>onSlackEvent</code> into <code>src/brain/turn/agent.ts</code> and <code>agent.impl.ts</code>, then inspect <code>compute.ts</code>, <code>tools.ts</code> and the finalization modules. Watch where idempotency, recovery and approval resume cross boundaries. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L816-L865">Dispatch</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L97-L255">DO fiber</a>.</li>
+<li><strong>Prove the permission graph with tests.</strong> Exercise public/private/DM read scopes, removed-channel membership before reconciliation, non-member requests, org-shared read-only tools, deceptive MCP tool names, and approval on resume. The implemented separation is sophisticated, but a security claim needs adversarial tests and live integration validation. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/read-scope.ts#L12-L32">Scope functions</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/tools/mcp/policy.ts#L162-L185">policy function</a>.</li>
+<li><strong>Separate portable ideas from vendor coupling.</strong> The room-scoped write / audience-scoped read graph, requester-approval pause, and recoverable turn fibers are reusable design patterns; Supermemory API, Slack events, Cloudflare DO/D1, and provider-specific tooling are not drop-in portable. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/read-scope.ts#L6-L32">Scope</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L81-L132">Agent</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L45-L83">deployment</a>.</li>
+</ol>
+<p><strong>Documentation caveat:</strong> <code>docs/architecture.md</code> still names old monorepo <code>apps/api</code>, Postgres/Hyperdrive and <code>AUTH_KV</code>. The released Worker instead points to <code>src/worker.ts</code>, D1 and <code>BRAIN_KV</code>. For the current self-hosted layout, follow live source and <code>wrangler.jsonc</code>, not that inherited diagram. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/docs/architecture.md#L1-L47">Legacy doc</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L1-L83">current bindings</a>.</p>
+<h2 id="7-follow-one-message-worker-durable-object-model-loop">7. Follow one message: Worker, Durable Object, model loop<a class="headerlink" href="#7-follow-one-message-worker-durable-object-model-loop" title="Permanent link">¶</a></h2>
+<p>The shortest distinction: <strong>Worker = HTTP front door; Durable Object = organization-scoped coordinator; model loop = function the coordinator runs to reason and call tools.</strong> The Worker verifies Slack and acknowledges fast; it does not sit there running a full multi-step conversation. The DO starts a recoverable turn fiber, loads the turn implementation, assembles context/tools and invokes <code>computeTurn</code>; the model loop can call search or external tools repeatedly before producing a response. This is an in-process function inside the DO's work, not a third deployed service. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L816-L865">Worker dispatch</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L97-L200">DO fiber</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/compute.ts#L137-L176">compute entry</a>.</p>
+<div class="mermaid">sequenceDiagram
+    autonumber
+    actor U as Slack user
+    participant S as Slack
+    participant W as Hono Worker
+    participant K as Workers KV
+    participant A as Org Durable Object
+    participant M as Supermemory API
+    participant L as Model provider
+    participant T as Connected tools
+    U-&gt;&gt;S: @bot question in channel
+    S-&gt;&gt;W: POST /slack/events (signed)
+    W-&gt;&gt;W: Verify signature, classify event, resolve org
+    W-&gt;&gt;K: Check event and turn dedupe keys
+    W-&gt;&gt;A: Dispatch onSlackEvent via waitUntil
+    W--&gt;&gt;S: HTTP 200 promptly
+    A-&gt;&gt;A: Start idempotent fiber; stash checkpoint
+    A-&gt;&gt;M: Search allowed memory containers
+    M--&gt;&gt;A: Relevant memories
+    loop Model steps (bounded)
+      A-&gt;&gt;L: Prompt with memory, tools and thread context
+      L--&gt;&gt;A: Answer or tool call
+      opt Tool call
+        A-&gt;&gt;T: Execute read / request approval for write
+        T--&gt;&gt;A: Result or paused state
+      end
+    end
+    A-&gt;&gt;S: Post/stream reply in Slack
+    S--&gt;&gt;U: Answer
+</div>
+<p>Notice the two durability boundaries: the fast HTTP acknowledgement and KV dedupe are not an atomic transaction with the actual reply; the DO fiber/checkpoint is the longer-running recovery mechanism. A tool approval interrupts the turn and persists resume state, rather than blocking an open Slack HTTP request. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L816-L865">Dedupe/dispatch</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L217-L255">fiber recovery</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/approval.ts#L23-L67">approval state</a>.</p>
+<h2 id="8-how-knowledge-is-added-checked-stored-and-retrieved">8. How knowledge is added, checked, stored and retrieved<a class="headerlink" href="#8-how-knowledge-is-added-checked-stored-and-retrieved" title="Permanent link">¶</a></h2>
+<p>There are <strong>two different things called memory</strong> here: the DO stores process state (pending messages, checkpoints, tag/tree bookkeeping); Supermemory stores submitted documents and extracted searchable memories. D1 stores people, roles, settings, Slack installation and connector records. KV holds short-lived OAuth/dedupe state and, unless overridden, the encryption key. The raw authoritative conversation remains in Slack; the memory service contains a selective derived representation, not a complete Slack archive. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L91-L139">DO pending batch</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/db/schema/auth.ts#L12-L109">D1 schema</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/compat/routes/memories/handler-effect.ts#L45-L99">API adapter</a>.</p>
+<div class="mermaid">flowchart LR
+    S[Public Slack messages] --&gt; P[DO pending spool / batch]
+    P --&gt; C{Channel still public?}
+    C -- No --&gt; X[Stop; no shared write]
+    C -- Yes --&gt; D[LLM distills durable clusters]
+    D --&gt; V[Zod schema + date/tags + scope + custom ID]
+    V --&gt; API[Supermemory documents.add]
+    API --&gt; Q[Queued extraction, chunking and indexing]
+    Q --&gt; R[Searchable memories in shared container]
+    D -- Empty list --&gt; N[No memory written]
+    DM[DM or private-channel turn] --&gt; WV[Own scope resolver]
+    WV --&gt; API
+    R --&gt; READ[Search only authorized containers]
+</div>
+<p><strong>Public-channel observation path:</strong> messages are spooled in DO SQLite; before writing to the shared brain, the job verifies via Slack that the channel is positively public. A model uses a constrained <code>DistillSchema</code> to select durable, human-stated facts (or no memories), grouping them into clusters. The code stamps a document date, normalizes tags, chooses the single write container, creates a deterministic custom ID and submits the document. After a successful submission it advances the cursor and clears the pending batch. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L1087-L1105">Public check</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L51-L63">distillation schema/policy</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L976-L1059">batch/write/cursor</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L116-L125">write resolver</a>.</p>
+<p><strong>What “validation” means—and does not mean.</strong> The code checks structure (Zod schema), non-empty content, computed scope/tag metadata, reset generation, API errors and some idempotency. Its LLM prompt asks for faithful, durable human-stated information and the downstream Supermemory service performs extraction/deduplication/supersession. But no human fact-check is required before every automatic write, and a <code>queued</code> API response only means accepted for processing—not that the fact is true, indexed, or safe to cite. This is a <em>curation pipeline</em>, not a truth oracle. For consequential facts, add a human-review queue or at least source-link, confidence, contradiction and freshness checks in a fork. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L30-L53">Schema</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/compat/routes/memories/handler-effect.ts#L69-L99">document submission</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/index.ts#L110-L165">write/reset checks</a>.</p>
+<p>For a question, the read-scope resolver selects permitted container tags <strong>before</strong> search. <code>searchBrain</code> queries each permitted container, six at a time, deduplicates by ID and returns the highest-similarity 40. This is retrieval of stored summaries, not a SQL join over every raw Slack message. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/read-scope.ts#L12-L32">Read scope</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/search-brain.ts#L58-L126">search</a>.</p>
+<h2 id="9-aws-hosted-replication-proposed-design-not-a-lift-and-shift">9. AWS-hosted replication: proposed design, not a lift-and-shift<a class="headerlink" href="#9-aws-hosted-replication-proposed-design-not-a-lift-and-shift" title="Permanent link">¶</a></h2>
+<p><strong>My take:</strong> preserve the <em>behavior</em>, not the Cloudflare products. The proposed design replaces Supermemory with a Jakarta-hosted, application-owned knowledge service built on Aurora PostgreSQL full-text + open-source <code>pgvector</code>, S3 and ingestion workers. DeepAgents handles the turn/tool loop; Bedrock (US inference allowed) handles LLM/embedding calls; <strong>Bedrock Knowledge Bases is not used</strong>. Slack remains an external processor for a Slack-based bot, so “everything in AWS” is not literal. The architecture below is a sketch, not a feature present in this repository; see the <a href="assets/aws-deepagents-proposal.html">full AWS/DeepAgents proposal</a> for the data boundary, validation pipeline and gaps. <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/memory/client.ts#L5-L19">Supermemory dependency</a>, <a href="https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L45-L83">Cloudflare bindings</a>.</p>
+<div class="mermaid">flowchart LR
+    Slack[Slack external] --&gt; ALB[Regional ALB / HTTPS]
+    Browser[Browser UI] --&gt; ALB
+    ALB --&gt; API[ECS Fargate API: signature + auth]
+    API --&gt; PG[(Aurora PostgreSQL: roles, state, approvals, ACL)]
+    API --&gt; FIFO[SQS FIFO: org or thread group]
+    FIFO --&gt; Work[ECS Fargate DeepAgents worker]
+    Work --&gt; PG
+    Work --&gt; S3[(S3: immutable source documents)]
+    Work --&gt; Vec[(Jakarta Aurora pgvector + text search)]
+    Work --&gt; BR[US Bedrock: model + embedding inference]
+    Work --&gt; Slack
+    Sch[EventBridge Scheduler] --&gt; FIFO
+    Sec[Secrets Manager + KMS] --&gt; API
+    Sec --&gt; Work
+</div>
+<table>
+<thead>
+<tr>
+<th>Current role</th>
+<th>AWS-hosted proposed replacement</th>
+<th>Why / trap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker HTTP + React assets</td>
+<td>Regional ALB → ECS Fargate API, static assets via regional service/private S3</td>
+<td>Keep signed Slack callbacks and browser sessions at one ingress. CloudFront is optional, not regional-only.</td>
+</tr>
+<tr>
+<td>Per-org DO + local SQLite + schedules</td>
+<td>SQS FIFO by org/thread, Fargate worker, Aurora turn/approval/checkpoint tables, EventBridge Scheduler</td>
+<td>FIFO serializes each message group; its built-in duplicate suppression lasts five minutes, so keep database idempotency and an outbox for retries/external side effects. <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-fifo-queue-message-identifiers.html">SQS groups</a>, <a href="https://docs.aws.amazon.com/scheduler/latest/UserGuide/getting-started.html">Scheduler targets</a></td>
+</tr>
+<tr>
+<td>D1 + KV</td>
+<td>Aurora PostgreSQL tables + Secrets Manager/KMS + short-TTL table/cache</td>
+<td>One relational store simplifies permissions and backup. Do not store a long-lived encryption key in a throwaway cache.</td>
+</tr>
+<tr>
+<td>Supermemory cloud</td>
+<td>Jakarta Aurora PostgreSQL full-text + OSS <code>pgvector</code>, regional S3 evidence, Fargate ingestion; US Bedrock embedding calls</td>
+<td>No Bedrock Knowledge Bases in this design. You own extraction, dedupe, versioning, ACL filtering, review, deletion and audit. Text sent for embedding is processed in the US, while the stored index remains in Jakarta. <a href="https://github.com/pgvector/pgvector">pgvector</a>, <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.VectorDB.html">Aurora pgvector</a></td>
+</tr>
+<tr>
+<td>Optional Cloudflare/Daytona sandbox</td>
+<td>Isolated Fargate task with restricted IAM/network and disposable storage</td>
+<td>Never execute model-generated shell code in the API or shared agent worker.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Build order:</strong> (1) Slack webhook + session/RBAC + per-org job queue; (2) scoped storage and retrieval with explicit ACL predicates; (3) asynchronous ingestion with evidence links and review/contradiction handling; (4) approval/resume for writes; (5) scheduling/proactivity; (6) sandbox only if its use case justifies the isolation cost. Do <strong>not</strong> start with Bedrock Agents or Step Functions just because the source calls its coordinator an “agent”; the crucial primitive is durable, per-organization work with an explicit state machine. SQS FIFO provides per-group ordering, not a guarantee that a Slack reply or tool side effect occurs once. <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-fifo-queue-message-identifiers.html">AWS FIFO semantics</a>.</p>
+<p><strong>Region and privacy gate:</strong> Jakarta hosts the application, source snapshots, claims, ACLs, checkpoints and search index; Bedrock model and embedding inference may run in US AWS Region(s), so selected messages, prompts and retrieved text cross that boundary. Use only Bedrock endpoints/profiles consistent with the US routing requirement and test the exact DeepAgents adapter; direct OpenAI/Anthropic APIs and Bedrock Knowledge Bases are out of scope. Slack and external connectors remain additional processors. <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html">Bedrock regional matrix</a>.</p>
+<p><strong>Next design pass (not claimed as implemented):</strong> test one Slack question and one reviewed memory write end-to-end using DeepAgents, a database checkpointer, Bedrock-only inference and the Jakarta-hosted knowledge service. Measure tenant-scoped retrieval, approval resume, model/tool compatibility, source citations, regional data flow and recovery before cloning the full feature list.</p>
+<p><strong>Method / limitations.</strong> Static review of the pinned repository and its first-party docs. No Cloudflare account, Slack workspace or Supermemory tenant was deployed for this study. Runtime behavior and security properties are derived from code paths rather than confirmed end-to-end in a live installation. AWS topology is a proposed design, not an implementation or deployment test. </p><p class="footer">Prepared for Irfan · source revision d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee</p></main></div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"; mermaid.initialize({startOnLoad:true, securityLevel:"strict", theme:"neutral"});</script>
+</div>

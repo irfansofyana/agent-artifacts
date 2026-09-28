@@ -1,0 +1,2265 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
+<div class="legacy-content" data-artifact-content>
+
+<div class="layout">
+<nav class="toc" aria-label="Table of contents"><a class="home" href="../../">← Agent artifacts</a><div class="toc">
+<ul>
+<li><a href="#how-to-read-this-guide">How to read this guide</a><ul>
+<li><a href="#what-the-docs-do-not-cover-read-this-first">What the docs do not cover (read this first)</a></li>
+</ul>
+</li>
+<li><a href="#chapter-1-what-a-deep-agent-is-and-isnt">Chapter 1 — What a Deep Agent is (and isn't)</a><ul>
+<li><a href="#the-problem">The problem</a></li>
+<li><a href="#the-concept-an-agent-harness">The concept: an agent harness</a></li>
+<li><a href="#incidentscout-v1">IncidentScout v1</a></li>
+<li><a href="#gotchas">Gotchas</a></li>
+<li><a href="#next-problem">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-2-architecture-the-loop-the-stack-and-where-state-lives">Chapter 2 — Architecture: the loop, the stack, and where state lives</a><ul>
+<li><a href="#the-problem_1">The problem</a></li>
+<li><a href="#the-loop">The loop</a></li>
+<li><a href="#the-deep-agents-stack">The Deep Agents stack</a></li>
+<li><a href="#how-state-flows">How state flows</a></li>
+<li><a href="#incidentscout-v2-threads-and-users">IncidentScout v2: threads and users</a></li>
+<li><a href="#gotchas_1">Gotchas</a></li>
+<li><a href="#next-problem_1">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-3-the-virtual-filesystem">Chapter 3 — The virtual filesystem</a><ul>
+<li><a href="#the-problem_2">The problem</a></li>
+<li><a href="#the-concept">The concept</a></li>
+<li><a href="#incidentscout-v3-notes-on-disk-a-seeded-runbook">IncidentScout v3: notes on disk, a seeded runbook</a></li>
+<li><a href="#gotchas_2">Gotchas</a></li>
+<li><a href="#next-problem_2">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-4-backends-deciding-where-files-actually-live">Chapter 4 — Backends: deciding where files actually live</a><ul>
+<li><a href="#the-problem_3">The problem</a></li>
+<li><a href="#the-concept_1">The concept</a></li>
+<li><a href="#41-statebackend-default-made-durable-with-postgres">4.1 StateBackend (default) — made durable with Postgres</a></li>
+<li><a href="#42-storebackend-cross-thread-storage-on-postgres">4.2 StoreBackend — cross-thread storage on Postgres</a></li>
+<li><a href="#43-compositebackend-incidentscout-v4">4.3 CompositeBackend — IncidentScout v4</a></li>
+<li><a href="#44-filesystembackend-local-disk">4.4 FilesystemBackend (local disk)</a></li>
+<li><a href="#45-localshellbackend-local-shell">4.5 LocalShellBackend (local shell)</a></li>
+<li><a href="#46-contexthubbackend">4.6 ContextHubBackend</a></li>
+<li><a href="#47-custom-backends-and-policy-hooks">4.7 Custom backends and policy hooks</a></li>
+<li><a href="#48-deploying-backends-on-aws-aws-docs">4.8 Deploying backends on AWS — [AWS docs]</a></li>
+<li><a href="#next-problem_3">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-5-sandboxes-letting-the-agent-run-code-safely">Chapter 5 — Sandboxes: letting the agent run code safely</a><ul>
+<li><a href="#the-problem_4">The problem</a></li>
+<li><a href="#the-concept_2">The concept</a></li>
+<li><a href="#51-langsmith-sandboxes-first-party">5.1 LangSmith sandboxes (first-party)</a></li>
+<li><a href="#52-daytona-langchaindaytona">5.2 Daytona (@langchain/daytona)</a></li>
+<li><a href="#53-deno-langchaindeno">5.3 Deno (@langchain/deno)</a></li>
+<li><a href="#54-modal-langchainmodal">5.4 Modal (@langchain/modal)</a></li>
+<li><a href="#55-node-vfs-langchainnode-vfs">5.5 Node VFS (@langchain/node-vfs)</a></li>
+<li><a href="#56-bedrock-agentcore-build-your-own-no-official-js-backend-yet">5.6 Bedrock AgentCore — build-your-own (no official JS backend yet)</a></li>
+<li><a href="#57-community-providers">5.7 Community providers</a></li>
+<li><a href="#security-considerations-all-providers">Security considerations (all providers)</a></li>
+<li><a href="#58-sandboxes-and-postgres-whats-actually-documented">5.8 Sandboxes and Postgres: what's actually documented</a></li>
+<li><a href="#deploying-sandboxes-on-aws">Deploying sandboxes on AWS</a></li>
+<li><a href="#next-problem_4">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-6-tools-and-mcp">Chapter 6 — Tools and MCP</a><ul>
+<li><a href="#the-problem_5">The problem</a></li>
+<li><a href="#the-concept_3">The concept</a></li>
+<li><a href="#incidentscout-v6-mcp-observability-a-host-side-credentialed-tool">IncidentScout v6: MCP observability + a host-side credentialed tool</a></li>
+<li><a href="#gotchas_3">Gotchas</a></li>
+<li><a href="#next-problem_5">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-7-multimodal-inputs">Chapter 7 — Multimodal inputs</a><ul>
+<li><a href="#the-problem_6">The problem</a></li>
+<li><a href="#the-concept_4">The concept</a></li>
+<li><a href="#how-compression-treats-media-important">How compression treats media (important)</a></li>
+<li><a href="#gotchas-and-recommended-patterns">Gotchas and recommended patterns</a></li>
+<li><a href="#next-problem_6">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-8-context-engineering-what-the-model-sees-and-for-how-long">Chapter 8 — Context engineering: what the model sees, and for how long</a><ul>
+<li><a href="#the-problem_7">The problem</a></li>
+<li><a href="#the-concept-five-kinds-of-context">The concept: five kinds of context</a></li>
+<li><a href="#input-context-prompt-memory-skills">Input context: prompt, memory, skills</a></li>
+<li><a href="#compression-offloading-then-summarization">Compression: offloading, then summarization</a></li>
+<li><a href="#incidentscout-v8-memory-skills-on-postgres-backed-paths">IncidentScout v8: memory + skills on Postgres-backed paths</a></li>
+<li><a href="#scoping-long-term-memory">Scoping long-term memory</a></li>
+<li><a href="#gotchas_4">Gotchas</a></li>
+<li><a href="#next-problem_7">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-9-subagents-delegation-and-context-isolation">Chapter 9 — Subagents: delegation and context isolation</a><ul>
+<li><a href="#the-problem_8">The problem</a></li>
+<li><a href="#the-concept_5">The concept</a></li>
+<li><a href="#defining-subagents">Defining subagents</a></li>
+<li><a href="#incidentscout-v9-specialist-investigators">IncidentScout v9: specialist investigators</a></li>
+<li><a href="#context-between-parent-and-child">Context between parent and child</a></li>
+<li><a href="#streaming-and-tracing-subagents">Streaming and tracing subagents</a></li>
+<li><a href="#beyond-synchronous-subagents">Beyond synchronous subagents</a></li>
+<li><a href="#gotchas-from-the-troubleshooting-section">Gotchas (from the troubleshooting section)</a></li>
+<li><a href="#next-problem_8">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-10-steering-and-guardrails-planning-human-in-the-loop-permissions-fault-tolerance">Chapter 10 — Steering and guardrails: planning, human-in-the-loop, permissions, fault tolerance</a><ul>
+<li><a href="#the-problem_9">The problem</a></li>
+<li><a href="#101-planning-with-write_todos-opt-in">10.1 Planning with write_todos (opt-in)</a></li>
+<li><a href="#102-human-in-the-loop">10.2 Human-in-the-loop</a></li>
+<li><a href="#103-filesystem-permissions-deepagents191">10.3 Filesystem permissions (deepagents&gt;=1.9.1)</a></li>
+<li><a href="#104-fault-tolerance">10.4 Fault tolerance</a></li>
+<li><a href="#105-streaming">10.5 Streaming</a></li>
+<li><a href="#106-interpreters-optional">10.6 Interpreters (optional)</a></li>
+<li><a href="#next-problem_9">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#chapter-11-production-architecture">Chapter 11 — Production architecture</a><ul>
+<li><a href="#the-problem_10">The problem</a></li>
+<li><a href="#three-production-primitives">Three production primitives</a></li>
+<li><a href="#components-required-vs-optional">Components: required vs optional</a></li>
+<li><a href="#deployment-options-described-by-the-docs">Deployment options described by the docs</a></li>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#reference-aws-deployment-aws-docs-composition">Reference AWS deployment — [AWS docs] + Composition</a></li>
+<li><a href="#gotchas_5">Gotchas</a></li>
+<li><a href="#next">Next</a></li>
+</ul>
+</li>
+<li><a href="#chapter-12-the-complete-incidentscout">Chapter 12 — The complete IncidentScout</a><ul>
+<li><a href="#recap-what-each-concept-contributed">Recap: what each concept contributed</a></li>
+</ul>
+</li>
+<li><a href="#chapter-13-wiring-it-together-middleware-skills-and-multimodal-files">Chapter 13 — Wiring it together: middleware, skills, and multimodal files</a><ul>
+<li><a href="#the-problem_11">The problem</a></li>
+<li><a href="#two-corrections-found-while-running-it">Two corrections found while running it</a></li>
+<li><a href="#how-the-pieces-meet">How the pieces meet</a></li>
+<li><a href="#the-agent-srcincidentscoutts">The agent — src/incidentscout.ts</a></li>
+<li><a href="#calling-it">Calling it</a></li>
+<li><a href="#the-tests-testwiringtestts">The tests — test/wiring.test.ts</a></li>
+<li><a href="#gotchas_6">Gotchas</a></li>
+<li><a href="#next-problem_10">Next problem</a></li>
+</ul>
+</li>
+<li><a href="#glossary">Glossary</a></li>
+</ul>
+</div>
+</nav>
+<main>
+<h1 id="deep-agents-typescript-from-first-agent-to-production-on-aws">Deep Agents (TypeScript): From First Agent to Production on AWS</h1>
+<p>2026-09-26 · @Irfan Sofyana Putra</p>
+<p><em>Updated 2026-09-27: added Chapter 13 (verified wiring of middleware, skills and multimodal files) with corrections for <code>deepagents@1.14.1</code>.</em></p>
+<h2 id="how-to-read-this-guide">How to read this guide</h2>
+<p>This guide teaches LangChain <strong>Deep Agents for JavaScript/TypeScript</strong> (<code>deepagents</code> on npm) by building one agent, chapter by chapter, until it is a production service on AWS. Each chapter opens with a problem the previous version of the agent ran into, introduces the concept that fixes it, and closes with the next problem.</p>
+<p><strong>Running example: IncidentScout.</strong> An on-call assistant that investigates production incidents. It starts as a single tool call ("fetch logs for service X"), then learns to keep notes in files, remember past incidents across conversations (Postgres on Aurora), run analysis scripts in a sandbox, call observability tools over MCP, read dashboard screenshots, survive long investigations, split work across specialist subagents, and ask a human before it posts to the incident channel.</p>
+<p><strong>Source rules used throughout.</strong></p>
+<ul>
+<li>Every claim is sourced and every chapter ends with a <strong>Sources</strong> line. Official docs come first: docs.langchain.com (Deep Agents JS pages, plus the LangGraph/LangChain JS pages and the JS API reference they link to). Where the official docs are silent, the guide also draws on GitHub (<code>langchain-ai/deepagentsjs</code>, <code>langchain-ai/langchainjs</code>, <code>langchain-ai/langchain-aws</code>, community repos, open issues/PRs) and community blogs/tutorials — always named and linked, and always marked by kind: <strong>[GitHub]</strong> for an issue/PR/repo, <strong>[community]</strong> for a blog or tutorial. A claim that is my own synthesis rather than something a source states is marked <strong>Composition</strong>, and a claim I could not source anywhere, official or community, is marked <strong>Not covered anywhere I could find</strong>.</li>
+<li>AWS-specific deployment steps come from docs.aws.amazon.com and are marked with the label <strong>[AWS docs]</strong>. LangChain's Deep Agents docs do not describe deploying backends or sandboxes on AWS, so every AWS recipe here is an AWS-docs recipe, not a LangChain one.</li>
+<li>Where you asked about something the docs do not cover, the guide says <strong>Not covered in the docs</strong> instead of filling the gap.</li>
+<li>Glue code that combines documented APIs (for example wiring a documented Postgres checkpointer into a documented <code>createDeepAgent</code> parameter) is marked <strong>Composition</strong> so you know it is assembled from documented parts rather than copied from one page.</li>
+</ul>
+<p><strong>Versions.</strong> The docs reference feature gates such as <code>deepagents&gt;=1.9.1</code> (permissions, <code>Runtime</code>-based namespace factories), <code>&gt;=1.9.0</code> (multimodal backends, V2 backend protocol), <code>&gt;=1.8.4</code> (subagent structured output), and <code>&gt;=1.6.0</code> (current summarization). Starting in v0.7 task planning is opt-in. Pin a recent version and check the <a href="https://docs.langchain.com/oss/javascript/deepagents/changelog-js" target="_blank" rel="noopener">JS changelog</a> before upgrading.</p>
+<p><strong>Install for the whole guide.</strong></p>
+<pre><code class="language-bash">npm install deepagents langchain @langchain/core @langchain/langgraph zod
+npm install @langchain/aws                      # Bedrock models (Ch1+)
+npm install @langchain/langgraph-checkpoint-postgres  # Postgres checkpointer + store (Ch4+)
+npm install @langchain/mcp-adapters             # MCP tools (Ch6)
+</code></pre>
+<h3 id="what-the-docs-do-not-cover-read-this-first">What the docs do not cover (read this first)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>You asked about</th>
+<th>Status in the docs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deploying any backend on AWS</td>
+<td>Not covered. AWS steps in this guide come from AWS docs.</td>
+</tr>
+<tr>
+<td>Hosting LangSmith, Daytona, Deno, or Modal sandboxes on AWS</td>
+<td>Not covered. These are provider-managed services; the docs only show calling them from your agent.</td>
+</tr>
+<tr>
+<td>A JS integration for an AWS-hosted sandbox (the backends page mentions "AgentCore" among sandbox choices)</td>
+<td>No official JS backend exists. Python has one (<code>langchain-a``gent``c``ore``-codeinterpreter</code>, an official <code>AgentCoreSandbox</code>); a JS PR (<a href="https://github.com/langchain-ai/langchainjs/pull/11724" target="_blank" rel="noopener">langchainjs #11724</a> [GitHub]) adds AgentCore tools, not a <code>deepagents</code> sandbox backend. Ch5.6 builds one by hand from AWS's TypeScript SDK.</td>
+</tr>
+<tr>
+<td>A Postgres-backed sandbox</td>
+<td>No source, official or community, describes a sandbox backed by Postgres. Two documented pieces come close: Daytona can run Postgres <em>inside</em> a sandbox (Docker-in-Docker), and AgentCore/Modal can let a sandbox <em>reach</em> a real database over the network. Ch5.6–5.7 cover both, plus why IncidentScout keeps SQL out of the sandbox entirely.</td>
+</tr>
+<tr>
+<td>A Postgres-backed filesystem backend class</td>
+<td>Not covered as a built-in. Postgres reaches the filesystem through <code>StoreBackend</code> (via <code>PostgresStore</code>) and through <code>StateBackend</code> (via <code>PostgresSaver</code>).</td>
+</tr>
+<tr>
+<td>Self-hosting the agent server on your own AWS account</td>
+<td>The Deep Agents docs point to LangSmith Deployment (cloud, hybrid, self-hosted) and to framework guides; they do not give an AWS-specific recipe.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/overview" target="_blank" rel="noopener">Deep Agents overview</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/sandboxes" target="_blank" rel="noopener">Sandbox integrations</a></p>
+<h2 id="chapter-1-what-a-deep-agent-is-and-isnt">Chapter 1 — What a Deep Agent is (and isn't)</h2>
+<h3 id="the-problem">The problem</h3>
+<p>You already know the basic tool-calling loop: send messages plus tool schemas to an LLM, execute whatever tool calls come back, append the results, repeat until the model answers without calling a tool. That loop is fine for "what's the weather in Tokyo". It breaks down for an incident investigation, which is long, multi-step, produces huge intermediate outputs (log dumps), needs a plan, and may need delegation and human sign-off. You end up hand-building planning, scratch storage, context trimming, delegation, and approvals around the loop.</p>
+<h3 id="the-concept-an-agent-harness">The concept: an agent harness</h3>
+<p>The docs position LangChain's three packages as layers:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Package</th>
+<th>What it adds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runtime</td>
+<td>LangGraph</td>
+<td>Durable execution, streaming, human-in-the-loop, persistence</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>LangChain (<code>createAgent</code>)</td>
+<td>Abstractions: content blocks, the agent loop, middleware, integrations</td>
+</tr>
+<tr>
+<td>Harness</td>
+<td>Deep Agents (<code>createDeepAgent</code>)</td>
+<td>Predefined tools, prompts, subagents, filesystem, context management</td>
+</tr>
+</tbody>
+</table></div>
+<p>A Deep Agent is <strong>the same core tool-calling loop as other agent frameworks</strong>, with built-in capabilities layered on: a virtual filesystem, automatic summarization and offloading of large results, subagent spawning through a <code>task</code> tool, optional planning, skills, memory, human-in-the-loop, and prompt caching for Anthropic and Bedrock models. <code>deepagents</code> is built on LangChain's building blocks and uses LangGraph to run agents in production. If you want the loop without these capabilities, the docs point you to LangChain's <code>createAgent</code> or a custom LangGraph workflow.</p>
+<p>Analogy: <code>createAgent</code> is an engine; <code>createDeepAgent</code> is the engine already mounted in a car with a boot (filesystem), a sat-nav (planning), a crew (subagents), and a driver who can radio base for approval (HITL).</p>
+<h3 id="incidentscout-v1">IncidentScout v1</h3>
+<pre><code class="language-ts">// src/v1.ts — based on the Deep Agents quickstart (overview page)
+import * as z from "zod";
+import { createDeepAgent } from "deepagents";
+import { tool } from "langchain";
+
+// A plain LangChain tool: name + description + Zod schema.
+// The description tells the model WHEN to use it.
+const fetchLogs = tool(
+  async ({ service, minutes }) =&gt;
+    `[stub] last ${minutes}m of logs for ${service}: ERROR timeout calling payments-db ...`,
+  {
+    name: "fetch_logs",
+    description:
+      "Fetch recent error logs for one service. Use when investigating an incident.",
+    schema: z.object({
+      service: z.string().describe("Service name, e.g. checkout-api"),
+      minutes: z.number().default(15).describe("Look-back window in minutes"),
+    }),
+  },
+);
+
+const agent = createDeepAgent({
+  // provider:model string; the docs show "bedrock:..." for Amazon Bedrock Converse
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  tools: [fetchLogs],
+  systemPrompt: "You are IncidentScout, an on-call incident investigator.",
+});
+
+const result = await agent.invoke({
+  messages: [{ role: "user", content: "checkout-api is throwing 500s. What's going on?" }],
+});
+console.log(result.messages.at(-1)?.content);
+</code></pre>
+<p>Even this minimal agent already has more than <code>fetch_logs</code>: it can call <code>ls</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>glob</code>, <code>grep</code>, and <code>task</code> (delegate to the auto-added <code>general-purpose</code> subagent). You did not wire any of that.</p>
+<h3 id="gotchas">Gotchas</h3>
+<ul>
+<li><strong>Model strings.</strong> Use <code>provider:model</code> to switch models quickly, or pass an initialized chat model (for example <code>new ChatBedrockConverse({ model, region })</code>) when you need parameters. Bedrock credentials follow AWS's Bedrock getting-started setup, which the LangChain page links to.</li>
+<li><strong>Task planning is opt-in since v0.7.</strong> Older tutorials that expect a <code>write_todos</code> tool by default are out of date (Ch10).</li>
+<li><strong><code>await</code></strong><strong> or not.</strong> The docs show <code>createDeepAgent(...)</code> both with and without <code>await</code>; <code>invoke</code> is always async.</li>
+</ul>
+<h3 id="next-problem">Next problem</h3>
+<p>Our stub returns one line. Real log fetches return tens of thousands of tokens. Before we feed that into the loop, we need to understand what the loop actually is and where state lives.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/concepts/products" target="_blank" rel="noopener">Runtimes, frameworks, and harnesses</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/overview" target="_blank" rel="noopener">Deep Agents overview</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/customization" target="_blank" rel="noopener">Customize Deep Agents</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/tools" target="_blank" rel="noopener">Tools</a></p>
+<h2 id="chapter-2-architecture-the-loop-the-stack-and-where-state-lives">Chapter 2 — Architecture: the loop, the stack, and where state lives</h2>
+<h3 id="the-problem_1">The problem</h3>
+<p>IncidentScout v1 forgets everything between <code>invoke</code> calls, and we cannot tell <em>which</em> user is asking. Before adding features we need a mental model of what <code>createDeepAgent</code> actually builds.</p>
+<h3 id="the-loop">The loop</h3>
+<p>LangChain describes the core agent loop as two steps repeated until the model stops calling tools: <strong>(1) model call</strong> — the LLM gets the prompt and tool schemas and returns either an answer or tool-call requests; <strong>(2) tool execution</strong> — the requested tools run and their results are appended. <code>createAgent</code> compiles this loop into a <strong>LangGraph graph</strong>; middleware is not a separate runtime, its hooks run inside that compiled graph. <code>createDeepAgent</code> is that same loop with a pre-assembled middleware stack.</p>
+<pre class="mermaid">flowchart TD
+    IN([invoke: messages + config.thread_id + context]) --&gt; BA[beforeAgent hooks]
+    BA --&gt; BM[beforeModel hooks]
+    BM --&gt; WM[wrapModelCall hooks&lt;br/&gt;summarization, prompt caching]
+    WM --&gt; LLM[(Chat model)]
+    LLM --&gt; AM[afterModel hooks]
+    AM --&gt;|tool calls?| TC{any tool calls?}
+    TC --&gt;|yes| WT[wrapToolCall hooks&lt;br/&gt;HITL, logging, retries]
+    WT --&gt; TOOLS[Tools: yours + ls/read_file/.../task]
+    TOOLS --&gt; BM
+    TC --&gt;|no| AA[afterAgent hooks]
+    AA --&gt; OUT([final state: messages, files, ...])
+    CP[(Checkpointer)] -. saves state every step .- TOOLS
+</pre>
+<p>Middleware hooks (from the <code>AgentMiddleware</code> reference): <code>beforeAgent</code> and <code>afterAgent</code> run once per invocation; <code>beforeModel</code> / <code>afterModel</code> run around each model call; <code>wrapModelCall</code> and <code>wrapToolCall</code> wrap each individual model or tool call. Node-style hooks return partial state updates that are merged into agent state.</p>
+<h3 id="the-deep-agents-stack">The Deep Agents stack</h3>
+<p>With only a model, the main agent typically includes, in order: <code>FilesystemMiddleware</code> → <code>SubAgentMiddleware</code> (because the general-purpose subagent is auto-added) → <code>SummarizationMiddleware</code> → <code>PatchToolCallsMiddleware</code> → prompt caching (for supported providers) → harness-profile extras and excluded-tool filtering.</p>
+<p>The full order, adding optional slots as you pass parameters:</p>
+<ol>
+<li><code>SkillsMiddleware</code> (only with <code>skills</code>)</li>
+<li><code>FilesystemMiddleware</code> (permissions enforcement lives here when you pass <code>permissions</code>)</li>
+<li><code>SubAgentMiddleware</code> (when at least one synchronous subagent exists)</li>
+<li><code>SummarizationMiddleware</code></li>
+<li><code>PatchToolCallsMiddleware</code> (repairs dangling tool calls after interrupts/cancellation)</li>
+<li><code>AsyncSubAgentMiddleware</code> (only with async subagents)</li>
+<li><strong>Your </strong><strong><code>middleware</code></strong><strong> argument</strong></li>
+<li>Harness profile extras</li>
+<li>Excluded-tool filtering</li>
+<li>Prompt caching (<code>AnthropicPromptCachingMiddleware</code> / <code>BedrockPromptCachingMiddleware</code>)</li>
+<li><code>MemoryMiddleware</code> (only with <code>memory</code>; placed late so memory edits don't invalidate the cache prefix)</li>
+<li><code>HumanInTheLoopMiddleware</code> (only with <code>interruptOn</code>)</li>
+</ol>
+<p>You cannot remove <code>FilesystemMiddleware</code> or <code>SubAgentMiddleware</code> via <code>excluded_middleware</code>; the docs say that is intentionally rejected. Hide tools with a harness profile's <code>excluded_tools</code> instead.</p>
+<h3 id="how-state-flows">How state flows</h3>
+<p>Think of three separate channels:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>What it holds</th>
+<th>Lifetime</th>
+<th>How you pass it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Graph state</strong></td>
+<td><code>messages</code>, the <code>files</code> of the default filesystem, custom middleware state (and todos if you enable planning)</td>
+<td>One <strong>thread</strong>, persisted by a checkpointer</td>
+<td><code>invoke(input, { configurable: { thread_id } })</code></td>
+</tr>
+<tr>
+<td><strong>Runtime context</strong></td>
+<td>Per-run data: user id, org id, feature flags, API keys</td>
+<td>One run; propagates to subagents</td>
+<td><code>invoke(input, { context: {...} })</code>, typed by <code>contextSchema</code></td>
+</tr>
+<tr>
+<td><strong>Store</strong></td>
+<td>Long-term key/value data across threads</td>
+<td>Until you delete it</td>
+<td><code>store</code> parameter + <code>StoreBackend</code> (Ch4)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Runtime context is <strong>not</strong> automatically shown to the model; a tool, middleware, or dynamic prompt must read it. The final system prompt is assembled from: your <code>systemPrompt</code>, the base agent prompt, the memory prompt, the skills prompt, the filesystem prompt, the subagent (<code>task</code>) prompt, your middleware prompts, and the HITL prompt.</p>
+<h3 id="incidentscout-v2-threads-and-users">IncidentScout v2: threads and users</h3>
+<pre><code class="language-ts">// src/v2.ts — threads + runtime context (Going to production, Context engineering pages)
+import { createDeepAgent } from "deepagents";
+import { MemorySaver } from "@langchain/langgraph";
+import { tool } from "langchain";
+import type { ToolRuntime } from "@langchain/core/tools";
+import * as z from "zod";
+
+const contextSchema = z.object({ userId: z.string(), orgId: z.string() });
+
+const fetchLogs = tool(
+  async ({ service }, runtime: ToolRuntime&lt;unknown, typeof contextSchema&gt;) =&gt; {
+    // Tools read per-run context directly; the model never sees it unless you return it.
+    const org = runtime.context?.orgId;
+    return `[stub] logs for ${service} in org ${org}`;
+  },
+  { name: "fetch_logs", description: "Fetch recent error logs for a service.",
+    schema: z.object({ service: z.string() }) },
+);
+
+const agent = createDeepAgent({
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  tools: [fetchLogs],
+  contextSchema,
+  checkpointer: new MemorySaver(), // dev only: RAM, lost on restart (Ch4 swaps in Postgres)
+});
+
+const config = { configurable: { thread_id: crypto.randomUUID() } };
+const ctx = { userId: "u-42", orgId: "acme" };
+
+await agent.invoke({ messages: [{ role: "user", content: "Investigate checkout-api 500s" }] },
+  { ...config, context: ctx });
+// Same thread_id =&gt; same conversation, message history is restored from the checkpointer
+await agent.invoke({ messages: [{ role: "user", content: "Was it the DB?" }] },
+  { ...config, context: ctx });
+</code></pre>
+<h3 id="gotchas_1">Gotchas</h3>
+<ul>
+<li><strong><code>thread_id</code></strong><strong> and </strong><strong><code>context</code></strong><strong> are independent.</strong> One scopes the conversation; the other carries per-run data. Pass both on every production call.</li>
+<li><strong><code>MemorySaver</code></strong><strong> loses everything on restart.</strong> Use a persistent checkpointer (Postgres) in production.</li>
+<li><strong>Don't mutate variables captured by middleware.</strong> Subagents, parallel tools, and concurrent threads run at the same time; keep counters in graph state instead.</li>
+<li><strong>Checkpointer is required</strong> for human-in-the-loop and for skills/memory examples that rely on thread state.</li>
+</ul>
+<h3 id="next-problem_1">Next problem</h3>
+<p>Now <code>fetch_logs</code> returns real data — 60,000 tokens of it. Where should that go so it doesn't drown the conversation?</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/langchain/middleware/overview" target="_blank" rel="noopener">LangChain middleware overview</a>, <a href="https://docs.langchain.com/oss/javascript/langchain/context-engineering" target="_blank" rel="noopener">LangChain context engineering</a>, <a href="https://reference.langchain.com/javascript/interfaces/langchain.index.AgentMiddleware.html" target="_blank" rel="noopener">AgentMiddleware reference</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/customization" target="_blank" rel="noopener">Customize Deep Agents — Deep Agents stack</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/context-engineering" target="_blank" rel="noopener">Context engineering</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production</a>, <a href="https://docs.langchain.com/oss/javascript/langgraph/persistence" target="_blank" rel="noopener">Persistence</a></p>
+<h2 id="chapter-3-the-virtual-filesystem">Chapter 3 — The virtual filesystem</h2>
+<h3 id="the-problem_2">The problem</h3>
+<p>A real <code>fetch_logs</code> call returns a 60k-token dump. In a plain loop that dump sits in <code>messages</code> forever: every later model call pays for it, and a few such calls overflow the context window. The agent also has nowhere to keep a running hypothesis list or a draft postmortem except its own chat history.</p>
+<h3 id="the-concept">The concept</h3>
+<p>The harness gives every agent a <strong>virtual filesystem</strong>: a set of file tools that operate through a pluggable <em>backend</em> (Ch4). The model sees ordinary file operations; you decide where the bytes actually live.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ls</code></td>
+<td>List a directory with metadata (size, modified time)</td>
+</tr>
+<tr>
+<td><code>read_file</code></td>
+<td>Read with line numbers; <code>offset</code>/<code>limit</code> paging for large files; returns multimodal content blocks for images, audio, video, PDFs (Ch7)</td>
+</tr>
+<tr>
+<td><code>write_file</code></td>
+<td>Create new files</td>
+</tr>
+<tr>
+<td><code>edit_file</code></td>
+<td>Exact string replacement (with a replace-all mode)</td>
+</tr>
+<tr>
+<td><code>glob</code></td>
+<td>Find files by pattern, e.g. <code>**/*.py</code></td>
+</tr>
+<tr>
+<td><code>grep</code></td>
+<td>Search contents (files-only, content with context, or counts)</td>
+</tr>
+<tr>
+<td><code>execute</code></td>
+<td>Shell commands — <strong>only</strong> with sandbox backends (Ch5)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Why it exists: the filesystem is the substrate for several other harness features — skills, memory, code execution, and context management all read and write files. It lets the agent move bulk out of the conversation and pull fragments back with <code>read_file</code> and <code>grep</code> when needed.</p>
+<p><strong>Automatic offloading.</strong> When a tool <em>result</em> exceeds a token threshold (default 20,000), the harness writes it to the backend and replaces it in the conversation with a file-path reference plus a preview of the first 10 lines. When large tool <em>inputs</em> (for example the full content of a <code>write_file</code> call) are redundant because the content is already on disk, older ones are truncated to a pointer once context crosses 85% of the window. Internally the harness writes offloaded results under <code>/large_tool_results/</code> and conversation history under <code>/conversation_history/</code>.</p>
+<p>In the default setup (<code>StateBackend</code>) files live in graph state for the current thread and are checkpointed with it. That backend is also <strong>shared</strong> between the supervisor and its subagents: files a subagent writes remain visible to the supervisor after the subagent finishes.</p>
+<h3 id="incidentscout-v3-notes-on-disk-a-seeded-runbook">IncidentScout v3: notes on disk, a seeded runbook</h3>
+<pre><code class="language-ts">// src/v3.ts — seeding files uses the StateBackend pattern from the Customization page
+import { createDeepAgent, type FileData } from "deepagents";
+import { MemorySaver } from "@langchain/langgraph";
+
+function fileData(content: string): FileData {
+  const now = new Date().toISOString();
+  return { content, mimeType: "text/plain", created_at: now, modified_at: now };
+}
+
+const agent = createDeepAgent({
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  tools: [fetchLogs], // from Ch2; now returns large dumps
+  checkpointer: new MemorySaver(),
+  systemPrompt: `You are IncidentScout.
+Keep a running investigation log in /notes/timeline.md and hypotheses in /notes/hypotheses.md.
+When a tool result is saved to a file, use grep and read_file with offset/limit instead of re-fetching.
+Consult /runbooks/ before proposing remediation.`,
+});
+
+const config = { configurable: { thread_id: "inc-2026-0912" } };
+await agent.invoke(
+  {
+    messages: [{ role: "user", content: "checkout-api 500s since 09:12 UTC. Investigate." }],
+    // Seed the default StateBackend's filesystem; virtual paths must start with "/"
+    files: { "/runbooks/checkout-api.md": fileData("# checkout-api\n1. Check payments-db pool...") },
+  },
+  config,
+);
+</code></pre>
+<h3 id="gotchas_2">Gotchas</h3>
+<ul>
+<li><strong>StateBackend is checkpointed at every step,</strong> so avoid writing large files there in production (Going to production).</li>
+<li><strong>Calling </strong><strong><code>StateBackend</code></strong><strong> methods outside a graph run</strong> (for example uploading files from app code) won't take effect until the graph executes. Seed through the <code>files</code> input or use a different backend.</li>
+<li><strong>Offloading measures text tokens only.</strong> An image-only message is not offloaded by size (Ch7).</li>
+<li><strong>To hide the file tools</strong> (for example a read-only agent), use a harness profile's <code>excluded_tools</code>; unused tool schemas are otherwise sent on every turn.</li>
+</ul>
+<h3 id="next-problem_2">Next problem</h3>
+<p>Close the thread and the notes are gone. Tomorrow's incident on the same service starts from zero. We need storage that outlives a thread — and we need to choose where it physically lives.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/overview" target="_blank" rel="noopener">Deep Agents overview — Virtual filesystem</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/context-engineering" target="_blank" rel="noopener">Context engineering — Offloading</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends — StateBackend</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/customization" target="_blank" rel="noopener">Customize Deep Agents — Memory/Skills</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production — Filesystem</a></p>
+<h2 id="chapter-4-backends-deciding-where-files-actually-live">Chapter 4 — Backends: deciding where files actually live</h2>
+<h3 id="the-problem_3">The problem</h3>
+<p>IncidentScout's notes vanish with the thread, and in a multi-user service we also need to say <em>whose</em> data a file is. The filesystem tools are fine; the storage behind them is the problem.</p>
+<h3 id="the-concept_1">The concept</h3>
+<p>A <strong>backend</strong> implements the storage behind the file tools. You pass one instance to <code>createDeepAgent({ backend })</code>; if you omit it you get <code>new StateBackend()</code>. Backends implement <code>BackendProtocolV2</code> (<code>ls</code>, <code>read</code>, <code>readRaw</code>, <code>write</code>, <code>edit</code>, <code>glob</code>, <code>grep</code>, optionally <code>uploadFiles</code>/<code>downloadFiles</code>); sandbox backends add <code>execute</code>. V1 backends are auto-adapted.</p>
+<pre class="mermaid">graph LR
+    T[File tools] --&gt; B{Backend}
+    B --&gt; S[StateBackend&lt;br/&gt;thread state]
+    B --&gt; ST[StoreBackend&lt;br/&gt;LangGraph store]
+    B --&gt; FS[FilesystemBackend&lt;br/&gt;real disk]
+    B --&gt; LS[LocalShellBackend&lt;br/&gt;disk + host shell]
+    B --&gt; CH[ContextHubBackend&lt;br/&gt;LangSmith Hub repo]
+    B --&gt; SB[Sandbox backends&lt;br/&gt;+ execute tool]
+    B --&gt; C[CompositeBackend&lt;br/&gt;routes by path prefix]
+    B --&gt; X[Custom backend]
+    C --&gt; S
+    C --&gt; ST
+    C --&gt; FS
+    C --&gt; CH
+</pre>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>Scope</th>
+<th>Use it for</th>
+<th>Avoid it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>StateBackend</code> (default)</td>
+<td>One thread</td>
+<td>Scratch pad, offloaded tool results</td>
+<td>Large files in production (checkpointed every step)</td>
+</tr>
+<tr>
+<td><code>StoreBackend</code></td>
+<td>Across threads</td>
+<td>Long-term memory, instructions reused across runs</td>
+<td>Anything without a namespace in multi-user apps</td>
+</tr>
+<tr>
+<td><code>CompositeBackend</code></td>
+<td>Per route</td>
+<td>Mixing scratch + durable paths in one filesystem</td>
+<td>— (it's the usual production shape)</td>
+</tr>
+<tr>
+<td><code>FilesystemBackend</code></td>
+<td>Host disk</td>
+<td>Local CLIs, CI, mounted volumes</td>
+<td>Web servers/HTTP APIs, deployed agents</td>
+</tr>
+<tr>
+<td><code>LocalShellBackend</code></td>
+<td>Host disk + shell</td>
+<td>Trusted local dev tools</td>
+<td>Production, multi-tenant, untrusted input</td>
+</tr>
+<tr>
+<td><code>ContextHubBackend</code></td>
+<td>LangSmith Hub repo</td>
+<td>LangSmith-native durable files with commit history</td>
+<td>Non-UTF-8 files; high-concurrency writers</td>
+</tr>
+<tr>
+<td>Sandboxes (Ch5)</td>
+<td>Isolated environment</td>
+<td>Running code</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Custom</td>
+<td>Your storage</td>
+<td>Databases, object stores, remote filesystems</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="41-statebackend-default-made-durable-with-postgres">4.1 StateBackend (default) — made durable with Postgres</h3>
+<p>Files live in LangGraph state for the current thread and persist across turns <strong>via your checkpointer</strong>. So "deploying StateBackend" really means deploying a persistent checkpointer. The LangGraph docs name <code>PostgresSaver</code> as the production choice.</p>
+<pre><code class="language-ts">// src/persistence.ts — Composition: PostgresSaver API (LangGraph JS reference) + createDeepAgent checkpointer param
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+
+export const checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL!, {
+  schema: "agent_checkpoints", // optional; defaults to "public"
+});
+await checkpointer.setup(); // MUST be called the first time (creates tables/migrations)
+</code></pre>
+<pre><code class="language-ts">import { createDeepAgent, StateBackend } from "deepagents";
+import { checkpointer } from "./persistence";
+
+const agent = createDeepAgent({
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  backend: new StateBackend(), // same as omitting it
+  checkpointer,               // thread state (messages + files) now survives restarts
+});
+</code></pre>
+<p><strong>When:</strong> per-conversation scratch space; the target of automatic offloading. <strong>When not:</strong> data another thread must read; big binary artifacts.</p>
+<p><strong>Gotchas:</strong> keep <code>thread_id</code> under 255 characters with <code>PostgresSaver</code> (use a UUID or hash); checkpoints grow over long conversations, so prune periodically; files written by subagents stay in state after they finish.</p>
+<h3 id="42-storebackend-cross-thread-storage-on-postgres">4.2 StoreBackend — cross-thread storage on Postgres</h3>
+<p><code>StoreBackend</code> stores files in a LangGraph <code>BaseStore</code>. Locally you use <code>InMemoryStore</code>; the docs list a PostgreSQL store in <code>@langchain/langgraph-checkpoint-postgres/store</code>.</p>
+<pre><code class="language-ts">// Composition: PostgresStore (LangChain long-term memory page + API reference) + StoreBackend (Backends page)
+import { createDeepAgent, StoreBackend } from "deepagents";
+import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
+
+export const store = PostgresStore.fromConnString(process.env.DATABASE_URL!, {
+  schema: "agent_store", // optional; PostgresStoreConfig also has ttl, index (pgvector), ensureTables
+});
+await store.setup();
+
+const agent = createDeepAgent({
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  backend: new StoreBackend({
+    // Namespace factory: receives a LangGraph Runtime, returns a tuple of strings
+    namespace: (rt) =&gt; [rt.context.orgId, rt.context.userId, "filesystem"],
+  }),
+  store,
+  contextSchema, // from Ch2: { userId, orgId }
+});
+</code></pre>
+<p><strong>Namespace factories</strong> control isolation. The <code>Runtime</code> exposes <code>rt.context</code> (your context schema), <code>rt.serverInfo</code> (assistant id, graph id, authenticated user — <strong>only when running on LangGraph Server / LangSmith Deployment</strong>), and <code>rt.executionInfo</code> (thread id, run id, checkpoint id). Documented patterns: per-user <code>[rt.serverInfo.user.identity]</code>, per-assistant <code>[rt.serverInfo.assistantId]</code>, per-thread <code>[rt.executionInfo.threadId]</code>, per-org <code>[rt.context.orgId]</code>.</p>
+<p><strong>When:</strong> you already run a LangGraph store (Postgres, Redis, etc.), or you deploy on LangSmith (store provisioned automatically — omit <code>store</code> there). <strong>When not:</strong> without a namespace in multi-user apps — the legacy default namespaces by assistant id, so all users of one assistant share files.</p>
+<p><strong>Gotchas:</strong></p>
+<ul>
+<li>If you self-host on your own <strong>LangGraph Server</strong> (not LangSmith Cloud), <code>rt.serverInfo</code> is still populated once requests go through the Agent Protocol — the docs' own namespace examples default to <code>rt.serverInfo.user.identity</code> / <code>rt.serverInfo.assistantId</code> (<code>deepagents&gt;=1.9.0</code>; older versions read <code>getConfig().metadata.assistantId</code> instead). Building namespaces from <code>rt.context</code> instead, as this guide does, is for when you call <code>agent.invoke</code> directly from your own process — no LangGraph Server in front of it — which is exactly IncidentScout's ECS setup in Ch11.</li>
+<li>Namespace components allow only alphanumerics, <code>-</code>, <code>_</code>, <code>.</code>, <code>@</code>, <code>+</code>, <code>:</code>, <code>~</code>; wildcards are rejected.</li>
+<li>The docs warn <code>namespace</code> will be required; always set it.</li>
+<li>Namespace factories receive <code>Runtime</code> in <code>deepagents&gt;=1.9.1</code>; older <code>BackendContext</code> accessors (<code>ctx.runtime</code>, <code>ctx.state</code>) are deprecated.</li>
+</ul>
+<h3 id="43-compositebackend-incidentscout-v4">4.3 CompositeBackend — IncidentScout v4</h3>
+<p><code>CompositeBackend(default, routes)</code> routes operations by path prefix; listings and search aggregate and keep original prefixes; the longest prefix wins. The docs recommend <code>StateBackend</code> as the default so internal artifacts (offloaded results, conversation history) stay ephemeral.</p>
+<pre><code class="language-ts">// src/v4.ts — thread scratch + durable, per-user incident memory on Postgres
+import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend } from "deepagents";
+import { checkpointer } from "./persistence";
+import { store } from "./store";
+
+export const backend = new CompositeBackend(new StateBackend(), {
+  // /memories/ = what this user's team learned from past incidents
+  "/memories/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "memories"] }),
+  // /runbooks/ = org-wide, written by app code only (made read-only in Ch10)
+  "/runbooks/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "runbooks"] }),
+});
+
+export const agent = createDeepAgent({
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  tools: [fetchLogs],
+  backend,
+  store,
+  checkpointer,
+  contextSchema,
+  systemPrompt: `You are IncidentScout.
+Scratch notes go in /notes/. At the start of an investigation read /memories/incidents.md.
+When you learn a durable fact (root cause, fix, flaky dependency), append it to /memories/incidents.md.`,
+});
+</code></pre>
+<h3 id="44-filesystembackend-local-disk">4.4 FilesystemBackend (local disk)</h3>
+<pre><code class="language-ts">import { createDeepAgent, CompositeBackend, FilesystemBackend, StateBackend } from "deepagents";
+
+// Recommended wrapping: project files on disk, internal agent data in ephemeral state
+const agent = createDeepAgent({
+  backend: new CompositeBackend(new StateBackend(), {
+    "/workspace/": new FilesystemBackend({ rootDir: "/srv/incident-reports", virtualMode: true }),
+  }),
+});
+</code></pre>
+<p><strong>When:</strong> local dev CLIs, CI pipelines, mounted persistent volumes. <strong>When not:</strong> web servers or HTTP APIs, and the production page says not to use it in deployed agents. <strong>Security:</strong> agents can read any accessible file including <code>.env</code>; combined with network tools that enables exfiltration; writes are irreversible. Always set <code>virtualMode: true</code> with <code>rootDir</code> (blocks <code>..</code>, <code>~</code>, and absolute paths outside root) — without it <code>rootDir</code> provides no security. <code>rootDir</code> must be absolute.</p>
+<h3 id="45-localshellbackend-local-shell">4.5 LocalShellBackend (local shell)</h3>
+<pre><code class="language-ts">import { createDeepAgent, LocalShellBackend } from "deepagents";
+const agent = createDeepAgent({ backend: new LocalShellBackend({ workingDirectory: "." }) });
+</code></pre>
+<p>Extends <code>FilesystemBackend</code> with <code>execute</code> running directly on the host (default timeout 120s, output capped at 100,000 bytes, configurable env). <strong>When:</strong> trusted local coding tools. <strong>When not:</strong> production, multi-tenant, or untrusted input — commands run with your user's permissions and <code>virtualMode</code> provides no protection once a shell exists. Pair with HITL if you use it at all.</p>
+<h3 id="46-contexthubbackend">4.6 ContextHubBackend</h3>
+<p>Stores the agent's filesystem in a LangSmith Context Hub repo (needs <code>LANGSMITH_API_KEY</code>). The agent repo mounts at <code>/</code>; linked skill repos appear under <code>/skills/</code>. Reads come from a lazily pulled in-memory cache; writes become Hub commits with optimistic parent-commit checks — a concurrent writer can make your write fail, so re-pull and retry. <code>uploadFiles()</code> accepts UTF-8 text only. The JS page shows this backend only in its quick-reference table (<code>ContextHubBackend("my-agent")</code>); check the <a href="https://reference.langchain.com/javascript/modules/deepagents.html" target="_blank" rel="noopener"><code>deepagents</code></a><a href="https://reference.langchain.com/javascript/modules/deepagents.html" target="_blank" rel="noopener"> API reference</a> for the exact JS constructor.</p>
+<h3 id="47-custom-backends-and-policy-hooks">4.7 Custom backends and policy hooks</h3>
+<p>Implement <code>BackendProtocolV2</code> (or <code>SandboxBackendProtocol</code> for <code>execute</code>). Methods must return result objects with an optional <code>error</code> field and must not throw for missing files or bad patterns. The docs provide an <strong>S3-style skeleton</strong> that maps paths to object keys, and two policy patterns: subclass <code>FilesystemBackend</code> to block writes under prefixes, or wrap any backend in a <code>PolicyWrapper</code> that denies <code>write</code>/<code>edit</code> for listed prefixes (audit logging, rate limits, content inspection go here too).</p>
+<pre><code class="language-ts">// Abbreviated from the Backends page — fill each method with your storage client
+class S3Backend implements BackendProtocolV2 {
+  constructor(private bucket: string, private prefix = "") {}
+  async ls(path: string): Promise&lt;LsResult&gt; { /* list keys under prefix+path */ }
+  async read(filePath: string, offset?: number, limit?: number): Promise&lt;ReadResult&gt; { /* ... */ }
+  async readRaw(filePath: string): Promise&lt;ReadRawResult&gt; { /* ... */ }
+  async grep(pattern: string, path?: string | null, glob?: string | null): Promise&lt;GrepResult&gt; { /* ... */ }
+  async glob(pattern: string, path = "/"): Promise&lt;GlobResult&gt; { /* ... */ }
+  async write(filePath: string, content: string): Promise&lt;WriteResult&gt; { /* create-only */ }
+  async edit(filePath: string, oldString: string, newString: string, replaceAll?: boolean): Promise&lt;EditResult&gt; { /* ... */ }
+}
+</code></pre>
+<p><strong>Not covered in the docs:</strong> a finished S3 implementation or its IAM/bucket setup.</p>
+<h3 id="48-deploying-backends-on-aws-aws-docs">4.8 Deploying backends on AWS — [AWS docs]</h3>
+<p>LangChain's Deep Agents docs do not describe AWS deployment. The mapping below uses only AWS documentation for the AWS parts.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>What runs on AWS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>StateBackend</code></td>
+<td>Nothing extra — durability comes from <code>PostgresSaver</code> on Aurora/RDS PostgreSQL</td>
+</tr>
+<tr>
+<td><code>StoreBackend</code></td>
+<td><code>PostgresStore</code> on the same Aurora/RDS PostgreSQL cluster (separate schema)</td>
+</tr>
+<tr>
+<td><code>CompositeBackend</code></td>
+<td>Both of the above</td>
+</tr>
+<tr>
+<td><code>FilesystemBackend</code></td>
+<td>Not for deployed agents (LangChain). If you run it in a trusted internal worker, an Amazon EFS volume mounted into the ECS task is the AWS way to get persistent shared disk</td>
+</tr>
+<tr>
+<td><code>LocalShellBackend</code></td>
+<td>Do not deploy (LangChain)</td>
+</tr>
+<tr>
+<td><code>ContextHubBackend</code></td>
+<td>Nothing to host; your task needs outbound HTTPS to LangSmith and <code>LANGSMITH_API_KEY</code> from Secrets Manager</td>
+</tr>
+<tr>
+<td>Custom (S3)</td>
+<td>Not covered</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Aurora PostgreSQL for the checkpointer and store [AWS docs]</strong></p>
+<ol>
+<li>Create a <strong>private</strong> Aurora PostgreSQL DB cluster inside a VPC. AWS's getting-started tutorial uses <em>Easy create</em> (you choose only engine, instance size, cluster identifier); choose <em>Standard create</em> when you need availability, security, backup, and maintenance options. Resources in the same VPC can reach the cluster; resources outside the VPC can't.</li>
+<li>Run the agent service (for example an ECS task, Ch11) in that VPC so it can reach the cluster.</li>
+<li>Store the database credentials in AWS Secrets Manager and reference them in the ECS task definition's <code>secrets</code> (not <code>environment</code>). On Fargate, injecting a specific JSON key of a secret needs platform version 1.4.0 or later; the task execution role needs Secrets Manager permissions.</li>
+<li>Injected secrets are read at container start. After rotating a secret, launch a new task (or update the service with <strong>Force new deployment</strong>) to pick it up.</li>
+<li>Build <code>DATABASE_URL</code> from the injected values at startup and call <code>checkpointer.setup()</code> / <code>store.setup()</code> once.</li>
+</ol>
+<p><strong>Composition note:</strong> the LangChain Postgres packages take a PostgreSQL connection string (node-postgres underneath). Nothing in the LangChain docs is specific to Aurora vs RDS for PostgreSQL; either works as long as the connection string reaches it.</p>
+<p><strong>Amazon EFS for </strong><strong><code>FilesystemBackend</code></strong><strong> [AWS docs]:</strong> EFS volumes on Fargate need platform version 1.4.0+; Fargate adds a small supervisor container that uses some task memory/CPU; EFS access points give application-specific entry points into the file system.</p>
+<h3 id="next-problem_3">Next problem</h3>
+<p>IncidentScout can now remember past incidents, but it can only <em>read</em> logs. To confirm a hypothesis it needs to run a script against a log dump — and we just said no host shells in production.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production</a>, <a href="https://docs.langchain.com/oss/javascript/langgraph/persistence" target="_blank" rel="noopener">Persistence</a>, <a href="https://docs.langchain.com/oss/javascript/langchain/long-term-memory" target="_blank" rel="noopener">LangChain long-term memory</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/long-term-memory" target="_blank" rel="noopener">Store integrations</a>, <a href="https://reference.langchain.com/javascript/langchain-langgraph-checkpoint-postgres/index/PostgresSaver" target="_blank" rel="noopener">PostgresSaver reference</a>, <a href="https://reference.langchain.com/javascript/langchain-langgraph-checkpoint-postgres/store/PostgresStoreConfig" target="_blank" rel="noopener">PostgresStoreConfig reference</a>. [AWS docs]: <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_GettingStartedAurora.AuroraPostgreSQL.FullConfig.html" target="_blank" rel="noopener">Aurora PostgreSQL getting started</a>, <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/secrets-envvar-secrets-manager.html" target="_blank" rel="noopener">ECS secrets from Secrets Manager</a>, <a href="https://docs.aws.amazon.com/AmazonECS/latest/userguide/efs-volumes.html" target="_blank" rel="noopener">EFS volumes with ECS</a></p>
+<h2 id="chapter-5-sandboxes-letting-the-agent-run-code-safely">Chapter 5 — Sandboxes: letting the agent run code safely</h2>
+<h3 id="the-problem_4">The problem</h3>
+<p>IncidentScout suspects a connection-pool leak and wants to run a quick Python script over a 2 GB log export to count timeouts per minute. <code>LocalShellBackend</code> would do it — on your production host, with your credentials in reach. Not acceptable.</p>
+<h3 id="the-concept_2">The concept</h3>
+<p>In Deep Agents, <strong>sandboxes are backends</strong>. A sandbox backend gives the agent all the normal file tools <strong>plus </strong><strong><code>execute</code></strong>, and everything happens inside an isolated environment. The only method a provider must implement is <code>execute()</code>; the <code>BaseSandbox</code> base class builds <code>read</code>/<code>write</code>/<code>edit</code>/<code>ls</code>/<code>glob</code>/<code>grep</code> on top of it by running scripts inside the sandbox. On every model call the harness checks whether the backend implements <code>SandboxBackendProtocol</code>; if not, <code>execute</code> is filtered out and the model never sees it.</p>
+<pre class="mermaid">graph LR
+    subgraph Your service
+      APP[App code] -- uploadFiles / downloadFiles&lt;br/&gt;provider API --&gt; SBX
+      AG[Agent loop] -- read_file, write_file, execute&lt;br/&gt;via execute() --&gt; SBX
+    end
+    subgraph SBX[Sandbox]
+      FS[(Filesystem)]
+      SH[Shell + deps]
+    end
+</pre>
+<p><strong>Two planes of file access.</strong> The agent's tools go through <code>execute()</code> inside the sandbox. Your application code uses <code>uploadFiles()</code> / <code>downloadFiles()</code> (provider-native transfer APIs) to seed inputs before a run and retrieve artifacts after. Large <code>execute</code> output is automatically saved to a file and the agent is told to page through it with <code>read_file</code>.</p>
+<p><strong>Integration patterns.</strong> <em>Agent in sandbox</em> (image with your agent inside; API keys must live in the sandbox; rebuild to update) vs <strong>sandbox as tool</strong> (agent runs on your server and calls the sandbox API; keys stay outside; sandbox failures don't lose agent state; pay per execution; adds network latency). All doc examples, and this guide, use sandbox-as-tool.</p>
+<p><strong>Lifecycle.</strong> Pick <strong>thread-scoped</strong> (fresh sandbox per conversation, reused across its turns, removed by TTL — the common case) or <strong>assistant-scoped</strong> (one shared sandbox; repo clones and installed packages persist, so you must add TTLs, snapshots, or cleanup). Sandboxes cost money until shut down.</p>
+<h3 id="51-langsmith-sandboxes-first-party">5.1 LangSmith sandboxes (first-party)</h3>
+<pre><code class="language-ts">// IncidentScout v5 — thread-scoped sandbox via an async graph factory (Going to production)
+import { createDeepAgent, LangSmithSandbox } from "deepagents";
+import { SandboxClient } from "langsmith/sandbox";
+import type { LangGraphRunnableConfig } from "@langchain/langgraph";
+
+const client = new SandboxClient();
+
+export async function agent(config: LangGraphRunnableConfig) {
+  const threadId = config.configurable?.thread_id as string;
+  const name = `thread-${threadId}`;
+  // Named lookup de-duplicates across runs of the same thread
+  const existing = (await client.listSandboxes()).filter((sb) =&gt; sb.name === name);
+  const sandbox = existing[0] ?? (await client.createSandbox({ name, idleTtlSeconds: 3600 }));
+  return createDeepAgent({
+    model: "bedrock:anthropic.claude-sonnet-4-6",
+    backend: new LangSmithSandbox({ sandbox }),
+  });
+}
+</code></pre>
+<p>A graph factory is an async function the server calls per run with the run config; it doesn't get a full <code>Runtime</code>, so read <code>thread_id</code> / <code>assistant_id</code> from <code>config.configurable</code>. For one-off scripts, create the sandbox, run, and <code>client.deleteSandbox(sandbox.name)</code> in <code>finally</code>. <strong>When:</strong> you want managed sandboxes without a third-party account, plus LangSmith snapshots, service URLs, and the <strong>auth proxy</strong> that injects credentials into outbound requests so secrets never enter the sandbox.</p>
+<h3 id="52-daytona-langchaindaytona">5.2 Daytona (<code>@langchain/daytona</code>)</h3>
+<pre><code class="language-ts">import { DaytonaSandbox } from "@langchain/daytona";
+const sandbox = await DaytonaSandbox.create({ language: "typescript", timeout: 300, autoStopInterval: 15 });
+try {
+  const agent = createDeepAgent({ model, backend: sandbox });
+  await agent.invoke({ messages: [{ role: "user", content: "Parse /data/app.log and count timeouts/minute" }] });
+} finally {
+  await sandbox.close(); // delete permanently; stop()/start() pause and resume
+}
+</code></pre>
+<p>Fast cold starts, TypeScript/Python/JavaScript runtimes, custom images (<code>image</code>) or <code>snapshot</code>, CPU/memory/disk via <code>resources</code> (requires <code>image</code>), regions <code>us</code>/<code>eu</code>, <code>initialFiles</code>, reconnect with <code>DaytonaSandbox.connect(id)</code>. Auth: <code>DAYTONA_API_KEY</code>. <strong>When:</strong> general coding and data work with quick startup and git-style workflows.</p>
+<h3 id="53-deno-langchaindeno">5.3 Deno (<code>@langchain/deno</code>)</h3>
+<pre><code class="language-ts">import { DenoSandbox } from "@langchain/deno";
+const sandbox = await DenoSandbox.create({ memoryMb: 1024, lifetime: "10m" });
+</code></pre>
+<p>Linux microVMs; 768–4096 MB memory, 10 GB disk, 2 vCPU, working dir <code>/home/app</code>, <strong>full network access by default</strong>; regions <code>ams</code>/<code>ord</code>. <code>lifetime: "session"</code> ends on close; a duration lifetime is required to reconnect later. The SDK can expose HTTP/SSH ports. Auth: <code>DENO_DEPLOY_TOKEN</code>. <strong>When:</strong> Deno/JavaScript workloads.</p>
+<h3 id="54-modal-langchainmodal">5.4 Modal (<code>@langchain/modal</code>)</h3>
+<pre><code class="language-ts">import { ModalSandbox } from "@langchain/modal";
+const sandbox = await ModalSandbox.create({
+  imageName: "python:3.12-slim",
+  timeoutMs: 600_000,
+  blockNetwork: true, // cut the exfiltration path when the task needs no network
+});
+</code></pre>
+<p>Serverless containers with GPUs (<code>T4</code>, <code>L4</code>, <code>A10G</code>, <code>A100</code>, <code>H100</code>), volumes for persistence, Modal secrets, <code>initialFiles</code>, <code>blockNetwork</code>. Auth: <code>MODAL_TOKEN_ID</code> / <code>MODAL_TOKEN_SECRET</code>. <strong>When:</strong> ML/AI and Python-heavy work.</p>
+<h3 id="55-node-vfs-langchainnode-vfs">5.5 Node VFS (<code>@langchain/node-vfs</code>)</h3>
+<pre><code class="language-ts">import { VfsSandbox } from "@langchain/node-vfs";
+const sandbox = await VfsSandbox.create({ initialFiles: { "/src/index.js": "console.log('hi')" } });
+// ... agent run ...
+await sandbox.stop();
+</code></pre>
+<p>Runs locally with an in-memory VFS; commands sync files to a temp dir, run, and sync back. No auth, no cloud. <strong>When:</strong> local dev, tests, CI without Docker. <strong>When not:</strong> production (no true container isolation, no resource limits, no persistence).</p>
+<h3 id="56-bedrock-agentcore-build-your-own-no-official-js-backend-yet">5.6 Bedrock AgentCore — build-your-own (no official JS backend yet)</h3>
+<p>The backends page mentions "AgentCore" in passing, but the JS sandbox integrations page lists only LangSmith, Deno, Daytona, Modal, Leap0 and Kubernetes — <strong>AgentCore is not among them</strong>. There is no official <code>deepagents</code> JS AgentCore backend as of this writing.</p>
+<p><strong>What exists instead.</strong> Python has an official one: <code>langchain-agentcore-codeinterpreter</code> provides <code>AgentCoreSandbox</code>, a <code>SandboxBackendProtocol</code> implementation wrapping AgentCore's Code Interpreter ("a secure, isolated MicroVM environment"). (<a href="https://pypi.org/project/langchain-agentcore-codeinterpreter/" target="_blank" rel="noopener">PyPI</a>, <a href="https://docs.langchain.com/oss/python/integrations/sandboxes/aws" target="_blank" rel="noopener">LangChain Python integration page</a>)</p>
+<pre><code class="language-python"># Python reference implementation — from the PyPI package README
+from bedrock_agentcore.tools.code_interpreter_client import CodeInterpreter
+from deepagents import create_deep_agent
+from langchain_agentcore_codeinterpreter import AgentCoreSandbox
+
+interpreter = CodeInterpreter(region="us-west-2")
+interpreter.start()
+backend = AgentCoreSandbox(interpreter=interpreter)
+agent = create_deep_agent(model=model, backend=backend)
+try:
+    agent.invoke({"messages": [...]})
+finally:
+    interpreter.stop()  # sessions cannot be reconnected after stop()
+</code></pre>
+<p><strong>On the JS side, a pull request is open but incomplete for this purpose.</strong> <a href="https://github.com/langchain-ai/langchainjs/pull/11724" target="_blank" rel="noopener">langchainjs PR #11724</a> [GitHub] (opened Sep 24, 2026, still open) adds a <code>CodeInterpreterToolkit</code> to <code>@langchain/aws</code> — 11 LangChain <strong>tools</strong> (<code>execute_code</code>, <code>read_files</code>, <code>write_files</code>, etc.), one sandbox session per <code>thread_id</code>. This gives a JS agent AgentCore <em>tools</em>, not the <code>deepagents</code> <code>execute</code> tool or sandbox-backed filesystem tools. No deepagentsjs issue requesting a real backend turned up in search.</p>
+<p><strong>Building one by hand is realistic.</strong> The JS sandboxes page says a backend needs only <code>execute()</code> — <code>BaseSandbox</code> builds the rest. AWS ships a TypeScript SDK, <code>bedrock-agentcore</code>, whose <code>CodeInterpreter</code> class exposes <code>executeCode</code>, <code>executeCommand</code>, <code>readFiles</code>, <code>writeFiles</code>, <code>listFiles</code>, <code>removeFiles</code>, <code>startSession</code>/<code>stopSession</code> (<a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-typescript-sdk-reference.html" target="_blank" rel="noopener">AWS TypeScript SDK reference</a>) — but these return plain strings, not <code>{stdout, stderr, exitCode}</code>. The lower-level <code>@aws-sdk/client-bedrock-agentcore</code> (AWS SDK v3) exposes <code>InvokeCodeInterpreterCommand</code> directly against the <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeCodeInterpreter.html" target="_blank" rel="noopener"><code>InvokeCodeInterpreter</code></a><a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeCodeInterpreter.html" target="_blank" rel="noopener"> API</a>, which is the better fit for a real exit code. <strong>Composition</strong> — outline only, untested, not from any source:</p>
+<pre><code class="language-ts">// Design sketch: subclass BaseSandbox, drive it with the low-level AWS SDK v3 client.
+// Verify BaseSandbox's exact method/type names against reference.langchain.com/javascript/deepagents
+// before relying on this — it has not been run.
+import { BedrockAgentCoreClient, InvokeCodeInterpreterCommand,
+         StartCodeInterpreterSessionCommand, StopCodeInterpreterSessionCommand } from "@aws-sdk/client-bedrock-agentcore";
+
+class AgentCoreSandboxJS extends BaseSandbox {
+  private client = new BedrockAgentCoreClient({ region: "us-east-1" });
+  private sessionId?: string;
+  async start() {
+    const { sessionId } = await this.client.send(new StartCodeInterpreterSessionCommand({
+      codeInterpreterIdentifier: "&lt;your-vpc-mode-interpreter-arn&gt;", sessionTimeoutSeconds: 1800 }));
+    this.sessionId = sessionId;
+  }
+  async execute(command: string) {
+    const res = await this.client.send(new InvokeCodeInterpreterCommand({
+      codeInterpreterIdentifier: "&lt;same-arn&gt;", sessionId: this.sessionId,
+      name: "executeCommand", arguments: { command } }));
+    // drain res.stream, map stdout/stderr/exit code into the BaseSandbox result shape
+  }
+  async stop() { await this.client.send(new StopCodeInterpreterSessionCommand({ sessionId: this.sessionId! })); }
+}
+</code></pre>
+<p><strong>Resource setup [AWS docs].</strong> A code interpreter is a named resource, created with <code>networkMode: "PUBLIC"|"SANDBOX"|"VPC"</code>; VPC mode takes <code>vpcConfig.securityGroups</code> / <code>vpcConfig.subnets</code> and is the only mode that can reach a private Aurora instance. (<a href="https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/create-code-interpreter.html" target="_blank" rel="noopener"><code>create-code-interpreter</code></a><a href="https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/create-code-interpreter.html" target="_blank" rel="noopener"> CLI reference</a>) Sessions default to a 900-second timeout, max 28,800 (8 hours) (<a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-management.html" target="_blank" rel="noopener">resource management</a>), and cannot be reconnected once stopped — stop it in a <code>finally</code> and start a fresh one for the next thread. Required IAM action: <code>bedrock-agentcore:InvokeCodeInterpreter</code>.</p>
+<p><strong>Pricing [AWS docs].</strong> Billed per second, by vCPU-hour and GB-hour, with a 1-second minimum and a 128MB memory floor; AWS's own worked example puts 30,000 two-minute executions a month at about $109/month. (<a href="https://aws.amazon.com/bedrock/agentcore/pricing/" target="_blank" rel="noopener">AgentCore pricing</a>)</p>
+<p><strong>Security — read before choosing a network mode.</strong> Independent security research (Unit 42, BeyondTrust, Sonrai Security, Nov 2025–Apr 2026) found that Sandbox mode allowed DNS-based data exfiltration, and that the microVM's instance-metadata service (MMDS) lacked session-token enforcement, letting sandboxed code extract the execution role's credentials — a risk that persists in VPC mode too, unless Route 53 Resolver DNS Firewall is attached. A retest in Apr 2026 found VPC mode without that firewall "still vulnerable." <strong>[community]</strong>, dated and disputed on exact timeline between sources: <a href="https://unit42.paloaltonetworks.com/bypass-of-aws-sandbox-network-isolation-mode/" target="_blank" rel="noopener">Unit 42</a>, <a href="https://www.beyondtrust.com/blog/entry/pwning-aws-agentcore-code-interpreter" target="_blank" rel="noopener">BeyondTrust</a>, <a href="https://haitmg.pl/blog/aws-bedrock-agentcore-network-modes/" target="_blank" rel="noopener">haitmg.pl retest</a>. Treat any AgentCore sandbox as able to leak whatever it can reach on the network, credentials included, until you've attached DNS Firewall and reviewed IAM scope on the execution role.</p>
+<h3 id="57-community-providers">5.7 Community providers</h3>
+<p>The JS sandbox integrations page also links <strong>Leap0</strong> and a community <strong>Kubernetes</strong> sandbox hosted outside docs.langchain.com. <strong>Not covered in the docs</strong> beyond the links.</p>
+<h3 id="security-considerations-all-providers">Security considerations (all providers)</h3>
+<ul>
+<li>Sandboxes protect your <strong>host</strong>; they do <strong>not</strong> protect against <strong>context injection</strong>. Anyone who controls part of the input can make the agent run arbitrary commands inside the sandbox.</li>
+<li><strong>Never put secrets in a sandbox</strong> (env vars, mounted files, the <code>secrets</code> option). Keep authenticated calls in <strong>tools that run outside the sandbox</strong>, or use a credential-injecting proxy (LangSmith auth proxy).</li>
+<li><strong>Block network</strong> when not needed (Modal <code>blockNetwork: true</code>); Deno has full network by default.</li>
+<li><strong>Filesystem permissions do not apply to sandboxes</strong>; with a sandbox as the Composite default, every permission path must sit under a named route.</li>
+<li>Treat everything produced in the sandbox as untrusted; review outputs; use middleware to redact sensitive patterns.</li>
+<li>If you must inject secrets anyway: HITL on <strong>all</strong> tool calls, restrict network, narrowest scope, shortest lifetime, monitor egress — and the docs still call it unsafe.</li>
+</ul>
+<h3 id="58-sandboxes-and-postgres-whats-actually-documented">5.8 Sandboxes and Postgres: what's actually documented</h3>
+<p>No source — official or community — describes Postgres itself as a sandbox backend. Widening the search to GitHub and blogs doesn't change that; what exists instead are two different, narrower patterns depending on whether the code needs Postgres <em>running inside</em> the sandbox or just <em>reachable from</em> it.</p>
+<p><strong>Postgres inside the sandbox (Daytona, documented).</strong> Daytona sandboxes "can run Docker containers inside them (Docker-in-Docker)… Run databases (PostgreSQL, Redis, MySQL) and other services," recommending at least 2 vCPU / 4GiB memory for this. A Snapshot can bake in "the filesystem, installed packages, dependencies, and settings" — so a Postgres image plus seed data becomes a reusable template. (<a href="https://www.daytona.io/docs/en/snapshots/" target="_blank" rel="noopener">Daytona snapshots</a>, <a href="https://www.daytona.io/docs/en/sandboxes/" target="_blank" rel="noopener">Daytona sandboxes</a>)</p>
+<p><strong>Postgres reachable from the sandbox (AgentCore, Modal).</strong> AgentCore's VPC network mode is AWS's own documented way for sandboxed code to reach "private resources within your AWS environment such as databases" — i.e., your Aurora cluster (Ch5.6). Modal sandboxes default to open outbound, but <code>outbound_cidr_allowlist</code> can restrict them to specific CIDR ranges; its domain allowlist only covers TLS/443, so it doesn't help with raw Postgres traffic on 5432. (<a href="https://modal.com/docs/guide/sandbox-networking" target="_blank" rel="noopener">Modal networking docs</a>)</p>
+<p><strong>Community repos exist, but solve a different problem.</strong> <a href="https://github.com/DiTo97/deepagents-backends" target="_blank" rel="noopener">DiTo97/deepagents-backends</a> [GitHub] and <a href="https://github.com/giurlanda/deep-db-agents" target="_blank" rel="noopener">giurlanda/deep-db-agents</a> [GitHub] both use Postgres with Deep Agents — but as a <code>PostgresBackend</code> storing the agent's <em>virtual files</em>, or as a database the agent queries through <em>tools</em>, not as sandbox infrastructure. Neither shows sandboxed code opening a live connection to a database.</p>
+<p><strong>Why this matters for security — [community], several independent sources agree.</strong> LangChain's own sandbox docs already warn that secrets "injected into a sandbox… can be read and exfiltrated by a context-injected agent, even short-lived or scoped credentials." A May 2026 arXiv paper on agentic attack surfaces found that "Docker sandboxing does not help… the database must remain accessible for the tool to function," but that a read-only Postgres role "eliminates UPDATE, DELETE, and INSERT," lowering risk from High to Moderate, and recommends wrapping writes in <code>BEGIN</code>/<code>ROLLBACK</code> with human confirmation. (<a href="https://arxiv.org/pdf/2605.10763" target="_blank" rel="noopener">MATRA, arXiv 2605.10763</a>) A practitioner dev.to post makes the same point more bluntly: "A database connection string is a bearer credential… the only honest remediation is to rotate the database password" once it has passed through a model's context; the fix is a read replica or a least-privilege role, not a promise the model won't misuse it. (<a href="https://dev.to/wolfhound1995/how-to-give-an-ai-agent-safe-access-to-your-database-read-only-by-default-1ima" target="_blank" rel="noopener">dev.to/wolfhound1995</a>) A read-only role alone doesn't stop resource exhaustion either — pair it with statement timeouts. (<a href="https://adaptive.live/blog/safe-ai-agent-database-access" target="_blank" rel="noopener">Adaptive.live</a>)</p>
+<p><strong>What IncidentScout does (recommendation, not from a single source):</strong> run Aurora SQL as a host-side LangChain tool inside the ECS task — credentials never enter the sandbox — against a read-only role or read replica, with statement timeouts. Give the sandbox only exported CSV/Parquet via <code>uploadFiles()</code> for its analysis scripts. If sandboxed code genuinely must run SQL, prefer a disposable Postgres <em>inside</em> a Daytona sandbox seeded from an export over reaching the real Aurora cluster at all; if it must reach Aurora, do it only through an AgentCore custom interpreter in VPC mode, pointed at a read-only replica, with Route 53 Resolver DNS Firewall attached (Ch5.6's security note explains why that firewall is not optional).</p>
+<h3 id="deploying-sandboxes-on-aws">Deploying sandboxes on AWS</h3>
+<p><strong>Not covered in the docs.</strong> LangSmith, Daytona, Deno, and Modal are provider-hosted; the LangChain docs only show your agent calling their APIs, and no page describes running them inside your AWS account. What you deploy on AWS is the <strong>agent</strong> (Ch11): it needs outbound network access to the provider API and the provider credential. [AWS docs] Put that credential in Secrets Manager and inject it via the ECS task definition's <code>secrets</code>; rotation requires a new task. Node VFS runs inside the agent process, so it "deploys" with the agent — but the docs rule it out for production. AgentCore is the exception worth a special note: it is the one sandbox provider that runs inside your own AWS account rather than a third party's, and Ch5.6 covers building a custom backend for it.</p>
+<h3 id="next-problem_4">Next problem</h3>
+<p>IncidentScout can now run analysis, but its only data source is our hand-written <code>fetch_logs</code>. The observability team already exposes metrics, traces, and deploy history through MCP servers.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/sandboxes" target="_blank" rel="noopener">Sandboxes</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/sandboxes" target="_blank" rel="noopener">Sandbox integrations</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/providers/daytona" target="_blank" rel="noopener">Daytona</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/providers/deno" target="_blank" rel="noopener">Deno</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/providers/modal" target="_blank" rel="noopener">Modal</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/providers/node-vfs" target="_blank" rel="noopener">Node VFS</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production — Sandboxes, Managing secrets</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/permissions" target="_blank" rel="noopener">Permissions — Composite backends</a>. AgentCore: <a href="https://pypi.org/project/langchain-agentcore-codeinterpreter/" target="_blank" rel="noopener">langchain-agentcore-codeinterpreter (PyPI)</a>, <a href="https://docs.langchain.com/oss/python/integrations/sandboxes/aws" target="_blank" rel="noopener">LangChain Python AgentCore integration</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-typescript-sdk-reference.html" target="_blank" rel="noopener">AWS TypeScript SDK reference</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeCodeInterpreter.html" target="_blank" rel="noopener">InvokeCodeInterpreter API</a>, <a href="https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/create-code-interpreter.html" target="_blank" rel="noopener">create-code-interpreter CLI</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-management.html" target="_blank" rel="noopener">resource management</a>, <a href="https://aws.amazon.com/bedrock/agentcore/pricing/" target="_blank" rel="noopener">AgentCore pricing</a> [AWS docs]; <a href="https://github.com/langchain-ai/langchainjs/pull/11724" target="_blank" rel="noopener">langchainjs PR #11724</a> [GitHub]; security: <a href="https://unit42.paloaltonetworks.com/bypass-of-aws-sandbox-network-isolation-mode/" target="_blank" rel="noopener">Unit 42</a>, <a href="https://www.beyondtrust.com/blog/entry/pwning-aws-agentcore-code-interpreter" target="_blank" rel="noopener">BeyondTrust</a>, <a href="https://haitmg.pl/blog/aws-bedrock-agentcore-network-modes/" target="_blank" rel="noopener">haitmg.pl</a> [community]. Postgres + sandboxes: <a href="https://www.daytona.io/docs/en/snapshots/" target="_blank" rel="noopener">Daytona snapshots</a>, <a href="https://www.daytona.io/docs/en/sandboxes/" target="_blank" rel="noopener">Daytona sandboxes</a>, <a href="https://modal.com/docs/guide/sandbox-networking" target="_blank" rel="noopener">Modal networking</a>; <a href="https://github.com/DiTo97/deepagents-backends" target="_blank" rel="noopener">DiTo97/deepagents-backends</a>, <a href="https://github.com/giurlanda/deep-db-agents" target="_blank" rel="noopener">giurlanda/deep-db-agents</a> [GitHub]; <a href="https://arxiv.org/pdf/2605.10763" target="_blank" rel="noopener">MATRA (arXiv 2605.10763)</a>, <a href="https://dev.to/wolfhound1995/how-to-give-an-ai-agent-safe-access-to-your-database-read-only-by-default-1ima" target="_blank" rel="noopener">dev.to/wolfhound1995</a>, <a href="https://adaptive.live/blog/safe-ai-agent-database-access" target="_blank" rel="noopener">Adaptive.live</a> [community]. [AWS docs]: <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/secrets-envvar-secrets-manager.html" target="_blank" rel="noopener">ECS secrets from Secrets Manager</a></p>
+<h2 id="chapter-6-tools-and-mcp">Chapter 6 — Tools and MCP</h2>
+<h3 id="the-problem_5">The problem</h3>
+<p>Hand-writing a LangChain tool for every observability API doesn't scale, and the platform team already runs MCP servers for metrics, traces, and deploy history. Also, the sandbox chapter left a rule: <strong>authenticated calls belong in tools outside the sandbox</strong>.</p>
+<h3 id="the-concept_3">The concept</h3>
+<p>Everything you pass in <code>tools</code> sits beside the built-in harness tools (<code>ls</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>glob</code>, <code>grep</code>, <code>execute</code> with sandboxes, <code>task</code>). Three sources:</p>
+<ol>
+<li><strong>Custom LangChain tools</strong> — <code>tool(fn, { name, description, schema })</code> with a Zod schema.</li>
+<li><strong>Prebuilt LangChain integrations</strong> — for example <code>TavilySearch</code> wrapped in a tool, as the docs do.</li>
+<li><strong>MCP tools</strong> — <code>@langchain/mcp-adapters</code>' <code>MultiServerMCPClient</code> connects to one or more servers and returns LangChain tools you pass straight in.</li>
+</ol>
+<p>Tool metadata <strong>is prompt</strong>. The docs ask for a clear name, a description that says <em>when</em> to use the tool, and a description for every argument.</p>
+<h3 id="incidentscout-v6-mcp-observability-a-host-side-credentialed-tool">IncidentScout v6: MCP observability + a host-side credentialed tool</h3>
+<pre><code class="language-ts">// src/tools.ts — MCP pattern from the Tools page; context-aware tool from Context engineering
+import { tool } from "langchain";
+import type { ToolRuntime } from "@langchain/core/tools";
+import * as z from "zod";
+
+const { MultiServerMCPClient } = await import("@langchain/mcp-adapters");
+
+export const mcp = new MultiServerMCPClient({
+  observability: { transport: "http", url: process.env.OBS_MCP_URL! }, // e.g. metrics + traces
+  deploys:       { transport: "http", url: process.env.DEPLOY_MCP_URL! },
+});
+export const mcpTools = await mcp.getTools(); // async network call — do it at startup / in a factory
+
+// A credentialed tool that runs in YOUR process, never in the sandbox.
+export const pageOncall = tool(
+  async ({ service, summary }, runtime: ToolRuntime&lt;unknown, typeof contextSchema&gt;) =&gt; {
+    const org = runtime.context?.orgId;               // per-run context, not model-visible
+    // call your paging API here with a key read from process.env (injected from Secrets Manager)
+    return `Paged on-call for ${service} in ${org}: ${summary}`;
+  },
+  {
+    name: "page_oncall",
+    description:
+      "Page the on-call engineer for a service. Use only when impact is confirmed and ongoing.",
+    schema: z.object({
+      service: z.string().describe("Service to page for"),
+      summary: z.string().describe("One-paragraph impact summary"),
+    }),
+  },
+);
+</code></pre>
+<pre><code class="language-ts">const agent = createDeepAgent({
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  tools: [fetchLogs, pageOncall, ...mcpTools],
+  backend, store, checkpointer, contextSchema,
+});
+</code></pre>
+<p>Tools receive a <code>runtime</code> argument with <code>runtime.context</code> and <code>runtime.store</code>, so tools that need user identity or long-term data don't need middleware. Tools can also call LangGraph's <code>interrupt()</code> to ask a human mid-execution (Ch10).</p>
+<h3 id="gotchas_3">Gotchas</h3>
+<ul>
+<li><strong>Permissions (Ch10) don't cover custom or MCP tools</strong> that touch files — only the built-in file tools. Guard those tools yourself or with backend policy hooks.</li>
+<li><strong>Connecting to MCP servers is I/O</strong>; do it async at startup or inside an async graph factory.</li>
+<li><strong>Unused tools still cost tokens</strong>: every schema is sent each turn. Hide built-ins you never want with a harness profile's <code>excluded_tools</code>, and keep subagent tool sets minimal (Ch9).</li>
+<li><strong>Tool errors:</strong> when a tool throws, the run halts by default; <code>ToolErrorMiddleware</code> is not yet available in JS (Ch10).</li>
+<li><strong>Not covered in the Deep Agents pages:</strong> MCP stdio servers, OAuth, tool filtering, stateful sessions — the Deep Agents pages defer these to LangChain's separate MCP guide.</li>
+</ul>
+<h3 id="next-problem_5">Next problem</h3>
+<p>The on-call engineer pastes a Grafana screenshot and a PDF vendor status report. Can IncidentScout read them?</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/tools" target="_blank" rel="noopener">Tools</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/customization" target="_blank" rel="noopener">Customize Deep Agents — Tools, MCP tools</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/context-engineering" target="_blank" rel="noopener">Context engineering — Tool prompts, Runtime context</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production — Async</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/fault-tolerance" target="_blank" rel="noopener">Fault tolerance</a></p>
+<h2 id="chapter-7-multimodal-inputs">Chapter 7 — Multimodal inputs</h2>
+<h3 id="the-problem_6">The problem</h3>
+<p>Incidents come with screenshots of dashboards, PDFs from vendors, and occasionally a screen recording. Text-only handling misses the signal.</p>
+<h3 id="the-concept_4">The concept</h3>
+<p>Deep Agents supports multimodal workflows <strong>when the chosen model supports them</strong>. Three entry points:</p>
+<ol>
+<li><strong>User messages</strong> carry LangChain standard content blocks (text + image/file/audio/video).</li>
+<li><strong><code>read_file</code></strong> returns multimodal content blocks for supported file types in the agent's filesystem (images <code>.png .jpg .jpeg .gif .webp .heic .heif</code>; video <code>.mp4 .mpeg .mov .avi .flv .mpg .webm .wmv .3gpp</code>; audio <code>.wav .mp3 .aiff .aac .ogg .flac</code>; files <code>.pdf .ppt .pptx</code>). V2 backends return binary content as <code>Uint8Array</code> with a <code>mimeType</code> (<code>deepagents&gt;=1.9.0</code>).</li>
+<li><strong>Custom tools</strong> can return an array of content blocks instead of a string.</li>
+</ol>
+<pre><code class="language-ts">// User input with an image (Multimodal page)
+await agent.invoke({
+  messages: [{
+    role: "user",
+    content: [
+      { type: "text", text: "This is the checkout latency panel. When did it start?" },
+      { type: "image", url: "https://grafana.example.com/render/checkout-p99.png" },
+    ],
+  }],
+}, { ...config, context: ctx });
+
+// A tool that returns text + image blocks
+const captureDashboard = tool(
+  async ({ panel }) =&gt; [
+    { type: "text", text: `Snapshot of ${panel}:` },
+    { type: "image", url: `https://grafana.example.com/render/${panel}.png` },
+  ],
+  { name: "capture_dashboard", description: "Snapshot a Grafana panel.",
+    schema: z.object({ panel: z.string() }) },
+);
+
+// Reading a binary file directly from a backend in app code
+const res = await backend.read("/workspace/screenshot.png");
+if (!res.error &amp;&amp; res.content instanceof Uint8Array) console.log(res.mimeType); // "image/png"
+</code></pre>
+<h3 id="how-compression-treats-media-important">How compression treats media (important)</h3>
+<ul>
+<li><strong>Offloading counts text tokens only.</strong> Non-text blocks are preserved, and an image-only message is never offloaded because of its size.</li>
+<li><strong>Summarization is text-only.</strong> When older turns are summarized, their image/audio/video/file blocks are dropped; the model only sees what the summarizer wrote about them. The text rendering of the conversation still goes to the filesystem.</li>
+<li>Built-in compression never resizes images or lowers resolution.</li>
+</ul>
+<h3 id="gotchas-and-recommended-patterns">Gotchas and recommended patterns</h3>
+<ul>
+<li>Save large media to a backend (or object store) and pass <strong>paths or URLs</strong>, not base64 blocks, in long conversations.</li>
+<li>Have a tool that produces images return a short description plus a path.</li>
+<li>Push image-heavy inspection into a <strong>subagent</strong> so the main agent gets a compact text result (Ch9).</li>
+<li>If your provider charges many tokens per image, tune summarization thresholds or provide a custom token counter.</li>
+<li>Check your provider's supported MIME types; the harness passes blocks through but the model must accept them.</li>
+</ul>
+<h3 id="next-problem_6">Next problem</h3>
+<p>A two-hour investigation with dozens of tool calls, screenshots, and MCP queries is now routine. The conversation keeps growing. What exactly does the harness do as it approaches the limit, and what else goes into the prompt?</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/multimodal" target="_blank" rel="noopener">Multimodal inputs and outputs</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends — Multimodal and binary files</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/tools" target="_blank" rel="noopener">Tools — Multimodal tool outputs</a></p>
+<h2 id="chapter-8-context-engineering-what-the-model-sees-and-for-how-long">Chapter 8 — Context engineering: what the model sees, and for how long</h2>
+<h3 id="the-problem_7">The problem</h3>
+<p>Long investigations push the context window. At the same time we want <em>more</em> in the prompt: team conventions ("always include customer impact first"), and deep procedures ("how to read a Postgres lock graph") that are only relevant sometimes. Stuffing everything into <code>systemPrompt</code> is wasteful; leaving it out makes the agent dumb.</p>
+<h3 id="the-concept-five-kinds-of-context">The concept: five kinds of context</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>You control</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input context</td>
+<td>System prompt, memory, skills, tool prompts</td>
+<td>Applied every run</td>
+</tr>
+<tr>
+<td>Runtime context</td>
+<td><code>context</code> passed at invoke time</td>
+<td>Per run; propagates to subagents</td>
+</tr>
+<tr>
+<td>Context compression</td>
+<td>Offloading + summarization (built in)</td>
+<td>Automatic near limits</td>
+</tr>
+<tr>
+<td>Context isolation</td>
+<td>Subagents (Ch9)</td>
+<td>Per delegation</td>
+</tr>
+<tr>
+<td>Long-term memory</td>
+<td>Store-backed paths such as <code>/memories/</code> (Ch4)</td>
+<td>Across conversations</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="input-context-prompt-memory-skills">Input context: prompt, memory, skills</h3>
+<ul>
+<li><strong><code>systemPrompt</code></strong> is static and prepended to the built-in prompt. If it must vary per request ("you have read-only access"), use <code>dynamicSystemPromptMiddleware</code>, which can read <code>request.runtime.context</code> and <code>request.runtime.store</code>.</li>
+<li><strong>Memory</strong> = <code>AGENTS.md</code> files passed via <code>memory</code>. Always loaded, no progressive disclosure — keep them short. Content is stored in your backend, so the agent can update memory from feedback.</li>
+<li><strong>Skills</strong> = directories with a <code>SKILL.md</code> (Agent Skills standard) plus scripts, templates, references. <strong>Progressive disclosure:</strong> only the frontmatter is read at startup; the full skill loads when the agent decides it's relevant. Keep each skill to one workflow; move detail into referenced files.</li>
+<li><strong>Tool prompts</strong>: built-in middleware appends usage guidance for file tools, <code>task</code>, and HITL; your tools contribute their descriptions.</li>
+<li><strong>Prompt caching</strong> is automatic for Anthropic and Bedrock (Claude/Nova) models, covering the static prompt sections (base instructions, memory, skills). No configuration needed. On Bedrock, cached content must exceed 1,024 tokens for a checkpoint to take effect.</li>
+</ul>
+<h3 id="compression-offloading-then-summarization">Compression: offloading, then summarization</h3>
+<ol>
+<li><strong>Offloading</strong> (Ch3): tool results over 20,000 tokens are replaced by a path + 10-line preview; redundant large tool inputs are truncated once context crosses 85% of the window.</li>
+<li><strong>Summarization</strong> (<code>deepagents&gt;=1.6.0</code>): when context crosses ~85% of the model's <code>max_input_tokens</code> and nothing more can be offloaded, an LLM writes a structured summary (session intent, artifacts created, next steps) that replaces old history, keeping ~10% of tokens as recent context. The original messages are also written to the filesystem as a canonical record the agent can search. Without a model profile it falls back to a 170,000-token trigger and keeps 6 messages. If any model call raises <code>ContextOverflowError</code>, the agent immediately summarizes and retries.</li>
+</ol>
+<p>Analogy: offloading is moving papers from your desk into a labelled drawer; summarization is writing a one-page brief of the meeting and filing the transcript.</p>
+<h3 id="incidentscout-v8-memory-skills-on-postgres-backed-paths">IncidentScout v8: memory + skills on Postgres-backed paths</h3>
+<pre><code class="language-ts">// src/v8.ts — Composition of: memory/skills params (Customization), CompositeBackend + StoreBackend (Backends)
+const backend = new CompositeBackend(new StateBackend(), {
+  "/memories/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "memories"] }),
+  "/skills/":   new StoreBackend({ namespace: () =&gt; ["skills"] }), // shared, curated by your team
+});
+
+export const agent = createDeepAgent({
+  model: "bedrock:anthropic.claude-sonnet-4-6",
+  tools: [fetchLogs, pageOncall, ...mcpTools],
+  backend, store, checkpointer, contextSchema,
+  memory: ["/memories/AGENTS.md"],  // always in the prompt: team conventions, known flaky deps
+  skills: ["/skills/"],             // e.g. /skills/postgres-locks/SKILL.md, /skills/postmortem/SKILL.md
+  systemPrompt: "You are IncidentScout. Customer impact first, then timeline, then cause.",
+});
+</code></pre>
+<p>Seeding skills from app code, as documented for a standalone <code>StoreBackend</code>:</p>
+<pre><code class="language-ts">const skillsBackend = new StoreBackend({ namespace: () =&gt; ["skills"], store });
+await skillsBackend.uploadFiles([
+  ["/skills/postmortem/SKILL.md", new TextEncoder().encode(postmortemSkillMarkdown)],
+]);
+</code></pre>
+<p>Confirmed: the Skills page states the <code>/skills/</code> route prefix is stripped before records are read from the store — so a store key must be written as <code>/postmortem/SKILL.md</code> (not <code>/skills/postmortem/SKILL.md</code>) for it to appear at <code>/skills/postmortem/SKILL.md</code> through the <code>CompositeBackend</code> route. The same stripping applies to any <code>CompositeBackend</code> route, including <code>/memories/</code>. Skills also require <code>deepagents&gt;=1.7.0</code> and load in three levels — frontmatter (<code>name</code>/<code>description</code>) at startup, the full <code>SKILL.md</code> body when the skill is invoked, and <code>scripts/</code>/<code>references/</code>/<code>assets/</code> only as the instructions call for them — so keep frontmatter short and the body under ~5,000 tokens.</p>
+<h3 id="scoping-long-term-memory">Scoping long-term memory</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Namespace</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User (recommended default)</td>
+<td>user id</td>
+<td>"I prefer concise responses"</td>
+</tr>
+<tr>
+<td>Assistant</td>
+<td>assistant id</td>
+<td>"Cap posts at 280 characters"</td>
+</tr>
+<tr>
+<td>Global/org</td>
+<td>org id</td>
+<td>"Never disclose internal pricing" (read-only for the agent)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Two ways memory gets written.</strong> By default the agent writes memory during the conversation itself ("hot path") — immediate, but it adds latency and the agent has to multitask. The documented alternative is <strong>background consolidation</strong> ("sleep time compute"): a separate consolidation deep agent, deployed alongside the main one, periodically reads recent conversation history and merges facts into the memory store, triggered by a LangSmith cron job. Match the cron cadence to how often users actually talk to the agent, and keep it in sync with the lookback window the consolidation agent's own search tool uses — mismatched windows either reprocess the same conversations or silently drop ones outside the window.</p>
+<p><strong>Episodic memory</strong> (what happened and in what order, not just what was learned) rides on the checkpointer: every conversation is already a checkpointed thread. To make past threads searchable, wrap the LangGraph SDK's thread search in a tool that filters by <code>userId</code> or <code>orgId</code> pulled from runtime context, so IncidentScout can look back at how a similar incident was resolved rather than re-deriving the fix from scratch.</p>
+<h3 id="gotchas_4">Gotchas</h3>
+<ul>
+<li><strong>Shared memory is a prompt-injection vector.</strong> If one user can write memory another user's run reads, they can inject instructions. Make org-wide paths read-only for the agent (permissions, Ch10) and write them from app code.</li>
+<li><strong>Streamed tokens include summarization output.</strong> Filter them by metadata:</li>
+</ul>
+<pre><code class="language-ts">for await (const [namespace, chunk] of await agent.stream(input, { streamMode: "messages" })) {
+  const [message, metadata] = chunk;
+  if (metadata?.lcSource === "summarization") continue; // skip summary tokens in the UI
+  render(message);
+}
+</code></pre>
+<ul>
+<li><strong>Memory is always injected</strong>; long memory files cost tokens every turn. Put detail in skills.</li>
+<li><strong>Custom subagents don't inherit skills</strong> (Ch9); the general-purpose one does.</li>
+</ul>
+<h3 id="next-problem_7">Next problem</h3>
+<p>Even with compression, one agent investigating five services in sequence fills its context with raw traces from all five, and it's slow. The work is naturally parallel.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/context-engineering" target="_blank" rel="noopener">Context engineering</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/overview" target="_blank" rel="noopener">Deep Agents overview — Context management, Prompt caching</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/customization" target="_blank" rel="noopener">Customize Deep Agents — Skills, Memory</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production — Memory scoping</a>, <a href="https://docs.langchain.com/oss/javascript/integrations/middleware/aws" target="_blank" rel="noopener">AWS middleware (Bedrock prompt caching)</a></p>
+<h2 id="chapter-9-subagents-delegation-and-context-isolation">Chapter 9 — Subagents: delegation and context isolation</h2>
+<h3 id="the-problem_8">The problem</h3>
+<p>A checkout outage touches checkout-api, payments, inventory, the DB, and the CDN. One agent checking all five drags every raw trace into one context and does it serially.</p>
+<h3 id="the-concept_5">The concept</h3>
+<p>The main agent gets a built-in <strong><code>task</code></strong><strong> tool</strong>. Each call spins up an <strong>ephemeral subagent</strong> with a <strong>fresh context</strong>, which runs autonomously to completion and returns <strong>one final report</strong> as the tool result. Subagents are stateless and cannot send multiple messages back. The parent can issue several <code>task</code> calls in one turn to run them in parallel. This is "context quarantine": the dozens of tool calls behind a finding never enter the parent's window.</p>
+<pre class="mermaid">graph TB
+    M[IncidentScout coordinator] --&gt;|task| L[log-analyst]
+    M --&gt;|task| T[trace-analyst]
+    M --&gt;|task| D[db-analyst]
+    L --&gt;|isolated work| R1[summary]
+    T --&gt;|isolated work| R2[summary]
+    D --&gt;|isolated work| R3[structured JSON]
+    R1 --&gt; M
+    R2 --&gt; M
+    R3 --&gt; M
+</pre>
+<p><strong>Use subagents</strong> for multi-step work that would clutter context, specialized domains, tasks needing a different model, and keeping the coordinator high-level. <strong>Don't</strong> for simple single-step tasks, or when the parent needs the intermediate context.</p>
+<h3 id="defining-subagents">Defining subagents</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th><code>SubAgent</code> field</th>
+<th>Notes</th>
+<th>Inherits from parent?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code> (req.)</td>
+<td>Used by <code>task</code>; becomes <code>lc_agent_name</code> metadata</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>description</code> (req.)</td>
+<td>How the parent decides to delegate — be specific</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>systemPrompt</code> (req.)</td>
+<td>Include tool guidance and output format</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>tools</code></td>
+<td>Keep minimal; overrides entirely when set</td>
+<td>Yes, by default</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td><code>provider:model</code> string or model instance</td>
+<td>Yes, by default</td>
+</tr>
+<tr>
+<td><code>middleware</code></td>
+<td>Appended to the subagent stack</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>interruptOn</code></td>
+<td>Per-subagent HITL; needs a checkpointer</td>
+<td>Yes; overrides</td>
+</tr>
+<tr>
+<td><code>skills</code></td>
+<td>Own skill sources; isolated skill state</td>
+<td>No (only general-purpose inherits)</td>
+</tr>
+<tr>
+<td><code>responseFormat</code></td>
+<td>Structured output, returned to parent as JSON (<code>&gt;=1.8.4</code>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>permissions</code></td>
+<td><strong>Replaces</strong> parent rules; <code>[]</code> = unrestricted</td>
+<td>Yes, by default</td>
+</tr>
+</tbody>
+</table></div>
+<p>For complex workflows, pass a <strong><code>CompiledSubAgent</code></strong> <code>{ name, description, runnable }</code> where <code>runnable</code> is a compiled graph (for example from <code>createAgent</code>); a custom LangGraph graph must have a <code>messages</code> state key.</p>
+<p>Every deep agent also has a <strong><code>general-purpose</code></strong> subagent (same tools, same model unless overridden, inherits skills). Replace it by defining a subagent named <code>general-purpose</code>; disable it via the harness profile's general-purpose subagent <code>enabled</code> flag, and with no other synchronous subagents the <code>task</code> tool disappears.</p>
+<h3 id="incidentscout-v9-specialist-investigators">IncidentScout v9: specialist investigators</h3>
+<pre><code class="language-ts">// src/subagents.ts — fields per the Subagents page
+import { z } from "zod";
+import type { SubAgent } from "deepagents";
+
+const DbFindings = z.object({
+  suspectedCause: z.string(),
+  confidence: z.number().describe("0..1"),
+  evidence: z.array(z.string()).describe("Queries/metrics that support the cause"),
+});
+
+export const subagents: SubAgent[] = [
+  {
+    name: "log-analyst",
+    description: "Analyzes error logs for ONE service over a time window and reports error patterns. Use one call per service.",
+    systemPrompt: `Fetch and analyze logs for the service you are given.
+Write raw extracts to /notes/logs-&lt;service&gt;.md. Return under 300 words: top error signatures, first-seen time, counts.
+Do NOT include raw log lines.`,
+    tools: [fetchLogs],
+  },
+  {
+    name: "db-analyst",
+    description: "Investigates database-side causes (locks, pool exhaustion, slow queries). Use when errors mention DB timeouts.",
+    systemPrompt: "Use the observability tools to inspect DB metrics. Load the postgres-locks skill if lock contention is suspected.",
+    tools: mcpTools.filter((t) =&gt; t.name.startsWith("db_")), // minimal tool set
+    skills: ["/skills/postgres-locks/"],                       // custom subagents don't inherit skills
+    responseFormat: DbFindings,                              // parent receives JSON
+    permissions: [{ operations: ["write"], paths: ["/**"], mode: "deny" }], // read-only
+  },
+];
+</code></pre>
+<pre><code class="language-ts">const agent = createDeepAgent({
+  // ...everything from v8...
+  subagents,
+  systemPrompt: `You are the IncidentScout coordinator.
+For multi-service incidents, delegate: one log-analyst task per affected service (in parallel),
+and db-analyst when DB symptoms appear. Synthesize their reports; don't redo their work.`,
+});
+</code></pre>
+<h3 id="context-between-parent-and-child">Context between parent and child</h3>
+<ul>
+<li><strong>Runtime context propagates</strong> to every subagent and its tools. For per-subagent settings, use namespaced keys or distinct schema fields (e.g. <code>researcherMaxDepth</code>).</li>
+<li>A shared tool can branch on the caller: <code>runtime.config?.metadata?.lc_agent_name</code>.</li>
+<li>With the default <code>StateBackend</code>, files written by subagents stay visible to the parent — a good channel for large data: "write raw data to a file, return the analysis".</li>
+</ul>
+<h3 id="streaming-and-tracing-subagents">Streaming and tracing subagents</h3>
+<p><code>agent.streamEvents(input, { version: "v3" })</code> gives typed projections; iterate <code>stream.subagents</code> to get a handle per delegated task with <code>.name</code>, <code>.messages</code>, <code>.tool_calls</code>, <code>.output</code>. In LangSmith, every run carries <code>lc_agent_name</code>, so you can filter traces per subagent.</p>
+<pre><code class="language-ts">const stream = await agent.streamEvents(input, { version: "v3" });
+await Promise.all([
+  (async () =&gt; { for await (const m of stream.messages) ui.coordinator(await m.text); })(),
+  (async () =&gt; {
+    for await (const sub of stream.subagents) {
+      ui.card(sub.name, "started");
+      for await (const m of sub.messages) ui.card(sub.name, await m.text);
+    }
+  })(),
+]);
+</code></pre>
+<h3 id="beyond-synchronous-subagents">Beyond synchronous subagents</h3>
+<ul>
+<li><strong>Async subagents</strong> (<code>deepagents&gt;=1.9.0</code>, preview — API may change) launch background tasks that return immediately, so the supervisor keeps talking to the user while the subagent works; the caller can check progress, steer, or cancel. They <strong>require LangSmith Deployment</strong> — each one points at a separate deployed graph via the Agent Protocol, not a function running in-process:
+  ```ts
+  import { createDeepAgent, type AsyncSubAgent } from "deepagents";</li>
+</ul>
+<p>const asyncSubagents: AsyncSubAgent[] = [
+  {
+    name: "deep-log-audit",
+    description: "Long-running audit across a service's full log history. Use for slow, thorough investigations the user doesn't need to wait on.",
+    graphId: "log-auditor",      // no url: ASGI transport, co-deployed in the same LangSmith deployment
+    // url: "https://log-auditor-deployment.langsmith.dev", // or HTTP transport for a remote deployment
+  },
+];</p>
+<p>const agent = createDeepAgent({ model, subagents: [...asyncSubagents] });
+  <code>``
+  This does not fit IncidentScout's self-hosted ECS deployment (Ch11), which has no LangSmith Deployment in front of it; it's documented here for completeness if you later split a long-running specialist onto LangSmith.
+- **Dynamic subagents** (beta): with</code>createCodeInterpreterMiddleware()<code>from</code>@langchain/quickjs<code>, the agent can dispatch</code>task()<code>from code — loops and parallel batches over many items. Phrasing a request as a "workflow" nudges it into this mode; disable with</code>createCodeInterpreterMiddleware({ subagents: false })`.</p>
+<h3 id="gotchas-from-the-troubleshooting-section">Gotchas (from the troubleshooting section)</h3>
+<ul>
+<li><strong>Subagent never called</strong> → make descriptions specific and tell the coordinator to delegate.</li>
+<li><strong>Context still bloated</strong> → instruct subagents to return concise summaries and write raw data to files.</li>
+<li><strong>Wrong subagent picked</strong> → differentiate descriptions ("quick" vs "deep" with explicit criteria).</li>
+<li>Don't try to remove <code>SubAgentMiddleware</code> via <code>excluded_middleware</code>; it raises an error.</li>
+</ul>
+<h3 id="next-problem_8">Next problem</h3>
+<p>Parallel specialists make IncidentScout powerful — and dangerous. It can now page humans and post to the incident channel. We need visible plans, approval gates, guardrails on what it can write, and resilience when a provider hiccups.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/subagents" target="_blank" rel="noopener">Subagents</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/context-engineering" target="_blank" rel="noopener">Context engineering — Context isolation</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/overview" target="_blank" rel="noopener">Deep Agents overview — Subagents, Streaming</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends — StateBackend</a></p>
+<h2 id="chapter-10-steering-and-guardrails-planning-human-in-the-loop-permissions-fault-tolerance">Chapter 10 — Steering and guardrails: planning, human-in-the-loop, permissions, fault tolerance</h2>
+<h3 id="the-problem_9">The problem</h3>
+<p>IncidentScout now acts: it pages people and can post updates. On-call leads want to see its plan, approve anything that notifies humans, stop it from rewriting org runbooks, and not have it die when Bedrock throttles.</p>
+<h3 id="101-planning-with-write_todos-opt-in">10.1 Planning with <code>write_todos</code> (opt-in)</h3>
+<p>Since v0.7 planning is opt-in. Add <code>todoListMiddleware()</code> to get a <code>write_todos</code> tool; tasks have <code>pending</code> / <code>in_progress</code> / <code>completed</code> status and live in agent state, which UIs can stream as a live checklist. The docs suggest it for long multi-step tasks, less capable models, and progress UIs.</p>
+<pre><code class="language-ts">import { todoListMiddleware } from "langchain";
+const agent = createDeepAgent({ /* ... */ middleware: [todoListMiddleware()] });
+</code></pre>
+<h3 id="102-human-in-the-loop">10.2 Human-in-the-loop</h3>
+<p><code>interruptOn</code> maps tool names to <code>true</code> (approve/edit/reject/respond), <code>false</code>, or <code>{ allowedDecisions: [...] }</code>. It adds <code>HumanInTheLoopMiddleware</code> and <strong>requires a checkpointer</strong>. Decisions:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Effect</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>approve</code></td>
+<td>Run with original args</td>
+<td>Send as drafted</td>
+</tr>
+<tr>
+<td><code>edit</code></td>
+<td>Run with modified args (<code>editedAction: { name, args }</code>)</td>
+<td>Fix a recipient</td>
+</tr>
+<tr>
+<td><code>reject</code></td>
+<td>Skip; feedback message goes to the agent</td>
+<td>Deny a side effect</td>
+</tr>
+<tr>
+<td><code>respond</code></td>
+<td>Your text becomes the tool result</td>
+<td>Answering an <code>ask_user</code>-style tool — <strong>not</strong> for denying side effects</td>
+</tr>
+</tbody>
+</table></div>
+<pre><code class="language-ts">// IncidentScout v10 — HITL wiring (Human-in-the-loop page)
+import { Command } from "@langchain/langgraph";
+
+const agent = createDeepAgent({
+  // ...v9...
+  interruptOn: {
+    page_oncall: { allowedDecisions: ["approve", "edit", "reject"] },
+    post_incident_update: { allowedDecisions: ["approve", "reject"] },
+  },
+  checkpointer, // required
+});
+
+let result = await agent.invoke({ messages }, { ...config, context: ctx });
+if (result.__interrupt__) {
+  const { actionRequests, reviewConfigs } = result.__interrupt__[0].value;
+  // Show actionRequests[i].name / .args to the human; collect ONE decision per request, in order
+  const decisions = [
+    { type: "reject", message: "Impact not confirmed yet. Do not page. Gather error-rate data first." },
+  ];
+  result = await agent.invoke(new Command({ resume: { decisions } }), { ...config, context: ctx }); // same thread_id!
+}
+</code></pre>
+<p>Notes: several gated calls in one step arrive as <strong>one</strong> batched interrupt; subagents can override <code>interruptOn</code>; tools can call <code>interrupt({...})</code> themselves and resume with <code>new Command({ resume: {...} })</code>. Make edits conservative — big argument changes can make the model re-plan or repeat calls. Always give <code>reject</code> a clear message about whether to abandon, ask, or try something safer. Because state is checkpointed, an interrupt can wait minutes or days.</p>
+<h3 id="103-filesystem-permissions-deepagents191">10.3 Filesystem permissions (<code>deepagents&gt;=1.9.1</code>)</h3>
+<p>Declarative rules for the built-in file tools: <code>{ operations: ["read" | "write"], paths: [globs], mode: "allow" | "deny" }</code>. <strong>First match wins; no match = allowed.</strong> Paths must be absolute, without <code>..</code> or <code>~</code>. <code>read</code> covers <code>ls</code>, <code>read_file</code>, <code>glob</code>, <code>grep</code>; <code>write</code> covers <code>write_file</code>, <code>edit_file</code>.</p>
+<pre><code class="language-ts">permissions: [
+  { operations: ["write"], paths: ["/runbooks/**", "/skills/**"], mode: "deny" }, // org content is app-managed
+  { operations: ["read", "write"], paths: ["/notes/**", "/memories/**"], mode: "allow" },
+],
+</code></pre>
+<p>Specific rules must come before broad ones. Subagents inherit rules unless they set their own (which replace, not merge). Permissions <strong>don't</strong> apply to custom/MCP tools or to sandbox <code>execute</code>; with a sandbox as the composite default, every rule path must fall under a route or construction throws. For audit logging, rate limits, or content inspection, use backend policy hooks (Ch4).</p>
+<h3 id="104-fault-tolerance">10.4 Fault tolerance</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Strategy</th>
+<th>Middleware</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Network blips, rate limits</td>
+<td>Retry with exponential backoff</td>
+<td><code>modelRetryMiddleware</code>, <code>toolRetryMiddleware</code> (scope to specific tools)</td>
+</tr>
+<tr>
+<td>Needs human info</td>
+<td>Pause</td>
+<td><code>interruptOn</code> / <code>interrupt()</code></td>
+</tr>
+<tr>
+<td>Provider outage</td>
+<td>Switch model</td>
+<td><code>modelFallbackMiddleware("...")</code></td>
+</tr>
+<tr>
+<td>Runaway loops</td>
+<td>Cap calls per run/thread</td>
+<td><code>modelCallLimitMiddleware</code>, <code>toolCallLimitMiddleware</code></td>
+</tr>
+<tr>
+<td>Unexpected bugs</td>
+<td>Let them bubble up</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>The docs demonstrate these with <code>createAgent</code>; Deep Agents accepts any LangChain middleware through <code>middleware</code>, where it is appended after <code>PatchToolCallsMiddleware</code>.</p>
+<pre><code class="language-ts">// Composition: documented LangChain middleware passed to createDeepAgent's middleware param
+import { modelRetryMiddleware, toolRetryMiddleware, modelFallbackMiddleware,
+         modelCallLimitMiddleware, toolCallLimitMiddleware, piiMiddleware } from "langchain";
+
+middleware: [
+  todoListMiddleware(),
+  modelRetryMiddleware({ maxRetries: 3, backoffFactor: 2.0, initialDelayMs: 1000 }),
+  toolRetryMiddleware({ maxRetries: 2, tools: ["fetch_logs"] }),
+  modelFallbackMiddleware("bedrock:anthropic.claude-sonnet-4-6"), // pick a different model/provider in practice
+  modelCallLimitMiddleware({ runLimit: 50 }),
+  toolCallLimitMiddleware({ runLimit: 200 }),
+  piiMiddleware("email", { strategy: "redact", applyToInput: true }),
+],
+</code></pre>
+<p>Gotchas: <code>ToolErrorMiddleware</code> is not yet available in JS, so a throwing tool halts the run — catch errors inside your tools and return an error string the model can act on. Chat models already retry transient API failures with backoff. <code>thread_limit</code> style caps need a checkpointer. For long subagent-heavy runs from a UI, set a high <code>recursionLimit</code>.</p>
+<h3 id="105-streaming">10.5 Streaming</h3>
+<p>Use <code>streamEvents(..., { version: "v3" })</code> for typed projections (<code>messages</code>, tool calls, values, <code>subagents</code>), or <code>stream(..., { streamMode: "messages" })</code> for tokens. On the frontend, <code>useStream</code> (React, Vue, Svelte, Angular) connects to a deployed agent and streams messages, subagent progress, and todo state; pass <code>streamSubgraphs: true</code> to see subagents.</p>
+<h3 id="106-interpreters-optional">10.6 Interpreters (optional)</h3>
+<p><code>createCodeInterpreterMiddleware()</code> from <code>@langchain/quickjs</code> adds an <code>eval</code> tool running JavaScript in a scoped QuickJS runtime — for loops, batching, data transforms, and programmatic tool calling, with no shell, package installs, filesystem, or network. Use a sandbox when you need those.</p>
+<h3 id="next-problem_9">Next problem</h3>
+<p>IncidentScout is feature-complete on a laptop. Now it has to run for a whole engineering org on AWS.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/overview" target="_blank" rel="noopener">Deep Agents overview — Task planning, Code execution</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/human-in-the-loop" target="_blank" rel="noopener">Human-in-the-loop</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/permissions" target="_blank" rel="noopener">Permissions</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/fault-tolerance" target="_blank" rel="noopener">Fault tolerance</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/customization" target="_blank" rel="noopener">Customize Deep Agents — Middleware, Interpreters</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production — Data privacy, Frontend</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/subagents" target="_blank" rel="noopener">Subagents — Streaming</a></p>
+<h2 id="chapter-11-production-architecture">Chapter 11 — Production architecture</h2>
+<h3 id="the-problem_10">The problem</h3>
+<p>Everything so far runs in one Node process with local state. Production means many users and threads, restarts, deploys, secrets, audits, and debugging runs you didn't watch.</p>
+<h3 id="three-production-primitives">Three production primitives</h3>
+<p>The docs frame production around <strong>threads</strong> (one conversation; history and scratch files scoped to it), <strong>users</strong> (identity from your auth layer; memory private or shared), and <strong>assistants</strong> (a configured agent instance; memory/sandboxes can be tied to it). Every production call carries a <code>thread_id</code> and a <code>context</code>.</p>
+<h3 id="components-required-vs-optional">Components: required vs optional</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+<th>Required?</th>
+<th>In IncidentScout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model provider</td>
+<td>The LLM behind the loop; Bedrock/Anthropic get automatic prompt caching</td>
+<td>Required</td>
+<td>Amazon Bedrock (<code>bedrock:</code> model string)</td>
+</tr>
+<tr>
+<td>Agent runtime</td>
+<td><code>createDeepAgent</code> → LangChain agent → LangGraph graph with durable execution</td>
+<td>Required</td>
+<td><code>deepagents</code></td>
+</tr>
+<tr>
+<td>Deployment surface</td>
+<td>Hosts the graph, exposes threads/runs, streaming</td>
+<td>Required (pick one)</td>
+<td>ECS service (self-hosted) or LangSmith Deployment</td>
+</tr>
+<tr>
+<td>Checkpointer</td>
+<td>Thread state, resume after failure, interrupts, time travel</td>
+<td>Required for multi-turn, HITL, durability</td>
+<td><code>PostgresSaver</code> on Aurora</td>
+</tr>
+<tr>
+<td>Store</td>
+<td>Cross-thread data behind <code>StoreBackend</code></td>
+<td>Optional (required for long-term memory)</td>
+<td><code>PostgresStore</code> on Aurora</td>
+</tr>
+<tr>
+<td>Filesystem backend</td>
+<td>Storage behind file tools</td>
+<td>Always present (default <code>StateBackend</code>)</td>
+<td><code>CompositeBackend</code> (state + store routes)</td>
+</tr>
+<tr>
+<td>Sandbox</td>
+<td>Isolated <code>execute</code></td>
+<td>Optional (only if code runs)</td>
+<td>LangSmith/Daytona/Modal, thread-scoped</td>
+</tr>
+<tr>
+<td>Tools and MCP servers</td>
+<td>Domain actions and data</td>
+<td>Optional but typical</td>
+<td><code>fetch_logs</code>, <code>page_oncall</code>, MCP observability</td>
+</tr>
+<tr>
+<td>Human-in-the-loop</td>
+<td>Approval gates</td>
+<td>Optional (needs checkpointer)</td>
+<td><code>interruptOn</code> for paging/posting</td>
+</tr>
+<tr>
+<td>Guardrails</td>
+<td>Permissions, PII, call limits, retries, fallbacks</td>
+<td>Strongly recommended</td>
+<td>Ch10 middleware</td>
+</tr>
+<tr>
+<td>Auth and multi-tenancy</td>
+<td>Who is calling; per-user namespaces; RBAC</td>
+<td>Required for multi-user</td>
+<td><code>context.userId/orgId</code> + your auth</td>
+</tr>
+<tr>
+<td>Streaming and frontend</td>
+<td>Live tokens, subagent cards, todos</td>
+<td>Optional</td>
+<td><code>streamEvents</code> / <code>useStream</code></td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>Traces per run and subagent (<code>lc_agent_name</code>)</td>
+<td>Strongly recommended</td>
+<td>LangSmith tracing</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>Model/provider/sandbox keys</td>
+<td>Required</td>
+<td>AWS Secrets Manager</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-options-described-by-the-docs">Deployment options described by the docs</h3>
+<ol>
+<li><strong>Managed Deep Agents</strong> — the recommended path, a CLI-first hosted runtime in LangSmith; currently private preview.</li>
+<li><strong>LangSmith Deployment</strong> — for custom routes, advanced auth, etc. Provisions threads, runs, a store, and a checkpointer (omit <code>store</code>/<code>checkpointer</code> in code), plus custom auth and authorization handlers, webhooks, cron, observability, and MCP/A2A exposure. Configured with <code>langgraph.json</code> (<code>dependencies</code>, <code>graphs: { agent: "./src/agent.ts:agent" }</code>, <code>env</code>); <code>langgraph dev</code> locally, <code>langgraph deploy</code> to ship. The docs mention hybrid and self-hosted LangSmith setups; details are outside the Deep Agents pages.</li>
+<li><strong>JavaScript frameworks and hosting platforms without LangSmith Cloud</strong> — guides for Next.js, SvelteKit, Nuxt, Cloudflare Workers, Deno. <strong>Not covered:</strong> an ECS/Fargate guide.</li>
+</ol>
+<h3 id="architecture">Architecture</h3>
+<pre class="mermaid">flowchart LR
+  U[Web UI / Slack bot&lt;br/&gt;useStream or HTTP] --&gt; ALB[Load balancer]
+  subgraph AWS VPC
+    subgraph Private subnets
+      ECS[ECS Fargate service&lt;br/&gt;Node: createDeepAgent&lt;br/&gt;+ middleware stack]
+      AUR[(Aurora PostgreSQL&lt;br/&gt;PostgresSaver + PostgresStore)]
+      MCP[Internal MCP servers&lt;br/&gt;observability, deploys]
+      EFS[(EFS - optional&lt;br/&gt;trusted internal only)]
+    end
+    SM[Secrets Manager]
+  end
+  ALB --&gt; ECS
+  ECS --&gt; AUR
+  ECS --&gt; MCP
+  ECS -.optional.-&gt; EFS
+  SM -. injected at task start .-&gt; ECS
+  ECS --&gt; BR[Amazon Bedrock]
+  ECS --&gt; SBX[Sandbox provider API&lt;br/&gt;LangSmith / Daytona / Modal]
+  ECS --&gt; LS[LangSmith tracing]
+</pre>
+<h3 id="reference-aws-deployment-aws-docs-composition">Reference AWS deployment — [AWS docs] + Composition</h3>
+<p>The AWS parts below come from AWS documentation; the LangChain parts are the APIs from earlier chapters. The HTTP wrapper around <code>agent.invoke</code>/<code>streamEvents</code> is ordinary Node code and is not described in the LangChain docs.</p>
+<ol>
+<li><strong>Network [AWS docs].</strong> A VPC with private subnets for the database and the service. The Aurora tutorial creates a private cluster; resources in the same VPC can reach it, outside ones can't.</li>
+<li><strong>Database [AWS docs].</strong> Aurora PostgreSQL cluster (Standard create for availability, backups, maintenance settings). One cluster, two schemas: checkpoints and store. Run <code>checkpointer.setup()</code> and <code>store.setup()</code> once at deploy time. Add pgvector only if you configure <code>PostgresStore</code>'s <code>index</code>.</li>
+<li><strong>Secrets [AWS docs].</strong> Database credentials, sandbox API key, LangSmith key, MCP tokens in Secrets Manager; referenced from the ECS task definition's <code>secrets</code>. The execution role needs Secrets Manager permissions. Fargate platform 1.4.0+ for JSON-key or version selection. Rotation needs a new task (<strong>Force new deployment</strong>). Anything in environment variables is visible to the app and its logs — which is exactly why none of it may be forwarded into a sandbox (Ch5).</li>
+<li><strong>Compute [AWS docs].</strong> An ECS service on Fargate running your Node container. Give the task role permission to call Bedrock (see AWS's Bedrock getting-started, which the LangChain Bedrock tab links to).</li>
+<li><strong>Optional shared disk [AWS docs].</strong> EFS volume on Fargate (platform 1.4.0+, access points) — only if you deliberately run <code>FilesystemBackend</code> in a trusted internal worker; the LangChain docs say not to use host-disk backends in deployed agents.</li>
+<li><strong>Egress.</strong> The task needs outbound access to the sandbox provider and LangSmith (both external services).</li>
+<li><strong>Multi-tenancy (LangChain).</strong> Build namespaces from authenticated identity (<code>context.userId</code>, <code>context.orgId</code>); never trust a user id from the request body without your auth layer. Make org-wide paths read-only via permissions.</li>
+<li><strong>Sandboxes (LangChain).</strong> Thread-scoped with idle TTL; delete in <code>finally</code> for one-off runs; no secrets inside.</li>
+<li><strong>Resilience (LangChain).</strong> Retries, fallback, call limits; durable checkpoints mean a crashed task's thread can resume from its last step.</li>
+</ol>
+<h3 id="gotchas_5">Gotchas</h3>
+<ul>
+<li><strong>Don't combine platform-provisioned persistence with your own</strong> when on LangSmith Deployment — omit <code>store</code> (and the docs say the checkpointer is configured automatically).</li>
+<li><strong><code>rt.serverInfo</code></strong><strong> exists only on LangGraph Server.</strong> Self-hosting on ECS, derive namespaces from <code>context</code>.</li>
+<li><strong>Graph factories are a server feature.</strong> On LangSmith Deployment an exported async function is called per run; on your own ECS service, do the equivalent in your request handler.</li>
+<li><strong>Async everywhere:</strong> sandbox creation and MCP connection are network calls.</li>
+<li><strong>Checkpoint growth:</strong> prune old checkpoints.</li>
+</ul>
+<h3 id="next">Next</h3>
+<p>All the pieces exist. Chapter 12 assembles them into one file.</p>
+<p>Sources: <a href="https://docs.langchain.com/oss/javascript/deepagents/going-to-production" target="_blank" rel="noopener">Going to production</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/overview" target="_blank" rel="noopener">Deep Agents overview</a>, <a href="https://docs.langchain.com/oss/javascript/langgraph/persistence" target="_blank" rel="noopener">Persistence</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/sandboxes" target="_blank" rel="noopener">Sandboxes</a>. [AWS docs]: <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_GettingStartedAurora.AuroraPostgreSQL.FullConfig.html" target="_blank" rel="noopener">Aurora PostgreSQL getting started</a>, <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/secrets-envvar-secrets-manager.html" target="_blank" rel="noopener">ECS secrets from Secrets Manager</a>, <a href="https://docs.aws.amazon.com/AmazonECS/latest/userguide/efs-volumes.html" target="_blank" rel="noopener">EFS volumes with ECS</a></p>
+<h2 id="chapter-12-the-complete-incidentscout">Chapter 12 — The complete IncidentScout</h2>
+<p>This file is a <strong>Composition</strong>: every API in it appears in the docs cited in earlier chapters, assembled for a self-hosted Node service (for example on ECS). On LangSmith Deployment you would export <code>buildAgent</code> as an async graph factory, read <code>thread_id</code> from <code>config.configurable</code>, and drop <code>store</code>/<code>checkpointer</code>.</p>
+<pre><code class="language-ts">// src/incidentscout.ts
+import * as z from "zod";
+import { tool, todoListMiddleware, modelRetryMiddleware, toolRetryMiddleware,
+         modelCallLimitMiddleware, toolCallLimitMiddleware } from "langchain";
+import type { ToolRuntime } from "@langchain/core/tools";
+import { Command } from "@langchain/langgraph";
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
+import { createDeepAgent, CompositeBackend, StoreBackend, LangSmithSandbox,
+         type SubAgent } from "deepagents";
+import { SandboxClient } from "langsmith/sandbox";
+
+// ---------- Ch2: per-run context (from your auth layer, never from the request body) ----------
+const contextSchema = z.object({ userId: z.string(), orgId: z.string() });
+type Ctx = z.infer&lt;typeof contextSchema&gt;;
+
+// ---------- Ch4: durable persistence on Aurora PostgreSQL ----------
+const DB = process.env.DATABASE_URL!; // assembled from Secrets Manager-injected values
+const checkpointer = PostgresSaver.fromConnString(DB, { schema: "agent_checkpoints" });
+const store = PostgresStore.fromConnString(DB, { schema: "agent_store" });
+await checkpointer.setup();
+await store.setup();
+
+// ---------- Ch1/Ch6: tools (credentials stay in this process, never in the sandbox) ----------
+const fetchLogs = tool(
+  async ({ service, minutes }, rt: ToolRuntime&lt;unknown, typeof contextSchema&gt;) =&gt; {
+    try {
+      return await logsApi.query(rt.context!.orgId, service, minutes); // your client
+    } catch (e) {
+      return `fetch_logs failed: ${(e as Error).message}`; // JS has no ToolErrorMiddleware yet
+    }
+  },
+  { name: "fetch_logs",
+    description: "Fetch recent error logs for one service. Use when investigating an incident.",
+    schema: z.object({ service: z.string(), minutes: z.number().default(15) }) },
+);
+
+const pageOncall = tool(
+  async ({ service, summary }) =&gt; pagingApi.page(service, summary),
+  { name: "page_oncall",
+    description: "Page on-call for a service. Only when impact is confirmed and ongoing.",
+    schema: z.object({ service: z.string(), summary: z.string() }) },
+);
+
+const postIncidentUpdate = tool(
+  async ({ channel, text }) =&gt; chatApi.post(channel, text),
+  { name: "post_incident_update",
+    description: "Post a status update to the incident channel.",
+    schema: z.object({ channel: z.string(), text: z.string() }) },
+);
+
+const { MultiServerMCPClient } = await import("@langchain/mcp-adapters");
+const mcp = new MultiServerMCPClient({
+  observability: { transport: "http", url: process.env.OBS_MCP_URL! },
+});
+const mcpTools = await mcp.getTools();
+
+// ---------- Ch9: specialists ----------
+const subagents: SubAgent[] = [
+  {
+    name: "log-analyst",
+    description: "Analyzes error logs for ONE service; one call per service.",
+    systemPrompt: "Write raw extracts to /notes/logs-&lt;service&gt;.md. Return &lt;300 words: signatures, first-seen, counts.",
+    tools: [fetchLogs],
+  },
+  {
+    name: "data-cruncher",
+    description: "Runs Python/shell analysis over exported data in the sandbox. Use for counts, histograms, correlations.",
+    systemPrompt: "Use execute to run scripts. Save outputs to /notes/analysis/. Return findings, not raw output.",
+    tools: [], // only the built-in file tools + execute from the sandbox backend
+  },
+];
+
+// ---------- Ch5: thread-scoped sandbox ----------
+const sandboxes = new SandboxClient();
+async function sandboxFor(threadId: string) {
+  const name = `thread-${threadId}`;
+  const found = (await sandboxes.listSandboxes()).filter((s) =&gt; s.name === name);
+  return found[0] ?? (await sandboxes.createSandbox({ name, idleTtlSeconds: 3600 }));
+}
+
+// ---------- The agent ----------
+export async function buildAgent(threadId: string) {
+  const sandbox = await sandboxFor(threadId);
+
+  // Ch3/4/5/8: sandbox is the default (scratch + execute); durable paths route to Postgres
+  const backend = new CompositeBackend(new LangSmithSandbox({ sandbox }), {
+    "/memories/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "memories"] }),
+    "/runbooks/": new StoreBackend({ namespace: (rt) =&gt; [rt.context.orgId, "runbooks"] }),
+    "/skills/":   new StoreBackend({ namespace: () =&gt; ["skills"] }),
+  });
+
+  return createDeepAgent({
+    model: "bedrock:anthropic.claude-sonnet-4-6",           // Ch1 (+ automatic Bedrock prompt caching)
+    systemPrompt: `You are the IncidentScout coordinator.
+Customer impact first, then timeline, then cause. Read /memories/AGENTS.md conventions and /runbooks/.
+Delegate per-service log work to log-analyst (in parallel) and heavy analysis to data-cruncher.
+Append durable learnings to /memories/incidents.md.`,
+    tools: [fetchLogs, pageOncall, postIncidentUpdate, ...mcpTools], // Ch6
+    contextSchema,                                          // Ch2
+    backend, store, checkpointer,                           // Ch4/5
+    memory: ["/memories/AGENTS.md"],                        // Ch8
+    skills: ["/skills/"],                                   // Ch8
+    subagents,                                              // Ch9
+    permissions: [                                          // Ch10 (paths under routes: required with a sandbox default)
+      { operations: ["write"], paths: ["/runbooks/**", "/skills/**"], mode: "deny" },
+    ],
+    interruptOn: {                                          // Ch10
+      page_oncall: { allowedDecisions: ["approve", "edit", "reject"] },
+      post_incident_update: { allowedDecisions: ["approve", "reject"] },
+    },
+    middleware: [                                           // Ch10
+      todoListMiddleware(),
+      modelRetryMiddleware({ maxRetries: 3, backoffFactor: 2.0, initialDelayMs: 1000 }),
+      toolRetryMiddleware({ maxRetries: 2, tools: ["fetch_logs"] }),
+      modelCallLimitMiddleware({ runLimit: 50 }),
+      toolCallLimitMiddleware({ runLimit: 200 }),
+    ],
+  });
+}
+
+// ---------- Request handler (your HTTP framework calls this) ----------
+export async function handleTurn(threadId: string, ctx: Ctx, text: string) {
+  const agent = await buildAgent(threadId);
+  const config = { configurable: { thread_id: threadId }, context: ctx };
+  const result = await agent.invoke({ messages: [{ role: "user", content: text }] }, config);
+  if (result.__interrupt__) {
+    // Return pending actions to the UI; the human's decisions come back via resumeTurn
+    return { pending: result.__interrupt__[0].value.actionRequests };
+  }
+  return { reply: result.messages.at(-1)?.content };
+}
+
+export async function resumeTurn(threadId: string, ctx: Ctx, decisions: unknown[]) {
+  const agent = await buildAgent(threadId);
+  return agent.invoke(new Command({ resume: { decisions } }),
+    { configurable: { thread_id: threadId }, context: ctx });
+}
+</code></pre>
+<p>(<code>logsApi</code>, <code>pagingApi</code>, <code>chatApi</code> are placeholders for your clients.)</p>
+<h3 id="recap-what-each-concept-contributed">Recap: what each concept contributed</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Ch</th>
+<th>Concept</th>
+<th>Problem it solved for IncidentScout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Harness vs loop</td>
+<td>Got planning, files, delegation, compression for free instead of hand-building them</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Loop, middleware stack, state channels</td>
+<td>Conversations continue by <code>thread_id</code>; tools know the user via <code>context</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Virtual filesystem</td>
+<td>60k-token log dumps offloaded; notes and hypotheses kept in files</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Backends + Postgres</td>
+<td>Past-incident memory survives threads and restarts; per-org isolation</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Sandboxes</td>
+<td>Runs analysis scripts without touching the host or its secrets</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Tools + MCP</td>
+<td>Plugs into observability MCP servers; credentialed actions stay host-side</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Multimodal</td>
+<td>Reads dashboard screenshots and vendor PDFs</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Context engineering</td>
+<td>Long investigations stay within limits; conventions (memory) and procedures (skills) load efficiently</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Subagents</td>
+<td>Parallel per-service investigation with clean coordinator context</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Planning, HITL, permissions, resilience</td>
+<td>Visible plan, human approval before paging/posting, org content protected, survives throttling</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Production architecture</td>
+<td>Runs for many users on AWS with durable state, secrets, and traces</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sources: all chapters above.</p>
+<h2 id="chapter-13-wiring-it-together-middleware-skills-and-multimodal-files">Chapter 13 — Wiring it together: middleware, skills, and multimodal files</h2>
+<h3 id="the-problem_11">The problem</h3>
+<p>Chapters 8, 7 and 10 introduced skills, multimodal input and middleware one at a time. In a real service they meet in one <code>createDeepAgent</code> call and interact: middleware wraps the built-in file tools that load skills and read PDFs, the backend routes decide who can see which file, and runtime context has to reach both. This chapter wires all three into IncidentScout and proves the wiring with tests.</p>
+<blockquote>
+<p><strong>Verified, not just composed.</strong> Unlike Ch12, every line here was executed: <code>deepagents@1.14.1</code>, <code>langchain@1.5.12</code>, <code>@langchain/langgraph@1.4.18</code>, Node 24. <code>tsc --strict</code> passes; 5 tests pass; 4 deliberate mutations (drop the policy middleware, drop <code>toolErrorMiddleware</code>, collapse org scoping, drop <code>skills</code>) each make a test fail. Tests use LangChain's scripted <code>fakeModel()</code>, so they are deterministic and need no API key.</p>
+</blockquote>
+<h3 id="two-corrections-found-while-running-it">Two corrections found while running it</h3>
+<p>Running the code against the current packages exposed two places where earlier chapters are out of date:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Earlier claim</th>
+<th>What <code>deepagents@1.14.1</code> / <code>langchain@1.5.12</code> actually do</th>
+<th>Affects</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>StoreBackend</code> namespace factories receive a LangGraph <code>Runtime</code>, so <code>(rt) =&gt; [rt.context.orgId, …]</code> works</td>
+<td>The factory receives <code>{ state, config, assistantId }</code> — <strong>no <code>context</code></strong>. <code>rt.context.orgId</code> is <code>undefined</code> and throws. Read identity from <code>config.configurable</code> (set it server-side next to <code>thread_id</code>), or use a static namespace.</td>
+<td>Ch4.2, 4.3, 8, 12</td>
+</tr>
+<tr>
+<td><code>ToolErrorMiddleware</code> is not yet available in JS</td>
+<td><code>toolErrorMiddleware({ onError })</code> is exported from <code>langchain</code>. Returning content from <code>onError</code> converts a thrown tool error into an error <code>ToolMessage</code>; returning nothing re-throws.</td>
+<td>Ch6, 10.4, 12</td>
+</tr>
+</tbody>
+</table></div>
+<p>Treat the rest of the guide's namespace examples accordingly: pass <code>configurable: { thread_id, orgId }</code> <strong>and</strong> <code>context: { userId, orgId }</code> on every call — <code>context</code> for tools and middleware, <code>configurable</code> for backend namespaces.</p>
+<h3 id="how-the-pieces-meet">How the pieces meet</h3>
+<pre class="mermaid">flowchart LR
+  REQ([invoke: messages + configurable.orgId + context]) --&gt; OP[OrgPolicy&lt;br/&gt;wrapModelCall&lt;br/&gt;reads runtime.context]
+  OP --&gt; LLM[(Model)]
+  LLM --&gt;|tool call| AU[AuditTools&lt;br/&gt;wrapToolCall]
+  AU --&gt; TE[toolErrorMiddleware]
+  TE --&gt; T{tool}
+  T --&gt;|read_file /skills/...| SK[(StoreBackend&lt;br/&gt;ns: skills)]
+  T --&gt;|read_file /uploads/...| UP[(StoreBackend&lt;br/&gt;ns: orgId, uploads)]
+  T --&gt;|fetch_logs| API[Logs API]
+  SKM[SkillsMiddleware&lt;br/&gt;lists skill frontmatter] -.system prompt.-&gt; LLM
+</pre>
+<ul>
+<li><strong>Middleware order:</strong> earlier in <code>middleware: [...]</code> means the outer wrapper. <code>AuditTools</code> sits outside <code>toolErrorMiddleware</code>, so it records a failed tool as <code>ok: false</code> instead of seeing an exception.</li>
+<li><strong>Skills:</strong> <code>skills: ["/skills/"]</code> makes <code>SkillsMiddleware</code> list each skill's <code>name</code> + <code>description</code> in the system prompt. The body is loaded only when the model calls <code>read_file</code> on it.</li>
+<li><strong>Multimodal files:</strong> app code uploads bytes into an org-scoped store namespace; the agent opens them with the built-in <code>read_file</code>, which returns a <code>{ type: "file", mimeType: "application/pdf", data }</code> block (images come back as image blocks).</li>
+<li><strong>Two ingress paths for media:</strong> attach it to the user message (one-off) or upload it under <code>/uploads/</code> and let the agent decide when to open it (preferred for long investigations, because summarization drops old media blocks — Ch7).</li>
+</ul>
+<h3 id="the-agent-srcincidentscoutts">The agent — <code>src/incidentscout.ts</code></h3>
+<pre><code class="language-ts">// src/incidentscout.ts — middleware + skills + multimodal files, wired into one Deep Agent.
+// Verified against deepagents@1.14.1 / langchain@1.5.12 by test/wiring.test.ts.
+import * as z from "zod";
+import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend } from "deepagents";
+import { createMiddleware, toolErrorMiddleware, modelCallLimitMiddleware, tool } from "langchain";
+import type { BaseStore, BaseCheckpointSaver } from "@langchain/langgraph";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+
+// ---------- runtime context: set by YOUR auth layer, never from the request body ----------
+export const contextSchema = z.object({ userId: z.string(), orgId: z.string() });
+
+// ---------- skills: seeded by app code into the shared "skills" namespace ----------
+const POSTMORTEM_SKILL = `---
+name: postmortem
+description: Blameless incident postmortem. Use when asked to write up or summarize a resolved incident.
+---
+# Postmortem
+1. Impact first: who was affected, how long, how badly.
+2. Timeline in UTC from first signal to resolution.
+3. Root cause and contributing factors. No blame on individuals.
+4. Action items with owners.
+`;
+
+export async function seedSkills(store: BaseStore) {
+  // The CompositeBackend strips the "/skills/" route prefix before hitting the store,
+  // so the store key is "/postmortem/SKILL.md", visible to the agent at "/skills/postmortem/SKILL.md".
+  await new StoreBackend({ namespace: ["skills"], store }).uploadFiles([
+    ["/postmortem/SKILL.md", new TextEncoder().encode(POSTMORTEM_SKILL)],
+  ]);
+}
+
+// ---------- multimodal uploads: org-scoped binary files the agent opens with read_file ----------
+export async function uploadIncidentFile(store: BaseStore, orgId: string, path: string, bytes: Uint8Array) {
+  const [res] = await new StoreBackend({ namespace: [orgId, "uploads"], store }).uploadFiles([[path, bytes]]);
+  if (res.error) throw new Error(`upload failed: ${res.error}`);
+}
+
+// In deepagents@1.14.1 the namespace factory receives { state, config, assistantId } — NOT a Runtime,
+// so per-run `context` is not visible here. Pass the org id through config.configurable as well.
+const orgScoped = (suffix: string) =&gt;
+  new StoreBackend({
+    namespace: ({ config }) =&gt; {
+      const org = config?.configurable?.orgId;
+      if (typeof org !== "string" || !org) throw new Error("configurable.orgId is required");
+      return [org, suffix];
+    },
+  });
+
+// ---------- custom middleware ----------
+export type AuditEvent = { tool: string; ms: number; ok: boolean };
+
+// wrapToolCall: time and record every tool call (built-in file tools included).
+const auditTools = (sink: AuditEvent[]) =&gt;
+  createMiddleware({
+    name: "AuditTools",
+    wrapToolCall: async (request, handler) =&gt; {
+      const t0 = Date.now();
+      const res: any = await handler(request);
+      const ok = res?.status !== "error";
+      sink.push({ tool: request.toolCall.name, ms: Date.now() - t0, ok });
+      return res;
+    },
+  });
+
+// wrapModelCall: add per-org policy from runtime context to the system prompt on every model call.
+const orgPolicy = createMiddleware({
+  name: "OrgPolicy",
+  contextSchema,
+  wrapModelCall: (request, handler) =&gt;
+    handler({
+      ...request,
+      systemMessage: request.systemMessage.concat(
+        `\nOrg: ${request.runtime.context.orgId}. Never page on-call before customer impact is confirmed.`,
+      ),
+    }),
+});
+
+// ---------- the agent ----------
+export function buildAgent(opts: {
+  model: BaseChatModel | string;
+  store: BaseStore;
+  checkpointer: BaseCheckpointSaver;
+  audit?: AuditEvent[];
+  fetchLogsImpl?: (service: string, minutes: number) =&gt; Promise&lt;string&gt;;
+}) {
+  const fetchLogs = tool(
+    async ({ service, minutes }) =&gt;
+      (opts.fetchLogsImpl ?? (async (s, m) =&gt; `[stub] last ${m}m of ${s}: ERROR timeout payments-db`))(service, minutes),
+    {
+      name: "fetch_logs",
+      description: "Fetch recent error logs for one service. Use when investigating an incident.",
+      schema: z.object({ service: z.string(), minutes: z.number().default(15) }),
+    },
+  );
+
+  const backend = new CompositeBackend(new StateBackend(), {
+    "/skills/": new StoreBackend({ namespace: ["skills"] }), // shared, curated by your team
+    "/uploads/": orgScoped("uploads"),                         // PDFs, screenshots, exports
+    "/memories/": orgScoped("memories"),
+  });
+
+  return createDeepAgent({
+    model: opts.model,
+    systemPrompt: `You are IncidentScout. Customer impact first, then timeline, then cause.
+User-provided files live under /uploads/&lt;incident&gt;/ — open them with read_file.`,
+    tools: [fetchLogs],
+    contextSchema,
+    backend,
+    store: opts.store,
+    checkpointer: opts.checkpointer,
+    skills: ["/skills/"],
+    permissions: [{ operations: ["write"], paths: ["/skills/**", "/uploads/**"], mode: "deny" }],
+    middleware: [
+      orgPolicy,
+      auditTools(opts.audit ?? []),
+      // Earlier in the list = outer wrapper. AuditTools wraps toolErrorMiddleware,
+      // so a thrown tool error reaches audit as an error ToolMessage (ok: false), not an exception.
+      toolErrorMiddleware({
+        onError: (_err, req) =&gt; `${req.toolCall.name} failed (upstream error). Try another data source.`,
+      }),
+      modelCallLimitMiddleware({ runLimit: 30 }),
+    ],
+  });
+}
+</code></pre>
+<p>What each piece does:</p>
+<ol>
+<li><strong><code>seedSkills</code></strong> writes <code>SKILL.md</code> under the store key <code>/postmortem/SKILL.md</code>. The <code>/skills/</code> route prefix is stripped before the store is hit, so the agent sees <code>/skills/postmortem/SKILL.md</code>. Writing the key <em>with</em> <code>/skills/</code> makes the skill invisible — the most common mistake.</li>
+<li><strong><code>uploadIncidentFile</code></strong> writes raw bytes (<code>Uint8Array</code>) into <code>[orgId, "uploads"]</code>. Nothing is base64-encoded into the conversation until the agent actually reads the file.</li>
+<li><strong><code>orgScoped</code></strong> builds the namespace from <code>config.configurable.orgId</code> and fails closed if it is missing, so a request without an org can never fall back to a shared namespace.</li>
+<li><strong><code>orgPolicy</code></strong> (<code>wrapModelCall</code>) appends per-org policy to the system message on every model call, reading <code>request.runtime.context</code> — this is where runtime context <em>is</em> available.</li>
+<li><strong><code>auditTools</code></strong> (<code>wrapToolCall</code>) times every tool call, including the built-in file tools, into a sink you control (swap for a logger or metrics client).</li>
+<li><strong><code>toolErrorMiddleware</code></strong> turns exceptions from <code>fetch_logs</code> into a model-readable error message <em>without</em> leaking the raw error text (hostnames, stack traces).</li>
+<li><strong><code>permissions</code></strong> make <code>/skills/</code> and <code>/uploads/</code> read-only to the agent: content there is written by app code only, which closes the shared-content prompt-injection path from Ch8.</li>
+</ol>
+<h3 id="calling-it">Calling it</h3>
+<pre><code class="language-ts">import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+import { readFile } from "node:fs/promises";
+import { buildAgent, seedSkills, uploadIncidentFile } from "./incidentscout.ts";
+
+const store = PostgresStore.fromConnString(process.env.DATABASE_URL!);
+const checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL!);
+await store.setup(); await checkpointer.setup();
+await seedSkills(store); // once, at deploy time
+
+const agent = buildAgent({ model: "bedrock:anthropic.claude-sonnet-4-6", store, checkpointer });
+
+// 1) User uploads a vendor PDF for incident 42 (from your HTTP handler)
+await uploadIncidentFile(store, "acme", "/inc-42/vendor-report.pdf", await readFile("report.pdf"));
+
+// 2) Ask with an inline screenshot as well
+const identity = { userId: "u-42", orgId: "acme" };           // from your auth layer
+const result = await agent.invoke(
+  { messages: [{ role: "user", content: [
+      { type: "text", text: "Checkout p99 spiked. Vendor report is at /uploads/inc-42/vendor-report.pdf. Draft a postmortem." },
+      { type: "image", url: "https://grafana.example.com/render/checkout-p99.png" },
+  ] }] },
+  { configurable: { thread_id: "inc-42", orgId: identity.orgId }, context: identity },
+);
+</code></pre>
+<p><strong>Production swaps</strong> (only these change): <code>InMemoryStore</code> → <code>PostgresStore</code>, <code>MemorySaver</code> → <code>PostgresSaver</code>, <code>fakeModel()</code> → a real model string. <strong>Bedrock caveat (Composition, not from the Deep Agents docs):</strong> Bedrock Converse accepts media as bytes or S3 locations rather than arbitrary public URLs, so for Bedrock prefer the <code>/uploads/</code> path (bytes) or base64 blocks over <code>{ type: "image", url }</code> pointing at a web URL. Check your model's supported MIME types.</p>
+<h3 id="the-tests-testwiringtestts">The tests — <code>test/wiring.test.ts</code></h3>
+<pre><code class="language-ts">// test/wiring.test.ts — proves middleware + skills + multimodal wiring with a scripted fake model.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { fakeModel, AIMessage } from "langchain";
+import { InMemoryStore, MemorySaver } from "@langchain/langgraph";
+import { buildAgent, seedSkills, uploadIncidentFile, type AuditEvent } from "../src/incidentscout.ts";
+
+const PDF = new TextEncoder().encode("%PDF-1.4 vendor status report");
+
+async function setup(model: ReturnType&lt;typeof fakeModel&gt;, fetchLogsImpl?: (s: string) =&gt; Promise&lt;string&gt;) {
+  const store = new InMemoryStore();
+  const audit: AuditEvent[] = [];
+  await seedSkills(store);
+  await uploadIncidentFile(store, "acme", "/inc-42/vendor-report.pdf", PDF);
+  const agent = buildAgent({ model, store, checkpointer: new MemorySaver(), audit, fetchLogsImpl });
+  return { agent, audit, store };
+}
+const run = (agent: any, org: string, content: any) =&gt;
+  agent.invoke(
+    { messages: [{ role: "user", content }] },
+    { configurable: { thread_id: crypto.randomUUID(), orgId: org }, context: { userId: "u-1", orgId: org } },
+  );
+const toolMsgs = (res: any) =&gt; res.messages.filter((m: any) =&gt; m.type === "tool" || m._getType?.() === "tool");
+const sysText = (model: any) =&gt; JSON.stringify(model.calls[0].messages[0].content);
+
+test("skills are listed in the system prompt and org policy middleware injects runtime context", async () =&gt; {
+  const model = fakeModel().respond(new AIMessage("ok"));
+  const { agent } = await setup(model);
+  await run(agent, "acme", "hello");
+  const sys = sysText(model);
+  assert.match(sys, /postmortem/);
+  assert.match(sys, /Blameless incident postmortem/);
+  assert.match(sys, /Org: acme/);
+});
+
+test("agent loads a skill body and reads an uploaded PDF as a file content block; audit sees both", async () =&gt; {
+  const model = fakeModel()
+    .respondWithTools([{ name: "read_file", args: { file_path: "/skills/postmortem/SKILL.md" } }])
+    .respondWithTools([{ name: "read_file", args: { file_path: "/uploads/inc-42/vendor-report.pdf" } }])
+    .respond(new AIMessage("Postmortem drafted."));
+  const { agent, audit } = await setup(model);
+  const res = await run(agent, "acme", "Draft a postmortem using the vendor report.");
+  const [skillMsg, pdfMsg] = toolMsgs(res);
+  assert.match(JSON.stringify(skillMsg.content), /Impact first/);
+  assert.deepEqual(
+    (pdfMsg.content as any[]).map((b) =&gt; [b.type, b.mimeType]),
+    [["file", "application/pdf"]],
+  );
+  assert.deepEqual(audit.map((e) =&gt; e.tool), ["read_file", "read_file"]);
+  assert.equal(res.messages.at(-1).content, "Postmortem drafted.");
+});
+
+test("uploads are org-scoped: another org cannot read acme's PDF", async () =&gt; {
+  const model = fakeModel()
+    .respondWithTools([{ name: "read_file", args: { file_path: "/uploads/inc-42/vendor-report.pdf" } }])
+    .respond(new AIMessage("n/a"));
+  const { agent } = await setup(model);
+  const res = await run(agent, "globex", "read it");
+  const content = JSON.stringify(toolMsgs(res)[0].content);
+  assert.doesNotMatch(content, /application\/pdf/);
+  assert.match(content, /not found|Error/i);
+});
+
+test("toolErrorMiddleware turns a throwing tool into an error ToolMessage and the run continues", async () =&gt; {
+  const model = fakeModel()
+    .respondWithTools([{ name: "fetch_logs", args: { service: "checkout-api", minutes: 15 } }])
+    .respond(new AIMessage("Logs API is down; falling back to metrics."));
+  const { agent, audit } = await setup(model, async () =&gt; { throw new Error("ECONNRESET secret-host:9200"); });
+  const res = await run(agent, "acme", "check logs");
+  const msg = toolMsgs(res)[0];
+  assert.match(String(msg.content), /fetch_logs failed/);
+  assert.doesNotMatch(String(msg.content), /secret-host/); // raw error text not leaked to the model
+  assert.equal(audit[0].ok, false);
+  assert.equal(res.messages.at(-1).content, "Logs API is down; falling back to metrics.");
+});
+
+test("multimodal user input (image + text) reaches the model unchanged", async () =&gt; {
+  const model = fakeModel().respond(new AIMessage("Latency spike at 09:12."));
+  const { agent } = await setup(model);
+  await run(agent, "acme", [
+    { type: "text", text: "When did this start?" },
+    { type: "image", url: "https://grafana.example.com/render/checkout-p99.png" },
+  ]);
+  const human = model.calls[0].messages.find((m: any) =&gt; m.type === "human" || m._getType?.() === "human");
+  assert.ok((human!.content as any[]).some((b) =&gt; b.type === "image"));
+});
+</code></pre>
+<p>Run with:</p>
+<pre><code class="language-bash">npm i deepagents langchain @langchain/core @langchain/langgraph zod
+npm i -D typescript tsx @types/node
+npx tsx --test test/wiring.test.ts   # 5 pass
+npx tsc -p .                         # strict, clean
+</code></pre>
+<p>What the tests prove:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>skills listed + org policy</td>
+<td><code>SkillsMiddleware</code> put the skill's description in the system prompt; <code>OrgPolicy</code> read <code>runtime.context.orgId</code></td>
+</tr>
+<tr>
+<td>skill body + PDF</td>
+<td><code>read_file</code> loads the skill body on demand and returns the PDF as a <code>file</code> block with <code>application/pdf</code>; audit saw both calls</td>
+</tr>
+<tr>
+<td>org-scoped uploads</td>
+<td><code>globex</code> cannot read <code>acme</code>'s PDF — namespace isolation via <code>configurable.orgId</code> works</td>
+</tr>
+<tr>
+<td>tool errors</td>
+<td>a throwing tool becomes an error message, raw error text is not leaked, audit logs <code>ok: false</code>, the run completes</td>
+</tr>
+<tr>
+<td>multimodal input</td>
+<td>an image content block in the user message reaches the model intact</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="gotchas_6">Gotchas</h3>
+<ul>
+<li><strong>Namespace factory ≠ runtime context</strong> (see corrections above). If isolation silently looks wrong, log what your factory receives.</li>
+<li><strong>Store keys omit the route prefix</strong> for skills, uploads and memories alike.</li>
+<li><strong>Skills need frontmatter</strong> with <code>name</code> and <code>description</code>; the description is what the model uses to decide to load the skill, so write it as "Use when…".</li>
+<li><strong>Custom subagents don't inherit <code>skills</code></strong> — pass them explicitly (Ch9).</li>
+<li><strong>Media and summarization:</strong> old image/PDF blocks disappear when history is summarized; files under <code>/uploads/</code> can be re-read, inline blocks cannot.</li>
+<li><strong><code>fakeModel()</code> is for wiring tests, not quality.</strong> It proves the harness plumbing; evaluate prompt and model behaviour separately with a real model.</li>
+</ul>
+<h3 id="next-problem_10">Next problem</h3>
+<p>The wiring is verified in isolation. Evaluating whether the <em>model</em> uses these pieces well — picks the right skill, opens the PDF before answering — is an evaluation problem, not a unit-test one.</p>
+<p>Sources: executed locally against <a href="https://www.npmjs.com/package/deepagents" target="_blank" rel="noopener">deepagents on npm</a> 1.14.1 and <a href="https://www.npmjs.com/package/langchain" target="_blank" rel="noopener">langchain on npm</a> 1.5.12; <a href="https://docs.langchain.com/oss/javascript/langchain/middleware/custom" target="_blank" rel="noopener">Custom middleware</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/multimodal" target="_blank" rel="noopener">Multimodal inputs and outputs</a>, <a href="https://docs.langchain.com/oss/javascript/langchain/messages" target="_blank" rel="noopener">LangChain messages — multimodal</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/skills" target="_blank" rel="noopener">Skills</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/backends" target="_blank" rel="noopener">Backends</a>, <a href="https://docs.langchain.com/oss/javascript/deepagents/permissions" target="_blank" rel="noopener">Permissions</a></p>
+<h2 id="glossary">Glossary</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Agent harness</strong></td>
+<td>An opinionated, batteries-included layer over an agent loop with built-in tools, prompts, and subagents. Deep Agents is one.</td>
+</tr>
+<tr>
+<td><strong>Agent loop</strong></td>
+<td>Model call → tool execution, repeated until the model stops calling tools.</td>
+</tr>
+<tr>
+<td><strong>Assistant</strong></td>
+<td>A configured agent instance; memory and sandboxes can be scoped to it.</td>
+</tr>
+<tr>
+<td><strong>Backend</strong></td>
+<td>The storage behind the virtual filesystem tools (<code>StateBackend</code>, <code>StoreBackend</code>, <code>CompositeBackend</code>, etc.).</td>
+</tr>
+<tr>
+<td><strong><code>BackendProtocolV2</code></strong></td>
+<td>The interface a backend implements: <code>ls</code>, <code>read</code>, <code>readRaw</code>, <code>write</code>, <code>edit</code>, <code>glob</code>, <code>grep</code> (+ optional file transfer).</td>
+</tr>
+<tr>
+<td><strong><code>BaseSandbox</code></strong></td>
+<td>Base class that builds file operations on top of a provider's <code>execute()</code>.</td>
+</tr>
+<tr>
+<td><strong>Checkpointer</strong></td>
+<td>LangGraph component that saves a thread's graph state at each step (e.g. <code>MemorySaver</code>, <code>PostgresSaver</code>).</td>
+</tr>
+<tr>
+<td><strong><code>CompiledSubAgent</code></strong></td>
+<td>A subagent defined by a prebuilt, compiled graph (<code>runnable</code>).</td>
+</tr>
+<tr>
+<td><strong>Context (runtime)</strong></td>
+<td>Per-run data passed as <code>context</code> and typed by <code>contextSchema</code>; visible to tools/middleware, not automatically to the model; propagates to subagents.</td>
+</tr>
+<tr>
+<td><strong>Context isolation / quarantine</strong></td>
+<td>Doing heavy work in a subagent so only its final result enters the parent's context.</td>
+</tr>
+<tr>
+<td><strong>Graph factory</strong></td>
+<td>An exported async function the LangGraph server calls per run to build the agent (used for per-thread sandboxes).</td>
+</tr>
+<tr>
+<td><strong>General-purpose subagent</strong></td>
+<td>The auto-added subagent with the parent's tools and model; inherits skills.</td>
+</tr>
+<tr>
+<td><strong>Harness profile</strong></td>
+<td>Per-provider/model defaults (e.g. <code>excluded_tools</code>, prompt overrides, general-purpose subagent settings).</td>
+</tr>
+<tr>
+<td><strong>HITL (human-in-the-loop)</strong></td>
+<td>Pausing before configured tool calls for approve / edit / reject / respond decisions, via <code>interruptOn</code>.</td>
+</tr>
+<tr>
+<td><strong>Interrupt</strong></td>
+<td>A LangGraph pause that returns control with <code>__interrupt__</code>; resumed with <code>new Command({ resume })</code> on the same thread.</td>
+</tr>
+<tr>
+<td><strong>Interpreter</strong></td>
+<td><code>createCodeInterpreterMiddleware()</code> from <code>@langchain/quickjs</code>: an <code>eval</code> tool running JS in QuickJS, no shell/network.</td>
+</tr>
+<tr>
+<td><strong>LangGraph</strong></td>
+<td>The runtime underneath: durable execution, streaming, interrupts, persistence.</td>
+</tr>
+<tr>
+<td><strong><code>lc_agent_name</code></strong></td>
+<td>Metadata key naming which agent/subagent produced a run; used in tracing and tool branching.</td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td>Model Context Protocol; <code>MultiServerMCPClient</code> loads MCP server tools as LangChain tools.</td>
+</tr>
+<tr>
+<td><strong>Memory (</strong><strong><code>AGENTS.md</code></strong><strong>)</strong></td>
+<td>Files passed via <code>memory</code>, always injected into the prompt; the agent can update them.</td>
+</tr>
+<tr>
+<td><strong>Middleware</strong></td>
+<td>Hooks (<code>beforeAgent</code>, <code>beforeModel</code>, <code>wrapModelCall</code>, <code>afterModel</code>, <code>wrapToolCall</code>, <code>afterAgent</code>) that run inside the agent graph.</td>
+</tr>
+<tr>
+<td><strong>Namespace factory</strong></td>
+<td>Function <code>(rt) =&gt; string[]</code> that scopes <code>StoreBackend</code> data per user, org, assistant, or thread.</td>
+</tr>
+<tr>
+<td><strong>Offloading</strong></td>
+<td>Replacing large tool inputs/results in the conversation with a file reference (+ preview).</td>
+</tr>
+<tr>
+<td><strong>Permissions</strong></td>
+<td>First-match-wins allow/deny rules on built-in file tools, by operation and path glob.</td>
+</tr>
+<tr>
+<td><strong>Progressive disclosure</strong></td>
+<td>Skills load only frontmatter at startup and full content when relevant.</td>
+</tr>
+<tr>
+<td><strong>Prompt caching</strong></td>
+<td>Automatic caching of static prompt sections for Anthropic and Bedrock models.</td>
+</tr>
+<tr>
+<td><strong>Sandbox</strong></td>
+<td>A backend with an isolated environment and an <code>execute</code> tool.</td>
+</tr>
+<tr>
+<td><strong>Skill</strong></td>
+<td>A directory with <code>SKILL.md</code> (Agent Skills standard) plus resources, loaded on demand.</td>
+</tr>
+<tr>
+<td><strong>Store</strong></td>
+<td>LangGraph <code>BaseStore</code> for cross-thread key/value data (e.g. <code>InMemoryStore</code>, <code>PostgresStore</code>).</td>
+</tr>
+<tr>
+<td><strong>Subagent</strong></td>
+<td>An ephemeral child agent launched by the <code>task</code> tool with fresh context, returning one report.</td>
+</tr>
+<tr>
+<td><strong>Summarization</strong></td>
+<td>Replacing older history with an LLM-written summary near the context limit, while writing the full history to the filesystem.</td>
+</tr>
+<tr>
+<td><strong>Thread</strong></td>
+<td>One conversation, identified by <code>thread_id</code>; scope of checkpoints and default files.</td>
+</tr>
+<tr>
+<td><strong>Virtual filesystem</strong></td>
+<td>The file tools (<code>ls</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>glob</code>, <code>grep</code>, <code>execute</code>) and the backend behind them.</td>
+</tr>
+<tr>
+<td><strong><code>write_todos</code></strong></td>
+<td>Planning tool added by <code>todoListMiddleware()</code> (opt-in since v0.7).</td>
+</tr>
+</tbody>
+</table></div>
+</main></div>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script>document.querySelectorAll('pre code').forEach(el=>hljs.highlightElement(el));</script>
+<script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true,theme:'default'});</script>
+
+</div>

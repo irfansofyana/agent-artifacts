@@ -1,0 +1,19 @@
+
+.legacy-content{--bg:var(--bg-terminal);--panel:var(--bg-terminal);--border:var(--border-chrome);--text:var(--text-primary);--muted:var(--text-secondary);--accent:var(--phosphor);--code:var(--phosphor)}
+.legacy-content *{box-sizing:border-box}.legacy-content{scroll-behavior:smooth}
+.legacy-content{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+.legacy-content a{color:var(--accent)}
+.legacy-content .layout{display:grid;grid-template-columns:290px minmax(0,1fr);max-width:1400px;margin:auto}
+.legacy-content nav.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:24px 18px;border-right:1px solid var(--border);font-size:.85rem}
+.legacy-content nav.toc ul{list-style:none;padding-left:12px;margin:4px 0}.legacy-content nav.toc>div>ul{padding-left:0}
+.legacy-content nav.toc a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}.legacy-content nav.toc a:hover{color:var(--text)}
+.legacy-content nav.toc .home{display:block;margin-bottom:14px;color:var(--accent);font-weight:600}
+.legacy-content main{padding:32px 48px 80px;max-width:980px}
+.legacy-content h1{font-size:2.1rem;line-height:1.2}.legacy-content h2{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border)}.legacy-content h3{margin-top:2rem}
+.legacy-content code{background:var(--code);padding:.1em .35em;border-radius:4px;font-size:.88em}
+.legacy-content pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:14px;overflow:auto}.legacy-content pre code{background:none;padding:0}
+.legacy-content pre.mermaid{background:var(--surface-output);color:var(--text-secondary);text-align:center}
+.legacy-content .tw{overflow-x:auto;margin:1rem 0}.legacy-content table{border-collapse:collapse;width:100%;font-size:.92rem}
+.legacy-content th,.legacy-content td{border:1px solid var(--border);padding:8px 10px;vertical-align:top;text-align:left}.legacy-content th{background:var(--panel)}
+.legacy-content blockquote{border-left:3px solid var(--accent);margin:0;padding-left:14px;color:var(--muted)}
+@media(max-width:900px){.legacy-content .layout{grid-template-columns:1fr}.legacy-content nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}.legacy-content main{padding:20px}}

@@ -1,0 +1,97 @@
+
+<div class="legacy-content" data-artifact-content>
+
+<div class="wrap">
+<header class="hero"><div class="eyebrow">Practical learning path · AWS Jakarta ready</div><h1>ECS + Fargate without cargo culting.</h1><p>A production-minded field guide for learning how containers become ECS tasks and services, how network and IAM boundaries actually work, and how to provision the useful parts with Terraform.</p><div class="notice"><strong>Operating principle:</strong> ECS decides <em>what</em></div></header>
+<div class="grid"><nav class="toc"><strong>In this guide</strong><a href="#model">1. Mental model</a><a href="#lifecycle">2. Tasks vs services</a><a href="#network">3. Networking</a><a href="#iam">4. IAM, secrets &amp; logs</a><a href="#terraform">5. Terraform stack</a><a href="#practice">6. Learning by building</a><a href="#resources">7. Curated resources</a><a href="#quiz">8. Check yourself</a></nav>
+<main>
+<section id="model"><h2>1. The mental model</h2><p class="lead">Do not memorize services first. Track the unit of work from image to network identity.</p><div class="flow"><div class="node"><span class="label">Build</span><br><strong>Container image</strong><br>Immutable application package in ECR.</div><div class="arrow">→</div><div class="node"><span class="label">Declare</span><br><strong>Task definition</strong><br>Image, CPU/RAM, ports, roles, logs, health checks.</div><div class="arrow">→</div><div class="node"><span class="label">Run</span><br><strong>Task</strong><br>One running copy of that definition.</div><div class="arrow">→</div><div class="node"><span class="label">Maintain</span><br><strong>Service</strong><br>Keeps a desired task count healthy and deploys revisions.</div></div><p>Fargate lets ECS run containers without you managing EC2 capacity. Each Fargate task has its own kernel, CPU/memory resources, and elastic network interface (ENI). That is a useful workload boundary, not a replacement for application authorization.[1]</p><div class="cards"><div class="card good"><h3>ECS</h3><p>The scheduler and control plane. It registers task definitions, starts/stops tasks, replaces unhealthy service tasks, and integrates with load balancers.</p></div><div class="card good"><h3>Fargate</h3><p>The serverless compute launch type. You pay for requested task CPU/memory while it runs instead of managing a worker-node fleet.</p></div><div class="card"><h3>Cluster</h3><p>A logical ECS boundary. With Fargate it is not a pool of servers you administer; it groups services, tasks, capacity-provider policy, and observability.</p></div><div class="card"><h3>Task definition</h3><p>A versioned deployment contract. Changing the image or environment produces a new revision; a service must be updated to roll it out.[2]</p></div></div></section>
+<section id="lifecycle"><h2>2. Tasks vs services: pick the right lifecycle</h2><div class="table-wrap"><table><thead><tr><th>Use</th><th>Primitive</th><th>Examples</th><th>Failure model</th></tr></thead><tbody><tr><td>Always-on HTTP/API</td><td><strong>ECS service</strong></td><td>Chat API, model gateway, MCP server</td><td>Maintain desired count; ALB health checks; rolling deployment</td></tr><tr><td>Finite background work</td><td><strong>RunTask</strong></td><td>PDF conversion, report generation, document ingestion</td><td>Caller/queue owns retry, timeout, idempotency and result state</td></tr><tr><td>Scheduled work</td><td><strong>Scheduled task</strong></td><td>Nightly index refresh, cleanup, cost report</td><td>EventBridge triggers task; alarms detect misses</td></tr></tbody></table></div><div class="card warn"><h3>The expensive beginner mistake</h3><p>Putting a long-running background job inside an HTTP request. The load balancer timeout, deploy, or task replacement will eventually teach you why that was a bad idea. Put durable job state in RDS/DynamoDB/S3, enqueue work, and make workers restartable.</p></div><h3>For the company-agent architecture</h3><p>Use services for the trusted shared plane: web/API, chat orchestration, model gateway, retrieval, and private MCP tools. Use short-lived tasks only for a bounded executor job. Never make a task's local disk your conversation database.</p></section>
+<section id="network"><h2>3. Networking: every Fargate task is a VPC citizen</h2><p>Fargate requires <code>awsvpc</code> network mode. A task receives a private IP through its ENI; containers inside the same task share <code>localhost</code>. Put application tasks in private subnets. An ALB belongs in public subnets and forwards to task IP targets.[2][3]</p><div class="cards"><div class="card good"><h3>Inbound</h3><p>Internet → CloudFront/WAF (optional) → ALB → service security group → task security group. Allow task ingress only from the ALB or a known internal security group.</p></div><div class="card good"><h3>Outbound</h3><p>Prefer VPC endpoints for ECR, CloudWatch Logs, S3, Secrets Manager and Bedrock when available. Use NAT only for approved internet egress; it is not a security policy by itself.[3]</p></div><div class="card warn"><h3>Task ENI limits</h3><p>Every task consumes VPC addresses. Plan subnet CIDR capacity for peak task count, deployment overlap, and worker bursts—not just today's desired count.</p></div><div class="card warn"><h3>Load balancer target type</h3><p>Fargate services behind an ALB/NLB use target type <code>ip</code>, not <code>instance</code>.[1]</p></div></div></section>
+<section id="iam"><h2>4. IAM, secrets and logs: the separation that matters</h2><div class="cards"><div class="card good"><h3>Execution role</h3><p>Used by the ECS/Fargate agent to pull ECR images, emit <code>awslogs</code>, and retrieve injected secrets. It is <strong>not</strong> the permission set your application should use.[2]</p></div><div class="card good"><h3>Task role</h3><p>Credentials delivered to application containers for their own AWS calls—e.g. an S3 prefix or Bedrock invocation. Keep it least-privilege and specific to the workload.[4]</p></div></div><pre><button class="copy">Copy</button><code># Rule of thumb
+execution role = "can ECS start the container?"
+task role      = "what may the application do after it starts?"
+</code></pre><p>Use Secrets Manager/Parameter Store for sensitive configuration. Do not bake secrets into images or Terraform variables committed to source control. Task roles make CloudTrail attribution include the task context, which is useful for audit.[4]</p></section>
+<section id="terraform"><h2>5. Terraform: provision the boring, important substrate</h2><p class="lead">Terraform describes desired infrastructure, tracks it in state, and plans changes before applying them.[5] Start with a small module boundary: networking is owned separately; the ECS service module receives subnet and security-group IDs.</p><h3>What Terraform should provision</h3><div class="table-wrap"><table><thead><tr><th>Layer</th><th>Terraform resources / data</th><th>Why it exists</th></tr></thead><tbody><tr><td>Image</td><td><code>aws_ecr_repository</code></td><td>Private image registry, image scanning/lifecycle policy</td></tr><tr><td>Runtime</td><td><code>aws_ecs_cluster</code>, <code>aws_ecs_task_definition</code>, <code>aws_ecs_service</code></td><td>Declare deployment unit, desired count, rollout behavior[6][7]</td></tr><tr><td>Network</td><td>VPC, private/public subnets, route tables, NAT/VPC endpoints, security groups, ALB + target group</td><td>Reachability and egress control</td></tr><tr><td>Identity</td><td><code>aws_iam_role</code>, <code>aws_iam_role_policy</code></td><td>Separate execution role from application task role</td></tr><tr><td>Operations</td><td>CloudWatch log group, alarms, autoscaling, IAM for CI/CD</td><td>Logs, deploy visibility, scale and response</td></tr></tbody></table></div><h3>Minimal service module skeleton</h3><pre><button class="copy">Copy</button><code>terraform {
+  required_providers {
+    aws = { source = "hashicorp/aws", version = "&gt;= 6.0, &lt; 7.0" }
+  }
+}
+
+provider "aws" { region = "ap-southeast-3" }
+
+resource "aws_ecs_cluster" "this" {
+  name = "company-ai"
+}
+
+resource "aws_cloudwatch_log_group" "app" {
+  name              = "/ecs/company-ai-api"
+  retention_in_days = 30
+}
+
+resource "aws_ecs_task_definition" "api" {
+  family                   = "company-ai-api"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 512
+  memory                   = 1024
+  execution_role_arn       = aws_iam_role.execution.arn
+  task_role_arn            = aws_iam_role.app.arn
+
+  container_definitions = jsonencode([{
+    name      = "api"
+    image     = "${aws_ecr_repository.api.repository_url}@${var.image_digest}"
+    essential = true
+    portMappings = [{ containerPort = 8080, protocol = "tcp" }]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.app.name
+        awslogs-region        = "ap-southeast-3"
+        awslogs-stream-prefix = "api"
+      }
+    }
+    healthCheck = {
+      command     = ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval    = 30
+      timeout     = 5
+      retries     = 3
+      startPeriod = 20
+    }
+  }])
+}
+
+resource "aws_ecs_service" "api" {
+  name            = "company-ai-api"
+  cluster         = aws_ecs_cluster.this.id
+  task_definition = aws_ecs_task_definition.api.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [aws_security_group.api.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.api.arn
+    container_name   = "api"
+    container_port   = 8080
+  }
+}
+</code></pre><div class="card bad"><h3>Do not copy this blindly</h3><p>This is a teaching skeleton, not an apply-ready production stack. You still need a VPC, ECR repository, private subnets, ALB/target group, security groups, roles, CI image pipeline, remote Terraform state and variables. The point is to recognize the boundaries before hiding them in a module.</p></div><h3>Terraform workflow that does not cause drama</h3><pre><button class="copy">Copy</button><code>terraform fmt -recursive
+terraform init
+terraform validate
+terraform plan -out=tfplan
+# review the plan with a human who owns the AWS account
+terraform apply tfplan
+</code></pre><p>Keep state remote, encrypted, and locked; do not use local state for a shared production account. Use separate environments/accounts or at least isolated state per environment. Pin provider versions, and promote an image by digest—not a mutable <code>latest</code> tag.</p></section>
+<section id="practice"><h2>6. A 4-week learning path that ends in a real system</h2><div class="card"><h3>Capstone: secure internal “document analysis” service</h3><p>Not a fake todo app. Build a small FastAPI service that accepts a document reference, queues a bounded analysis task, writes a result to S3, and exposes job state. It teaches service + task, network, IAM, logs, retries, Terraform and cleanup without opening an arbitrary-shell security hole.</p></div><h3>Week 1 — container and ECS primitives</h3><label class="check"><input type="checkbox">Containerize a tiny HTTP service; add a real <code>/health</code> endpoint.</label><label class="check"><input type="checkbox">Deploy it as an ECS Fargate service behind an ALB. Break the health endpoint once and observe replacement.</label><label class="check"><input type="checkbox">Write down what is image, task definition, task, service and cluster in your own deployment.</label><h3>Week 2 — VPC and IAM boundaries</h3><label class="check"><input type="checkbox">Move tasks into private subnets and allow inbound only from the ALB security group.</label><label class="check"><input type="checkbox">Create separate execution and task roles. Give the task role only one test S3 prefix.</label><label class="check"><input type="checkbox">Verify access from a task; verify that an unrelated prefix is denied.</label><h3>Week 3 — Terraform and deployment discipline</h3><label class="check"><input type="checkbox">Split Terraform into <code>network</code> and <code>service</code> modules with explicit inputs/outputs.</label><label class="check"><input type="checkbox">Use remote state and make CI run <code>fmt</code>, <code>validate</code>, and <code>plan</code>.</label><label class="check"><input type="checkbox">Deploy a new image digest and watch the ECS deployment events and CloudWatch logs.</label><h3>Week 4 — background task and operations</h3><label class="check"><input type="checkbox">Add a bounded <code>RunTask</code> worker path for a file-processing job.</label><label class="check"><input type="checkbox">Make job state durable, idempotent and visible. Kill the worker mid-job and prove retry behavior.</label><label class="check"><input type="checkbox">Set a budget alarm, task CPU/memory alarm, log retention and an explicit cleanup policy.</label></section>
+<section id="resources"><h2>7. Curated resources — in the order I would use them</h2><div class="card"><div class="resource"><div class="rank">01 · AWS</div><div><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html">Architect for AWS Fargate for Amazon ECS</a><br><span class="lead">Read first. The authoritative overview of Fargate’s operating model, isolation, platform versions, capacity providers and load-balancer behavior.</span></div></div><div class="resource"><div class="rank">02 · AWS</div><div><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html">Fargate task definition parameters</a><br><span class="lead">Use while building. It is the source of truth for fields, valid combinations, CPU/memory sizing and Fargate restrictions.</span></div></div><div class="resource"><div class="rank">03 · AWS</div><div><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-networking.html">Fargate task networking</a><br><span class="lead">Read before shipping anything reachable. Covers ENIs, private/public subnets, NAT, ECR endpoints, Flow Logs and PrivateLink.</span></div></div><div class="resource"><div class="rank">04 · AWS</div><div><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html">ECS task IAM roles</a><br><span class="lead">Read alongside the execution-role guide. This prevents the classic mistake of giving the application the role intended for the ECS agent.</span></div></div><div class="resource"><div class="rank">05 · HashiCorp</div><div><a href="https://developer.hashicorp.com/terraform">Terraform: Get Started &amp; documentation</a><br><span class="lead">Learn state, plans, modules, variables, and remote collaboration before applying cloud resources.</span></div></div><div class="resource"><div class="rank">06 · Terraform Registry</div><div><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition">aws_ecs_task_definition</a> · <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service">aws_ecs_service</a><br><span class="lead">Keep these open while writing HCL. Provider docs beat copied snippets.</span></div></div><div class="resource"><div class="rank">07 · AWS workshop</div><div><a href="https://catalog.workshops.aws/ecs-troubleshooting">Amazon ECS Troubleshooting Workshop</a><br><span class="lead">Take after you can deploy a service. It is deliberately operational rather than another hello-world tutorial.</span></div></div></div></section>
+<section id="quiz"><h2>8. Check yourself</h2><div class="card quiz"><strong>Question:</strong> Your container needs to read one S3 prefix after startup. Where should that permission live?<button onclick="reveal('a1')">A. Execution role</button><button onclick="reveal('a1')">B. Task role</button><button onclick="reveal('a1')">C. Developer IAM user</button><div class="answer" id="a1"><strong>B — task role.</strong> The execution role lets ECS/Fargate perform startup work such as pulling images and sending logs. The task role is what the application container receives for AWS API calls.[4]</div></div><div class="card quiz"><strong>Question:</strong> Why is <code>assign_public_ip = false</code> the normal setting for an API task behind an ALB?<button onclick="reveal('a2')">Show answer</button><div class="answer" id="a2"><strong>Because the ALB is the public ingress point.</strong> The task should live in private subnets and accept traffic only from the ALB security group. It still needs an intentional egress route—VPC endpoints and/or a controlled NAT path—for the dependencies it uses.[3]</div></div></section>
+<section><h2>Sources and scope</h2><p>This guide is deliberately focused on ECS on Fargate and Terraform infrastructure. It does not teach Docker fundamentals, a full VPC design, Kubernetes, or an AI-agent framework. Learn those separately when the product requires them.</p><ol><li><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html">AWS: Architect for AWS Fargate for Amazon ECS</a></li><li><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html">AWS: Fargate task definition parameters</a></li><li><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-networking.html">AWS: Fargate task networking</a></li><li><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html">AWS: ECS task IAM roles</a></li><li><a href="https://developer.hashicorp.com/terraform">HashiCorp: Terraform documentation</a></li><li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition">Terraform Registry: aws_ecs_task_definition</a></li><li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service">Terraform Registry: aws_ecs_service</a></li><li><a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate-Regions.html">AWS: Fargate supported Regions</a></li></ol></section>
+</main></div><footer class="footer">Prepared 2026-09-09 · Public learning artifact · Verify current AWS quotas, prices, and provider schemas before deploying.</footer></div>
+<script>document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{navigator.clipboard.writeText(b.parentElement.innerText.replace('Copy','').trim());const t=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=t,1200)}));function reveal(id){document.getElementById(id).style.display='block'}</script>
+
+</div>
