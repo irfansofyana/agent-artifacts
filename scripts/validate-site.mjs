@@ -47,7 +47,8 @@ export function validateSite(root=repo){
  const ledger=join(root,'docs/migration-ledger.md');
  if(existsSync(ledger)){
   const rows=[...readFileSync(ledger,'utf8').matchAll(/^\| ([a-z0-9-]+) \| migrated \|/gm)].map(m=>m[1]);
-  for(const slug of expected){const n=rows.filter(x=>x===slug).length;if(n!==1)issues.push(`ledger: ${slug} appears ${n} times`)}
+  const counts=new Map();for(const slug of rows)counts.set(slug,(counts.get(slug)||0)+1);
+  for(const [slug,count] of counts)if(count!==1)issues.push(`ledger: ${slug} appears ${count} times`);
   for(const slug of rows)if(!expected.has(slug))issues.push(`ledger: unregistered ${slug}`);
  }
  return issues;

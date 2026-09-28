@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readSite } from './site-model.mjs';
+import {parseFragment} from 'parse5';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const homeTemplate = readFileSync(join(repo,'templates/home.html'),'utf8');
@@ -20,9 +21,20 @@ export function renderHome(model) {
   });
 }
 function tocFor(fragment) {
-  const matches = [...fragment.matchAll(/<h([23])\b[^>]*\bid=["']([^"']+)["'][^>]*>([\s\S]*?)<\/h\1>/gi)];
-  if (matches.length < 3) return {desktop:'',mobile:''};
-  const links = matches.map(([,level,id,text]) => `<a href="#${escapeHtml(id)}">${escapeHtml(text.replace(/<[^>]*>/g,'').trim())}</a>`).join('');
+  const headings=[];const seen=new Set();
+  const attribute=(node,key)=>node.attrs?.find(a=>a.name===key)?.value;
+  const text=node=>node.nodeName==='#text'?node.value:(node.childNodes||[]).map(text).join('');
+  function visit(node,sectionId=''){
+    const localSection=node.tagName==='section'?(attribute(node,'id')||sectionId):sectionId;
+    if(node.tagName==='h2'||node.tagName==='h3'){
+      const id=attribute(node,'id')||localSection;
+      if(id&&!seen.has(id)){headings.push({id,label:text(node).trim()});seen.add(id)}
+    }
+    for(const child of node.childNodes||[])visit(child,localSection);
+  }
+  visit(parseFragment(fragment));
+  if(headings.length<3)return {desktop:'',mobile:''};
+  const links=headings.map(({id,label})=>`<a href="#${escapeHtml(id)}">${escapeHtml(label)}</a>`).join('');
   return {desktop:`<nav class="article-toc" aria-label="On this page">${links}</nav>`,mobile:`<details class="mobile-toc"><summary>On this page · sections</summary>${links}</details>`};
 }
 export function renderArtifact(entry,fragment,{moduleCss='',moduleJs=''}={}) {

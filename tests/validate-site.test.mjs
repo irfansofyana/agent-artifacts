@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync,mkdirSync,writeFileSync,rmSync,readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import {execFileSync} from 'node:child_process';
 import { validateSite } from '../scripts/validate-site.mjs';
 import { renderHome,renderArtifact } from '../scripts/render-site.mjs';
 const entry={slug:'example',title:'Example',description:'Example page',url:'artifacts/example/',type:'guide',createdAt:'2026-01-01'};
@@ -44,5 +45,9 @@ test('rejects unsafe relative asset traversal',()=>withFixture(root=>{
 }));
 test('all original slugs appear exactly once in migration ledger',()=>{
  const root=new URL('..',import.meta.url).pathname;
+ const original=JSON.parse(execFileSync('git',['show','2cddb02:artifacts.json'],{cwd:root,encoding:'utf8'})).artifacts.map(e=>e.slug);
+ const ledger=readFileSync(join(root,'docs/migration-ledger.md'),'utf8');
+ const rows=[...ledger.matchAll(/^\| ([a-z0-9-]+) \| migrated \|/gm)].map(m=>m[1]);
+ for(const slug of original)assert.equal(rows.filter(x=>x===slug).length,1,`missing/duplicate migration row: ${slug}`);
  assert.deepEqual(validateSite(root).filter(e=>e.includes('ledger')),[]);
 });

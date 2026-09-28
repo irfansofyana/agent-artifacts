@@ -4,10 +4,11 @@ import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,rmSync} from
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync,spawnSync} from 'node:child_process';
+import {validateSite} from '../scripts/validate-site.mjs';
 const project=new URL('..',import.meta.url).pathname;
 const helper=join(project,'scripts/add-artifact.mjs');
 const initial={artifacts:[]};
-function withRepo(fn){const root=mkdtempSync(join(tmpdir(),'artifact-author-'));try{mkdirSync(join(root,'artifacts'));mkdirSync(join(root,'src/artifacts'),{recursive:true});writeFileSync(join(root,'artifacts.json'),JSON.stringify(initial));fn(root)}finally{rmSync(root,{recursive:true,force:true})}}
+function withRepo(fn){const root=mkdtempSync(join(tmpdir(),'artifact-author-'));try{mkdirSync(join(root,'artifacts'));mkdirSync(join(root,'src/artifacts'),{recursive:true});mkdirSync(join(root,'docs'),{recursive:true});writeFileSync(join(root,'docs/migration-ledger.md'),'# Migration ledger\n');writeFileSync(join(root,'artifacts.json'),JSON.stringify(initial));fn(root)}finally{rmSync(root,{recursive:true,force:true})}}
 function add(root,source,slug='new-guide',title='New Guide'){
  return spawnSync(process.execPath,[helper,'--slug',slug,'--title',title,'--description','Useful guide.','--date','2026-09-28','--file',source],{cwd:root,env:{...process.env,ARTIFACT_REPO_ROOT:root},encoding:'utf8'});
 }
@@ -20,6 +21,7 @@ test('fragment creates source, manifest entry and shared-shell output; updating 
  assert.equal(add(root,source,'new-guide','Updated Guide').status,0);
  const entries=JSON.parse(readFileSync(join(root,'artifacts.json'),'utf8')).artifacts;
  assert.equal(entries.length,1);assert.equal(entries[0].title,'Updated Guide');
+ assert.deepEqual(validateSite(root),[],`new page must validate using documented workflow`);
 }));
 test('rejects full document and unsafe slug before writing anything',()=>withRepo(root=>{
  const source=join(root,'full.html');writeFileSync(source,'<!doctype html><html><body><h1>Old shell</h1></body></html>');

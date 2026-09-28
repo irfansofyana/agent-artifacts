@@ -16,8 +16,17 @@ test('artifact shell escapes metadata and retains a relative diagram link', () =
   assert.match(html,/<main\b/);
   assert.match(html,/href="#site-main"/);
 });
+test('section IDs become shared navigation even when heading has no ID',()=>{
+ const entry={slug:'section-test',title:'Guide',description:'Guide',type:'html',createdAt:'2026-01-01',url:'artifacts/section-test/'};
+ const fragment='<div class="legacy-content"><section id="first"><h2>First</h2></section><section id="second"><h2>Second</h2></section><section id="third"><h2>Third</h2></section></div>';
+ const html=renderArtifact(entry,fragment);
+ assert.match(html,/<nav class="article-toc"[^>]*>/);
+ assert.match(html,/<a href="#first">First<\/a>/);
+ assert.match(html,/<a href="#third">Third<\/a>/);
+});
+
 test('theme button remains usable when storage is unavailable', () => {
-  const script = readFileSync(new URL('../assets/site.js',import.meta.url),'utf8');
+   const script = readFileSync(new URL('../assets/site.js',import.meta.url),'utf8');
   const handlers = {};
   const button = {textContent:'',setAttribute(k,v){this[k]=v},addEventListener(k,fn){handlers[k]=fn}};
   const root = {dataset:{}};
