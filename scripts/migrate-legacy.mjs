@@ -66,7 +66,7 @@ for(const slug of slugs){
  const headScripts=walk(head,n=>n.tagName==='script').map(n=>serializeOuter(n));
  mkdirSync(sourceDir,{recursive:true});
  const content=`<div class="legacy-content" data-artifact-content>\n${body.childNodes.map(serializeOuter).join('')}\n</div>\n${headScripts.join('\n')}`.trimEnd()+'\n';
- if(!refresh) writeFileSync(output,(stylesheetLinks.join('\n')+'\n'+content).trimEnd()+'\n');
+ if(!refresh) writeFileSync(output,(stylesheetLinks.join('\n')+'\n'+content).split('\n').map(line=>line.trimEnd()).join('\n').trimEnd()+'\n');
  if(styles.length)writeFileSync(join(sourceDir,'module.css'),styles.map(scopedCss).join('\n').split('\n').map(line=>line.trimEnd()).join('\n').trimEnd()+'\n');
  console.log(`Migrated ${slug}: ${content.length} HTML chars; ${styles.length} style blocks`);
 }

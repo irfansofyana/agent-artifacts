@@ -1,0 +1,23 @@
+
+@page { size: A4; margin: 15mm 13mm 16mm; @bottom-right { content: counter(page); color: #667085; font-size: 9pt; } }
+.legacy-content { --ink:var(--text-primary); --muted:var(--text-secondary); --line:var(--border-chrome); --soft:var(--phosphor); --navy:var(--phosphor); --blue:var(--phosphor); --amber:var(--accent-amber); --green:var(--phosphor); }
+.legacy-content * { box-sizing: border-box; }
+.legacy-content { color:var(--ink); font-family: var(--font-mono); font-size:9.25pt; line-height:1.45; margin:0; }
+.legacy-content h1 { color:var(--navy); font-size:29pt; line-height:1.08; letter-spacing:-.9px; margin:0 0 8mm; padding-bottom:5mm; border-bottom:3px solid var(--blue); }
+.legacy-content h1 + p { font-size:10.2pt; color:var(--muted); background:var(--surface-output); padding:4mm; border-left:3px solid var(--blue); }
+.legacy-content h2 { color:var(--navy); font-size:17pt; line-height:1.2; letter-spacing:-.3px; margin:10mm 0 4mm; padding-bottom:2mm; border-bottom:1px solid var(--line); break-after:avoid; }
+.legacy-content h3 { color:var(--text-secondary); font-size:11.5pt; margin:6mm 0 2mm; break-after:avoid; }
+.legacy-content p { margin:0 0 3mm; }
+.legacy-content strong { color:var(--text-secondary); }
+.legacy-content code { background:var(--surface-output); color:var(--text-secondary); padding:.15em .35em; border-radius:3px; font-family:var(--font-mono); font-size:.9em; }
+.legacy-content pre { background:var(--surface-output); color:var(--text-secondary); padding:4mm; border-radius:5px; overflow:hidden; }
+.legacy-content table { border-collapse:collapse; width:100%; margin:4mm 0 6mm; font-size:8.2pt; break-inside:avoid; }
+.legacy-content th { background:var(--navy); color:var(--text-secondary); font-weight:700; text-align:left; padding:2.3mm; vertical-align:top; }
+.legacy-content td { border:1px solid var(--line); padding:2.1mm; vertical-align:top; }
+.legacy-content tr:nth-child(even) td { background:var(--soft); }
+.legacy-content ul,.legacy-content ol { margin:1.5mm 0 4mm 5mm; padding-left:4mm; }
+.legacy-content li { margin:1.2mm 0; }
+.legacy-content blockquote { color:var(--muted); border-left:3px solid var(--blue); padding-left:3mm; margin:4mm 0; }
+.legacy-content a { color:var(--blue); text-decoration:none; overflow-wrap:anywhere; }
+.legacy-content hr { border:0; border-top:1px solid var(--line); margin:5mm 0; }
+@media print { .legacy-content h2 { break-before: auto; } .legacy-content table { page-break-inside:avoid; } }

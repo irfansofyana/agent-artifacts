@@ -10,3 +10,9 @@ Baseline: commit `2cddb02` (33 registered HTML artifacts). The migration utility
 | deepseek-harness-brief | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Cards need visual inspection |
 | goal-loop-engineering | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Grid needs visual inspection |
 | headroom-how-it-works | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Flow needs gesture inspection |
+| headroom-litellm-eks-runbook | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Scoped legacy layout |
+| hello-world | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Smoke page retains registry back-link |
+| hermes-dashboard-inspiration | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Scoped legacy layout |
+| litellm-bedrock-model-evaluation-playbook-2026-08-04 | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Four tables need swipe inspection |
+| matt-pocock-skills-ai-assisted-engineering-playbook | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Five tables need swipe inspection |
+| matt-pocock-skills-learning-guide | migrated | ids/links/code/tables match | mobile dark/paper: no overflow or page errors | Two tables need swipe inspection |
