@@ -1,0 +1,12 @@
+{
+  "name": "agent-artifacts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/render-site.mjs",
+    "validate": "node scripts/validate-site.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "preview": "python3 -m http.server 4173 --bind 127.0.0.1",
+    "test:browser": "node tests/browser/site-smoke.mjs"
+  }
+}
