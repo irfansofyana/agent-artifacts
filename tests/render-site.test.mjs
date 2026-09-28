@@ -21,7 +21,7 @@ test('theme button remains usable when storage is unavailable', () => {
   const handlers = {};
   const button = {textContent:'',setAttribute(k,v){this[k]=v},addEventListener(k,fn){handlers[k]=fn}};
   const root = {dataset:{}};
-  runInNewContext(script, {document:{documentElement:root,querySelector:()=>button},get localStorage(){throw new Error('blocked')}});
+  runInNewContext(script, {document:{documentElement:root,querySelector:selector=>selector==='[data-theme-toggle]'?button:null},get localStorage(){throw new Error('blocked')}});
   handlers.click();
   assert.equal(root.dataset.theme,'paper');
   assert.equal(button.textContent,'Theme: Paper');

@@ -9,7 +9,7 @@ const articleTemplate = readFileSync(join(repo,'templates/artifact.html'),'utf8'
 export const escapeHtml = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 function fill(template, fields) { return template.replace(/\{\{([A-Z_]+)\}\}/g, (_,key) => fields[key] ?? ''); }
 function sorted(artifacts) { return [...artifacts].sort((a,b) => b.createdAt.localeCompare(a.createdAt) || a.title.localeCompare(b.title)); }
-function row(entry,index) { return `<a class="artifact-card" data-artifact-row href="${escapeHtml(entry.url)}"><small>${String(index+1).padStart(2,'0')} · ${escapeHtml(entry.createdAt)} · ${escapeHtml(entry.type)}</small><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.description)}</p></a>`; }
+function row(entry,index) { return `<a class="artifact-card" data-artifact-row data-slug="${escapeHtml(entry.slug)}" data-date="${escapeHtml(entry.createdAt)}" data-type="${escapeHtml(entry.type)}" href="${escapeHtml(entry.url)}"><small>${String(index+1).padStart(2,'0')} · ${escapeHtml(entry.createdAt)} · ${escapeHtml(entry.type)}</small><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.description)}</p></a>`; }
 export function renderHome(model) {
   const items = sorted(model.artifacts);
   const latest = items[0];
