@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Custom Slack Bot + Private MCP: Per-User OAuth Architecture",
+      "slug": "slack-bot-private-mcp-per-user",
+      "description": "English visual architecture guide with per-user OAuth flows, minimum secure token-store fields, encryption and refresh controls, VPN topology, and rollout checks.",
+      "createdAt": "2026-09-28",
+      "type": "html",
+      "url": "artifacts/slack-bot-private-mcp-per-user/"
+    },
+    {
       "title": "Company Brain — Technical Deep Dive",
       "slug": "company-brain-technical-deep-dive",
       "description": "Source-pinned Company Brain assessment with Mermaid request and knowledge flows, security and memory findings, plus an AWS Jakarta/DeepAgents replication proposal with explicit gaps.",
