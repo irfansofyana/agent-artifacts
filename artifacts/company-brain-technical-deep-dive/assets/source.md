@@ -110,4 +110,104 @@ On Cloudflare Workers Free, the documented 50-outbound-call/request limit can tr
 
 **Documentation caveat:** `docs/architecture.md` still names old monorepo `apps/api`, Postgres/Hyperdrive and `AUTH_KV`. The released Worker instead points to `src/worker.ts`, D1 and `BRAIN_KV`. For the current self-hosted layout, follow live source and `wrangler.jsonc`, not that inherited diagram. [Legacy doc](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/docs/architecture.md#L1-L47), [current bindings](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L1-L83).
 
-**Method / limitations.** Static review of the pinned repository and its first-party docs. No Cloudflare account, Slack workspace or Supermemory tenant was deployed for this study. Runtime behavior and security properties are derived from code paths rather than confirmed end-to-end in a live installation. 
+## 7. Follow one message: Worker, Durable Object, model loop
+
+The shortest distinction: **Worker = HTTP front door; Durable Object = organization-scoped coordinator; model loop = function the coordinator runs to reason and call tools.** The Worker verifies Slack and acknowledges fast; it does not sit there running a full multi-step conversation. The DO starts a recoverable turn fiber, loads the turn implementation, assembles context/tools and invokes `computeTurn`; the model loop can call search or external tools repeatedly before producing a response. This is an in-process function inside the DO's work, not a third deployed service. [Worker dispatch](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L816-L865), [DO fiber](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L97-L200), [compute entry](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/compute.ts#L137-L176).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Slack user
+    participant S as Slack
+    participant W as Hono Worker
+    participant K as Workers KV
+    participant A as Org Durable Object
+    participant M as Supermemory API
+    participant L as Model provider
+    participant T as Connected tools
+    U->>S: @bot question in channel
+    S->>W: POST /slack/events (signed)
+    W->>W: Verify signature, classify event, resolve org
+    W->>K: Check event and turn dedupe keys
+    W->>A: Dispatch onSlackEvent via waitUntil
+    W-->>S: HTTP 200 promptly
+    A->>A: Start idempotent fiber; stash checkpoint
+    A->>M: Search allowed memory containers
+    M-->>A: Relevant memories
+    loop Model steps (bounded)
+      A->>L: Prompt with memory, tools and thread context
+      L-->>A: Answer or tool call
+      opt Tool call
+        A->>T: Execute read / request approval for write
+        T-->>A: Result or paused state
+      end
+    end
+    A->>S: Post/stream reply in Slack
+    S-->>U: Answer
+```
+
+Notice the two durability boundaries: the fast HTTP acknowledgement and KV dedupe are not an atomic transaction with the actual reply; the DO fiber/checkpoint is the longer-running recovery mechanism. A tool approval interrupts the turn and persists resume state, rather than blocking an open Slack HTTP request. [Dedupe/dispatch](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/routes/slack/index.ts#L816-L865), [fiber recovery](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/agent.ts#L217-L255), [approval state](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/turn/approval.ts#L23-L67).
+
+## 8. How knowledge is added, checked, stored and retrieved
+
+There are **two different things called memory** here: the DO stores process state (pending messages, checkpoints, tag/tree bookkeeping); Supermemory stores submitted documents and extracted searchable memories. D1 stores people, roles, settings, Slack installation and connector records. KV holds short-lived OAuth/dedupe state and, unless overridden, the encryption key. The raw authoritative conversation remains in Slack; the memory service contains a selective derived representation, not a complete Slack archive. [DO pending batch](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L91-L139), [D1 schema](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/db/schema/auth.ts#L12-L109), [API adapter](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/compat/routes/memories/handler-effect.ts#L45-L99).
+
+```mermaid
+flowchart LR
+    S[Public Slack messages] --> P[DO pending spool / batch]
+    P --> C{Channel still public?}
+    C -- No --> X[Stop; no shared write]
+    C -- Yes --> D[LLM distills durable clusters]
+    D --> V[Zod schema + date/tags + scope + custom ID]
+    V --> API[Supermemory documents.add]
+    API --> Q[Queued extraction, chunking and indexing]
+    Q --> R[Searchable memories in shared container]
+    D -- Empty list --> N[No memory written]
+    DM[DM or private-channel turn] --> WV[Own scope resolver]
+    WV --> API
+    R --> READ[Search only authorized containers]
+```
+
+**Public-channel observation path:** messages are spooled in DO SQLite; before writing to the shared brain, the job verifies via Slack that the channel is positively public. A model uses a constrained `DistillSchema` to select durable, human-stated facts (or no memories), grouping them into clusters. The code stamps a document date, normalizes tags, chooses the single write container, creates a deterministic custom ID and submits the document. After a successful submission it advances the cursor and clears the pending batch. [Public check](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L1087-L1105), [distillation schema/policy](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L51-L63), [batch/write/cursor](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/slack/channel-observe.ts#L976-L1059), [write resolver](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L116-L125).
+
+**What “validation” means—and does not mean.** The code checks structure (Zod schema), non-empty content, computed scope/tag metadata, reset generation, API errors and some idempotency. Its LLM prompt asks for faithful, durable human-stated information and the downstream Supermemory service performs extraction/deduplication/supersession. But no human fact-check is required before every automatic write, and a `queued` API response only means accepted for processing—not that the fact is true, indexed, or safe to cite. This is a *curation pipeline*, not a truth oracle. For consequential facts, add a human-review queue or at least source-link, confidence, contradiction and freshness checks in a fork. [Schema](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/writeback.ts#L30-L53), [document submission](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/compat/routes/memories/handler-effect.ts#L69-L99), [write/reset checks](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/index.ts#L110-L165).
+
+For a question, the read-scope resolver selects permitted container tags **before** search. `searchBrain` queries each permitted container, six at a time, deduplicates by ID and returns the highest-similarity 40. This is retrieval of stored summaries, not a SQL join over every raw Slack message. [Read scope](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/read-scope.ts#L12-L32), [search](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/brain/memory/search-brain.ts#L58-L126).
+
+## 9. AWS-hosted replication: proposed design, not a lift-and-shift
+
+**My take:** preserve the *behavior*, not the Cloudflare products. The proposed design replaces Supermemory with a Jakarta-hosted, application-owned knowledge service built on Aurora PostgreSQL full-text + open-source `pgvector`, S3 and ingestion workers. DeepAgents handles the turn/tool loop; Bedrock (US inference allowed) handles LLM/embedding calls; **Bedrock Knowledge Bases is not used**. Slack remains an external processor for a Slack-based bot, so “everything in AWS” is not literal. The architecture below is a sketch, not a feature present in this repository; see the [full AWS/DeepAgents proposal](assets/aws-deepagents-proposal.html) for the data boundary, validation pipeline and gaps. [Supermemory dependency](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/src/memory/client.ts#L5-L19), [Cloudflare bindings](https://github.com/supermemoryai/company-brain/blob/d76cc1c9cc4fbddaf95f3a560edcaa04001c4dee/wrangler.jsonc#L45-L83).
+
+```mermaid
+flowchart LR
+    Slack[Slack external] --> ALB[Regional ALB / HTTPS]
+    Browser[Browser UI] --> ALB
+    ALB --> API[ECS Fargate API: signature + auth]
+    API --> PG[(Aurora PostgreSQL: roles, state, approvals, ACL)]
+    API --> FIFO[SQS FIFO: org or thread group]
+    FIFO --> Work[ECS Fargate DeepAgents worker]
+    Work --> PG
+    Work --> S3[(S3: immutable source documents)]
+    Work --> Vec[(Jakarta Aurora pgvector + text search)]
+    Work --> BR[US Bedrock: model + embedding inference]
+    Work --> Slack
+    Sch[EventBridge Scheduler] --> FIFO
+    Sec[Secrets Manager + KMS] --> API
+    Sec --> Work
+```
+
+| Current role | AWS-hosted proposed replacement | Why / trap |
+|---|---|---|
+| Worker HTTP + React assets | Regional ALB → ECS Fargate API, static assets via regional service/private S3 | Keep signed Slack callbacks and browser sessions at one ingress. CloudFront is optional, not regional-only. |
+| Per-org DO + local SQLite + schedules | SQS FIFO by org/thread, Fargate worker, Aurora turn/approval/checkpoint tables, EventBridge Scheduler | FIFO serializes each message group; its built-in duplicate suppression lasts five minutes, so keep database idempotency and an outbox for retries/external side effects. [SQS groups](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-fifo-queue-message-identifiers.html), [Scheduler targets](https://docs.aws.amazon.com/scheduler/latest/UserGuide/getting-started.html) |
+| D1 + KV | Aurora PostgreSQL tables + Secrets Manager/KMS + short-TTL table/cache | One relational store simplifies permissions and backup. Do not store a long-lived encryption key in a throwaway cache. |
+| Supermemory cloud | Jakarta Aurora PostgreSQL full-text + OSS `pgvector`, regional S3 evidence, Fargate ingestion; US Bedrock embedding calls | No Bedrock Knowledge Bases in this design. You own extraction, dedupe, versioning, ACL filtering, review, deletion and audit. Text sent for embedding is processed in the US, while the stored index remains in Jakarta. [pgvector](https://github.com/pgvector/pgvector), [Aurora pgvector](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.VectorDB.html) |
+| Optional Cloudflare/Daytona sandbox | Isolated Fargate task with restricted IAM/network and disposable storage | Never execute model-generated shell code in the API or shared agent worker. |
+
+**Build order:** (1) Slack webhook + session/RBAC + per-org job queue; (2) scoped storage and retrieval with explicit ACL predicates; (3) asynchronous ingestion with evidence links and review/contradiction handling; (4) approval/resume for writes; (5) scheduling/proactivity; (6) sandbox only if its use case justifies the isolation cost. Do **not** start with Bedrock Agents or Step Functions just because the source calls its coordinator an “agent”; the crucial primitive is durable, per-organization work with an explicit state machine. SQS FIFO provides per-group ordering, not a guarantee that a Slack reply or tool side effect occurs once. [AWS FIFO semantics](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-fifo-queue-message-identifiers.html).
+
+**Region and privacy gate:** Jakarta hosts the application, source snapshots, claims, ACLs, checkpoints and search index; Bedrock model and embedding inference may run in US AWS Region(s), so selected messages, prompts and retrieved text cross that boundary. Use only Bedrock endpoints/profiles consistent with the US routing requirement and test the exact DeepAgents adapter; direct OpenAI/Anthropic APIs and Bedrock Knowledge Bases are out of scope. Slack and external connectors remain additional processors. [Bedrock regional matrix](https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html).
+
+**Next design pass (not claimed as implemented):** test one Slack question and one reviewed memory write end-to-end using DeepAgents, a database checkpointer, Bedrock-only inference and the Jakarta-hosted knowledge service. Measure tenant-scoped retrieval, approval resume, model/tool compatibility, source citations, regional data flow and recovery before cloning the full feature list.
+
+**Method / limitations.** Static review of the pinned repository and its first-party docs. No Cloudflare account, Slack workspace or Supermemory tenant was deployed for this study. Runtime behavior and security properties are derived from code paths rather than confirmed end-to-end in a live installation. AWS topology is a proposed design, not an implementation or deployment test.
