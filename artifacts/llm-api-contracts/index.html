@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="Provider support, request and response shapes, tool loops, state, and endpoint selection across OpenAI, Anthropic, Bedrock, OpenRouter, and Gemini."><title>LLM API Contracts: A Field Guide · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script><link rel="stylesheet" href="../../src/artifacts/llm-api-contracts/module.css"></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/llm-api-contracts</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>LLM API Contracts: A Field Guide</h1><p class="lede">Provider support, request and response shapes, tool loops, state, and endpoint selection across OpenAI, Anthropic, Bedrock, OpenRouter, and Gemini.</p><div class="artifact-meta"><span>2026-09-30</span><span>html</span></div></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#mental-model">01 · The mental model</a><a href="#matrix">02 · Provider × contract support</a><a href="#wire">03 · Six request/response shapes</a><a href="#legacy">A · Legacy text completion</a><a href="#chat">B · OpenAI Chat Completions</a><a href="#messages">C · Anthropic Messages</a><a href="#responses">D · OpenAI Responses</a><a href="#generate-content">E · Google Gemini generateContent</a><a href="#interactions">F · Google Gemini Interactions</a><a href="#bedrock">04 · Bedrock is a platform, not one format</a><a href="#tool-loop">05 · Same tool, six different envelopes</a><a href="#operations">06 · What breaks at the boundary</a><a href="#decision">07 · Pick the endpoint</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#mental-model">01 · The mental model</a><a href="#matrix">02 · Provider × contract support</a><a href="#wire">03 · Six request/response shapes</a><a href="#legacy">A · Legacy text completion</a><a href="#chat">B · OpenAI Chat Completions</a><a href="#messages">C · Anthropic Messages</a><a href="#responses">D · OpenAI Responses</a><a href="#generate-content">E · Google Gemini generateContent</a><a href="#interactions">F · Google Gemini Interactions</a><a href="#bedrock">04 · Bedrock is a platform, not one format</a><a href="#tool-loop">05 · Same tool, six different envelopes</a><a href="#operations">06 · What breaks at the boundary</a><a href="#decision">07 · Pick the endpoint</a></details><div data-artifact-content class="legacy-content">
+  <p><strong>Field guide · checked 30 September 2026.</strong> A contract is the request/response shape, not a model capability. “OpenAI-compatible” means a particular API surface is translated; it does not promise identical tools, state, streaming, model availability, or retention. These are <strong>illustrative schema slices, not captured live responses</strong>: IDs and text are placeholders, and omitted optional fields vary by model. Follow the linked first-party references before shipping.</p>
+  <section aria-labelledby="mental-model"><h2 id="mental-model">01 · The mental model</h2>
+    <p>Choose across four axes: <strong>input unit</strong> (prompt, role-message, content block, or item), <strong>output unit</strong> (text, choice, block, candidate, or typed step), <strong>state owner</strong> (your application or provider), and <strong>tool owner</strong> (your code or server-side tool). A compatible client is only the beginning of compatibility.</p>
+    <div class="contract-grid">
+      <div><strong>Prompt → text</strong><span>Legacy text completion</span></div>
+      <div><strong>Messages → choice</strong><span>OpenAI Chat Completions; compatible gateways</span></div>
+      <div><strong>Messages → blocks</strong><span>Anthropic Messages</span></div>
+      <div><strong>Items → items</strong><span>OpenAI Responses</span></div>
+      <div><strong>Contents → candidates</strong><span>Gemini generateContent</span></div>
+      <div><strong>Input → steps</strong><span>Gemini Interactions</span></div>
+    </div>
+  </section>
+  <section aria-labelledby="matrix"><h2 id="matrix">02 · Provider × contract support</h2>
+    <p><strong>Legend:</strong> Native = provider-owned format; Compatible = documented translation surface; Model-dependent = check model and endpoint; — = not asserted here. This is an <em>API-family</em> map, not a promise that every model supports every feature. <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-api-compatibility.html">Bedrock's model/API matrix</a> and each model card remain authoritative.</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Provider and API contract support matrix"><table><thead><tr><th>Platform</th><th>Text completion</th><th>Chat Completions</th><th>Messages</th><th>Responses</th><th>Other native APIs</th></tr></thead><tbody>
+      <tr><th>OpenAI</th><td>Legacy <code>/v1/completions</code></td><td>Native</td><td>—</td><td>Native; recommended for new OpenAI apps</td><td>Specialized endpoints beyond this guide</td></tr>
+      <tr><th>Anthropic direct</th><td>Legacy <code>/v1/complete</code></td><td>—</td><td>Native <code>/v1/messages</code></td><td>—</td><td>Model-dependent tools/batches</td></tr>
+      <tr><th>Amazon Bedrock</th><td>—</td><td>Compatible; model/endpoint-dependent</td><td>Anthropic-compatible for Claude; model/endpoint-dependent</td><td>Compatible; model/endpoint-dependent</td><td><code>Converse</code>, <code>ConverseStream</code>, <code>InvokeModel</code></td></tr>
+      <tr><th>OpenRouter</th><td>—</td><td>Compatible <code>/api/v1/chat/completions</code></td><td>—</td><td>Compatible <code>/api/v1/responses</code>, <strong>stateless only</strong></td><td>Provider routing and plugins</td></tr>
+      <tr><th>Google Gemini API</th><td>—</td><td>OpenAI-compatible Chat Completions</td><td>—</td><td>— (not documented in the compatibility guide)</td><td>Native <code>generateContent</code>; native <code>interactions</code></td></tr>
+    </tbody></table></div><p class="swipe-note">↔ Swipe the matrix on narrow screens.</p>
+    <p>Sources: <a href="https://developers.openai.com/api/docs/guides/migrate-to-responses">OpenAI migration</a>, <a href="https://platform.claude.com/docs/en/api/messages">Anthropic Messages</a>, <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-api-compatibility.html">Bedrock matrix</a>, <a href="https://openrouter.ai/docs/api_reference/overview">OpenRouter overview</a>, <a href="https://openrouter.ai/docs/api_reference/responses/overview">OpenRouter Responses</a>, <a href="https://ai.google.dev/gemini-api/docs/openai">Gemini OpenAI compatibility</a>, <a href="https://ai.google.dev/gemini-api/docs/interactions-overview">Gemini Interactions overview</a>.</p>
+  </section>
+  <section aria-labelledby="wire"><h2 id="wire">03 · Six request/response shapes</h2>
+    <p>The same task (“say hello”) exposes the structural differences. Examples below omit authentication headers and unrelated optional fields. The response fragments show where application code reads the answer; do not treat them as exhaustive JSON Schemas.</p>
+    <h3 id="legacy">A · Legacy text completion</h3><p><code>POST https://api.openai.com/v1/completions</code>. One freeform <code>prompt</code> enters; a choice's <code>text</code> comes out. Anthropic's separate legacy <code>/v1/complete</code> has its own format; these are not interchangeable.</p>
+    <pre><code class="language-javascript">// request
+{"model":"&lt;completion-capable-model&gt;","prompt":"Say hello."}
+// response fragment
+{"choices":[{"text":"Hello!","finish_reason":"stop"}]}</code></pre>
+    <p>Use only for a supported legacy/prefix-suffix workflow, not as a new agent default. <a href="https://developers.openai.com/api/docs/guides/completions">OpenAI legacy guide</a> · <a href="https://platform.claude.com/docs/en/api/python/completions">Anthropic legacy reference</a>.</p>
+    <h3 id="chat">B · OpenAI Chat Completions</h3><p><code>POST https://api.openai.com/v1/chat/completions</code>. Role messages enter; <code>choices[0].message</code> exits. Your application supplies the relevant prior turns on the next request.</p>
+    <pre><code class="language-javascript">// request
+{"model":"&lt;chat-capable-model&gt;","messages":[{"role":"user","content":"Say hello."}]}
+// response fragment
+{"choices":[{"message":{"role":"assistant","content":"Hello!"},"finish_reason":"stop"}]}</code></pre>
+    <p><a href="https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create">OpenAI reference</a>. Google, OpenRouter, and Bedrock document compatible Chat endpoints, but inspect model support and optional parameter handling before switching base URLs.</p>
+    <h3 id="messages">C · Anthropic Messages</h3><p><code>POST https://api.anthropic.com/v1/messages</code>. The <code>system</code> instruction is top-level, not a role in <code>messages</code>. Content is an array of typed blocks; <code>max_tokens</code> is required.</p>
+    <pre><code class="language-javascript">// request
+{"model":"&lt;claude-model&gt;","max_tokens":128,"system":"Be concise.",
+ "messages":[{"role":"user","content":"Say hello."}]}
+// response fragment
+{"role":"assistant","content":[{"type":"text","text":"Hello!"}],
+ "stop_reason":"end_turn","usage":{"input_tokens":12,"output_tokens":4}}</code></pre>
+    <p>Stateless multi-turn: pass earlier turns again. The numeric usage shown is illustrative. <a href="https://platform.claude.com/docs/en/api/messages">Anthropic reference</a>.</p>
+    <h3 id="responses">D · OpenAI Responses</h3><p><code>POST https://api.openai.com/v1/responses</code>. <code>input</code> may be a string or items; <code>output</code> is an array of typed items. A reasoning item or tool call may appear before an assistant message. The SDK's <code>output_text</code> is a convenience, not the wire response's universal first field.</p>
+    <pre><code class="language-javascript">// request
+{"model":"&lt;responses-capable-model&gt;","input":"Say hello.","store":false}
+// response fragment
+{"id":"resp_example","output":[{"type":"message","role":"assistant",
+ "content":[{"type":"output_text","text":"Hello!"}]}]}</code></pre>
+    <p>OpenAI recommends Responses for new projects. If using provider-managed conversation state, follow its <code>store</code>/<code>previous_response_id</code> policy explicitly; stateless callers must preserve required context, including reasoning items as applicable. <a href="https://developers.openai.com/api/docs/guides/migrate-to-responses">Migration and state guide</a>.</p>
+    <h3 id="generate-content">E · Google Gemini <code>generateContent</code></h3><p><code>POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent</code>. The URL selects the model; request <code>contents[]</code> contains role-and-part objects; <code>systemInstruction</code>, <code>tools</code>, <code>generationConfig</code>, and <code>safetySettings</code> are separate fields. Response <code>candidates[]</code> contain <code>content.parts[]</code>, with <code>finishReason</code>; usage lives in <code>usageMetadata</code>. For a multi-turn stateless call, send the history in <code>contents</code>.</p>
+    <pre><code class="language-javascript">// request body; model is in URL
+{"systemInstruction":{"parts":[{"text":"Be concise."}]},
+ "contents":[{"role":"user","parts":[{"text":"Say hello."}]}]}
+// response fragment
+{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello!"}]},
+ "finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":12,
+ "candidatesTokenCount":4}}</code></pre>
+    <p><strong>Important update:</strong> Google now calls <code>generateContent</code> legacy-but-supported and recommends its native Interactions API for new Gemini projects. Do not mistake Gemini's OpenAI-compatible Chat endpoint for its native schema. <a href="https://ai.google.dev/api/generate-content">generateContent reference</a> · <a href="https://ai.google.dev/gemini-api/docs/interactions-overview">Interactions overview</a>.</p>
+    <h3 id="interactions">F · Google Gemini Interactions</h3><p><code>POST https://generativelanguage.googleapis.com/v1beta/interactions</code>. A turn becomes an Interaction resource with typed <code>steps[]</code>, such as <code>model_output</code> and tool steps. Optional <code>previous_interaction_id</code> continues server-side history; <code>store:false</code> opts out of storage. Unlike a transcript alone, most request settings (<code>tools</code>, <code>system_instruction</code>, <code>generation_config</code>) need to be re-specified on subsequent interactions.</p>
+    <pre><code class="language-javascript">// request
+{"model":"gemini-3.8-flash","input":"Say hello.","store":false}
+// response fragment
+{"id":"interaction_example","object":"interaction","status":"completed",
+ "steps":[{"type":"model_output","content":[{"type":"text","text":"Hello!"}]}]}</code></pre>
+    <p>Google states Interactions became GA in June 2026 and recommends it for new projects. Check retention before enabling stored state. <a href="https://ai.google.dev/gemini-api/docs/interactions-overview">Overview</a> · <a href="https://ai.google.dev/api/interactions-api-v1">REST schema</a>.</p>
+  </section>
+  <section aria-labelledby="bedrock"><h2 id="bedrock">04 · Bedrock is a platform, not one format</h2>
+    <p><strong>Converse:</strong> AWS-normalized chat for supported models. <code>POST /model/{modelId}/converse</code>; <code>messages</code>, <code>system</code>, <code>inferenceConfig</code>, <code>toolConfig</code> enter; <code>output.message</code>, <code>stopReason</code>, <code>usage</code> exit. Start here for AWS-native multi-model chat. <strong>InvokeModel:</strong> <code>POST /model/{modelId}/invoke</code> passes a model-specific body; use for native capabilities and non-chat tasks such as embeddings/images. <strong>Compatibility APIs:</strong> OpenAI Chat/Responses and Anthropic Messages use different Bedrock base URLs and support sets. Match the model card, Region, endpoint, and auth scheme—not just the API family's name.</p>
+    <pre><code class="language-json">// Converse request fragment
+{"messages":[{"role":"user","content":[{"text":"Say hello."}]}],
+ "inferenceConfig":{"maxTokens":128}}
+// Converse response fragment
+{"output":{"message":{"role":"assistant","content":[{"text":"Hello!"}]}},
+ "stopReason":"end_turn","usage":{"inputTokens":12,"outputTokens":4}}</code></pre>
+    <p>Bedrock recommends <code>bedrock-runtime</code> for new compatible applications when the model and features are available; <code>bedrock-mantle</code> remains a compatibility route for capabilities absent on runtime. Bedrock Responses storage is <strong>on by default</strong>; AWS documents a 30-day stored-response retention window and <code>store:false</code> to disable it. Runtime Responses lacks Mantle's background execution and server-side tools. <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html">Converse guide</a> · <a href="https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html">InvokeModel reference</a> · <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-responses-api.html">Responses endpoints and state</a> · <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-messages-api.html">Messages endpoints</a>.</p>
+  </section>
+  <section aria-labelledby="tool-loop"><h2 id="tool-loop">05 · Same tool, six different envelopes</h2>
+    <p>The model asks to call <code>get_weather({"city":"Paris"})</code>. Your application validates and executes it, then supplies the result; a tool-call object alone did not fetch anything. Server-side tools are a separate capability whose availability varies by API and endpoint.</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Tool call and tool result shapes"><table><thead><tr><th>Contract</th><th>Model's call</th><th>Application's return</th></tr></thead><tbody>
+      <tr><th>OpenAI Chat</th><td><code>choices[0].message.tool_calls[]</code>, each with <code>id</code> and function arguments</td><td>New <code>role:"tool"</code> message with matching <code>tool_call_id</code></td></tr>
+      <tr><th>OpenAI Responses</th><td><code>output[]</code> item <code>type:"function_call"</code> with <code>call_id</code></td><td><code>input[]</code> item <code>type:"function_call_output"</code> with matching <code>call_id</code></td></tr>
+      <tr><th>Anthropic Messages</th><td>Assistant content block <code>type:"tool_use"</code> with <code>id</code></td><td>User content block <code>type:"tool_result"</code> with matching <code>tool_use_id</code></td></tr>
+      <tr><th>Bedrock Converse</th><td>Assistant content <code>toolUse</code>; <code>stopReason:"tool_use"</code></td><td>User content <code>toolResult</code> with matching <code>toolUseId</code></td></tr>
+      <tr><th>Gemini generateContent</th><td>Model <code>content.parts[].functionCall</code> with function name/args</td><td>Next user turn's part <code>functionResponse</code> with name/response; preserve the model's call turn</td></tr>
+      <tr><th>Gemini Interactions</th><td>Typed <code>function_call</code> step</td><td>Function result through its interaction continuation flow; see current REST guide</td></tr>
+    </tbody></table></div><p class="swipe-note">↔ Swipe the tool mapping on narrow screens.</p>
+    <h3>Tool-result round trip · schematic fragments</h3>
+    <p>These are <em>continuation payload fragments</em>, not standalone runnable requests: include the original prompt, tool declaration, and prior model call (or the provider's stored-response reference) as the contract requires. The IDs and weather value are illustrative.</p>
+    <pre><code class="language-javascript">// OpenAI Responses: model output item → next request input item
+{"type":"function_call","name":"get_weather","call_id":"call_example",
+ "arguments":"{\"city\":\"Paris\"}"}
+{"type":"function_call_output","call_id":"call_example",
+ "output":"{\"temperature_c\":18}"}
+
+// Anthropic Messages: assistant block → user tool-result block
+{"type":"tool_use","id":"toolu_example","name":"get_weather",
+ "input":{"city":"Paris"}}
+{"type":"tool_result","tool_use_id":"toolu_example",
+ "content":"{\"temperature_c\":18}"}
+
+// Gemini generateContent: model part → next user part
+{"functionCall":{"name":"get_weather","args":{"city":"Paris"}}}
+{"functionResponse":{"name":"get_weather",
+ "response":{"temperature_c":18}}}</code></pre>
+    <p>References: <a href="https://developers.openai.com/api/docs/guides/function-calling">OpenAI function calling</a>, <a href="https://platform.claude.com/docs/en/api/messages">Anthropic Messages</a>, <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html">Bedrock tool use</a>, <a href="https://ai.google.dev/api/generate-content">Gemini parts</a>, <a href="https://ai.google.dev/api/interactions-api-v1">Gemini Interactions</a>.</p>
+  </section>
+  <section aria-labelledby="operations"><h2 id="operations">06 · What breaks at the boundary</h2>
+    <ul><li><strong>State and privacy:</strong> distinguish resending history from referencing stored IDs. Set storage deliberately. OpenRouter Responses rejects <code>store:true</code> and non-null <code>previous_response_id</code>; Bedrock Responses stores by default; Gemini Interactions stores by default. <a href="https://openrouter.ai/docs/api_reference/responses/overview">OpenRouter</a> · <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-responses-api.html">Bedrock</a> · <a href="https://ai.google.dev/gemini-api/docs/interactions-overview">Google</a>.</li>
+    <li><strong>Streaming:</strong> parse the provider's event grammar, not raw text chunks. OpenAI Responses emits typed events such as <code>response.output_text.delta</code>; Anthropic emits <code>content_block_delta</code> and partial JSON tool arguments; Bedrock has <code>ConverseStream</code>. <a href="https://developers.openai.com/api/docs/guides/streaming-responses">OpenAI</a> · <a href="https://docs.anthropic.com/en/api/messages-streaming">Anthropic</a> · <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html">AWS</a>.</li>
+    <li><strong>Stopping and errors:</strong> <code>finish_reason</code>, <code>stop_reason</code>, <code>stopReason</code>, <code>finishReason</code>, and <code>status</code> are not interchangeable. Handle tool handoffs, truncation, refusals/safety filtering, and incomplete output before reading text.</li>
+    <li><strong>Feature parity:</strong> a successful text call does not establish that function calling, JSON constraints, multimodal parts, reasoning carryover, caching, model listing, or built-in tools work through a compatible endpoint. Probe each required feature with its intended model and Region. <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-api-compatibility.html">Bedrock matrix</a> · <a href="https://openrouter.ai/docs/api_reference/overview">OpenRouter transformations</a>.</li></ul>
+  </section>
+  <section aria-labelledby="decision"><h2 id="decision">07 · Pick the endpoint</h2>
+    <ol><li><strong>OpenAI-first new agent:</strong> Responses. For a simple established multi-provider chat adapter, Chat Completions is a reasonable narrow common denominator. <a href="https://developers.openai.com/api/docs/guides/migrate-to-responses">Source</a>.</li>
+    <li><strong>Claude-first:</strong> native Anthropic Messages. <a href="https://platform.claude.com/docs/en/api/messages">Source</a>.</li>
+    <li><strong>AWS-native multi-model chat:</strong> Bedrock Converse; choose InvokeModel for a model-native/non-chat need. Existing OpenAI/Anthropic clients can instead use Bedrock-compatible APIs after model/endpoint verification. <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html">Source</a>.</li>
+    <li><strong>OpenRouter routing:</strong> Chat Completions for the conventional adapter; Responses only when its stateless restriction is acceptable. <a href="https://openrouter.ai/docs/api_reference/responses/overview">Source</a>.</li>
+    <li><strong>New Gemini-native app:</strong> Interactions; retain generateContent for existing integrations or when that API's documented feature path is the fit. Google's OpenAI-compatible Chat endpoint is for migration, not the native Gemini schema. <a href="https://ai.google.dev/gemini-api/docs/interactions-overview">Source</a> · <a href="https://ai.google.dev/gemini-api/docs/openai">Compatibility</a>.</li></ol>
+    <p><strong>Implementation principle:</strong> keep an internal typed transcript (turns, content parts, tool call IDs/results, finish states, usage) and one adapter per contract. Preserve unknown provider-specific fields separately rather than pretending everything collapses to <code>{role, content}</code>. Test both directions of every adapter, plus a live capability probe when credentials are available.</p>
+  </section>
+</div>
+</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · llm-api-contracts</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>

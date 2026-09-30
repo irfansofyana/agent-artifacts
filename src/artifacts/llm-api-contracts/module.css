@@ -1,0 +1,12 @@
+[data-artifact-content] .contract-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap: .8rem; margin:1.25rem 0; }
+[data-artifact-content] .contract-grid > div { border:1px solid var(--border, currentColor); padding:.8rem; background:var(--bg-chrome, transparent); }
+[data-artifact-content] .contract-grid strong, [data-artifact-content] .contract-grid span { display:block; }
+[data-artifact-content] .contract-grid span { margin-top:.3rem; }
+[data-artifact-content] .table-scroll { overflow-x:auto; max-width:100%; border:1px solid var(--border, currentColor); }
+[data-artifact-content] .table-scroll table { min-width:1200px; width:100%; border-collapse:collapse; margin:0; }
+[data-artifact-content] .table-scroll th, [data-artifact-content] .table-scroll td { min-width:170px; vertical-align:top; overflow-wrap:normal; word-break:normal; }
+[data-artifact-content] .table-scroll th:first-child { min-width:170px; }
+[data-artifact-content] .swipe-note { font-size:.82rem; margin:.35rem 0 1rem; }
+[data-artifact-content] pre { overflow-x:auto; max-width:100%; white-space:pre; }
+[data-artifact-content] pre code { white-space:inherit; }
+[data-artifact-content] .table-scroll:focus-visible { outline:2px solid var(--phosphor, currentColor); outline-offset:2px; }

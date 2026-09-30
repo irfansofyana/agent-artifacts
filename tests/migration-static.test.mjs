@@ -8,7 +8,8 @@ import { renderArtifact } from '../scripts/render-site.mjs';
 import { readSite } from '../scripts/site-model.mjs';
 
 const root=new URL('..',import.meta.url).pathname;
-const selected=(process.env.MIGRATION_SLUGS || readSite(root).artifacts.map(e=>e.slug).join(',')).split(',');
+const baselinePaths = new Set(execFileSync('git',['ls-tree','-r','--name-only','2cddb02','artifacts'],{cwd:root,encoding:'utf8'}).trim().split('\n'));
+const selected=(process.env.MIGRATION_SLUGS || readSite(root).artifacts.filter(e=>baselinePaths.has(`artifacts/${e.slug}/index.html`)).map(e=>e.slug).join(',')).split(',');
 const manifest=new Map(readSite(root,{allowLegacy:true}).artifacts.map(e=>[e.slug,e]));
 function descendants(node,fn,out=[]){if(fn(node))out.push(node);for(const child of node.childNodes||[])descendants(child,fn,out);return out}
 function attrs(node){return Object.fromEntries((node.attrs||[]).map(x=>[x.name,x.value]))}
