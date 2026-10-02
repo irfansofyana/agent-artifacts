@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Codemode in Pi Coding Agent",
+      "slug": "pi-codemode-research",
+      "description": "A grounded guide to Pi\u2019s first-party Codemode: tool composition, MCP exposure, safety boundaries, and community-package name collisions.",
+      "createdAt": "2026-10-02",
+      "type": "html",
+      "url": "artifacts/pi-codemode-research/"
+    },
+    {
       "title": "LLM API Contracts: A Field Guide",
       "slug": "llm-api-contracts",
       "description": "Provider support, request and response shapes, tool loops, state, and endpoint selection across OpenAI, Anthropic, Bedrock, OpenRouter, and Gemini.",

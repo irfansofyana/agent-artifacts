@@ -1,0 +1,58 @@
+<div data-artifact-content class="legacy-content">
+<h2 id="the-short-answer">The short answer</h2>
+<p>Codemode is now a first-party Pi tool, introduced in Pi 0.99.0.<a class="citation" href="#source-1" aria-label="Source 1">[1]</a>
+The model writes a JavaScript program that calls Pi tools; Pi runs it in a QuickJS sandbox and returns the script's selected output rather than feeding every intermediate tool result back to the model.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+It is a way to compose tools and control context, not a new model, an autonomous agent, or a security boundary for the whole Pi process.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a></p>
+<p>This matters most for multi-step work: discover a tool, call several tools (possibly concurrently), filter or aggregate their results in code, and return only the useful slice.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+It can reduce model-tool round trips and context volume; the documentation does not establish a universal percentage of token or latency savings, so benchmark your own workloads.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a><a class="citation" href="#source-3" aria-label="Source 3">[3]</a></p>
+<h2 id="what-actually-runs">What actually runs</h2>
+<p>The <code>codemode</code> tool accepts raw JavaScript source as the body of an async function—not JSON, a fenced block, or TypeScript.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+Top-level <code>await</code> and <code>return</code> work.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+Scripts have <code>tools.&lt;name&gt;(args)</code>, <code>text()</code>, <code>image()</code>, <code>console</code>, discovery helpers (<code>searchTools</code>, <code>describeTool</code>, <code>describeNamespace</code>, <code>ALL_TOOLS</code>), small session-branch-aware <code>store()</code>/<code>load()</code> state, and a <code>models</code> API for classifier/image models; chat models cannot be run from scripts.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a></p>
+<pre><code class="language-js">const hits = await searchTools(&quot;search repository issues&quot;);
+text(hits.map(({name, description}) =&gt; ({name, description})));
+// On the next invocation, inspect a chosen tool with describeTool(name),
+// then call tools.&lt;exact_name&gt;({ ...documented_arguments }).
+</code></pre>
+<p>Once the tool name and arguments are known, independent calls can use <code>Promise.all()</code>; use <code>Promise.allSettled()</code> when partial success matters.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+An output-schema tool resolves to a structured value; MCP calls resolve to the full <code>CallToolResult</code>, including <code>isError</code>, so check the result instead of assuming a resolved promise means success.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+The example above deliberately discovers rather than invents an MCP method name.</p>
+<p>The sandbox has no direct Node APIs, filesystem, network, or timers.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+It reaches those capabilities through registered tools; a tool call can still write files, run shell commands, or mutate a remote service.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+A script failure does <strong>not</strong> roll back calls already completed.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+Pending calls are cancelled when the script ends, and unawaited promises are discarded.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+In other words, sandboxed JavaScript is not sandboxed effects.</p>
+<h2 id="how-tools-are-exposed">How tools are exposed</h2>
+<p>Pi's four default active tools remain <code>read</code>, <code>bash</code>, <code>edit</code>, and <code>write</code> unless configured otherwise.<a class="citation" href="#source-4" aria-label="Source 4">[4]</a>
+Add <code>codemode</code> for a run with <code>pi --tools read,bash,edit,write,codemode</code>, or add <code>"defaultTools": ["+codemode"]</code> in Pi settings without replacing the defaults.<a class="citation" href="#source-4" aria-label="Source 4">[4]</a><a class="citation" href="#source-1" aria-label="Source 1">[1]</a>
+The built-in tool is also auto-enabled when a default-exposure MCP server connects, unless <code>autoEnableCodemode</code> is disabled in <code>mcp.json</code>.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a></p>
+<p>With <code>codemode.mode: "on"</code> (the default), declared tools remain directly available to the model and can also be called from scripts.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+With <code>"only"</code>, they are hidden as direct model tools and reached through scripts instead.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+The inline tool declarations have a configurable token budget (<code>codemode.inlineBudget</code>, default 3,000 estimated tokens); beyond it scripts can discover tools on demand.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a></p>
+<p>Pi 0.99.0 also introduced <code>tool_search</code>, a separate route that declares deferred tools to the model for later direct calls.<a class="citation" href="#source-1" aria-label="Source 1">[1]</a>
+MCP servers can choose <code>codemode</code> (default), <code>codemode-deferred</code>, <code>deferred</code>, <code>direct</code>, or <code>hidden</code> exposure, with per-tool overrides.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a>
+This is not simply “all MCP tools become one tool”: visibility and access depend on configuration, and codemode can still call tools that are not declared directly to the model.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a></p>
+<p>To connect an MCP server, configure <code>~/.pi/agent/mcp.json</code> or a trusted project's <code>.pi/mcp.json</code>, then check it with <code>pi mcp list</code> and reload the session.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a>
+Pi supports stdio and streamable HTTP; project config is trust-gated because a stdio server can launch a command.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a>
+Keep credentials in environment references, not plaintext config.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a></p>
+<h2 id="limits-and-safety">Limits and safety</h2>
+<p>The QuickJS VM has a 256 MB memory limit.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+The default script output cap is 10,000 tokens; <code>// @options: {"max_output_tokens": 2000, "timeout_ms": 60000}</code> can set an output cap and a hard deadline.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+A script without a deadline can wait on a running tool; set one for bounded jobs, but allow long-running image generation enough time.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a></p>
+<p>Native tool calls still go through Pi's tool pipeline, including extension <code>tool_call</code>/<code>tool_result</code> handlers; nested calls carry their parent codemode call ID.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a>
+A permission gate can intercept them, but Pi does not thereby become a whole-process sandbox.<a class="citation" href="#source-3" aria-label="Source 3">[3]</a><a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+Treat untrusted extensions and MCP servers as executable dependencies, and protect destructive tools at the host/tool boundary rather than trusting JavaScript isolation alone.</p>
+<h2 id="avoid-the-name-collision">Avoid the name collision</h2>
+<p>Before 0.99.0, community extensions already used “codemode.”<a class="citation" href="#source-6" aria-label="Source 6">[6]</a><a class="citation" href="#source-1" aria-label="Source 1">[1]</a>
+For example, <code>@boozedog/pi-codemode</code> provides a TypeScript <code>execute_tools</code> tool and <code>/codemode on|off|yolo</code> modes, root-scoped patch tools and its own policy files.<a class="citation" href="#source-6" aria-label="Source 6">[6]</a>
+Those are <strong>that package's</strong> commands and guarantees, not Pi core's <code>codemode</code> JavaScript tool or <code>codemode.mode: "on"|"only"</code> settings.<a class="citation" href="#source-6" aria-label="Source 6">[6]</a><a class="citation" href="#source-2" aria-label="Source 2">[2]</a>
+Do not install a third-party package merely to get the first-party feature; also check for tool-name or <code>/mcp</code> command collisions if one is installed.<a class="citation" href="#source-1" aria-label="Source 1">[1]</a><a class="citation" href="#source-3" aria-label="Source 3">[3]</a></p>
+<h2 id="recommendation">Recommendation</h2>
+<p>Start with core Codemode only if you have a real workflow that chains several tools or needs to trim bulky MCP results. Leave <code>mode</code> at <code>on</code> first so ordinary tools remain easy to inspect; move to <code>only</code> only if you deliberately want all declared calls mediated by scripts.<a class="citation" href="#source-2" aria-label="Source 2">[2]</a> For a one-file read or simple edit, direct tools are clearer. Measure cost and latency on a representative task, and keep approval/permission checks outside the script rather than treating Codemode as a safety upgrade.</p>
+<h2 id="sources">Sources</h2>
+<p><span id="source-1">[1]</span> <a href="https://pi.dev/changelog/releases/0.99.0">https://pi.dev/changelog/releases/0.99.0</a>
+<span id="source-2">[2]</span> <a href="https://pi.dev/docs/latest/codemode">https://pi.dev/docs/latest/codemode</a>
+<span id="source-3">[3]</span> <a href="https://pi.dev/docs/latest/mcp">https://pi.dev/docs/latest/mcp</a>
+<span id="source-4">[4]</span> <a href="https://pi.dev/docs/latest/cli">https://pi.dev/docs/latest/cli</a>
+<span id="source-6">[6]</span> <a href="https://github.com/boozedog/pi-codemode">https://github.com/boozedog/pi-codemode</a></p>
+</div>
