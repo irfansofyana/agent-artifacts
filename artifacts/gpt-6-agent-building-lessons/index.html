@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="Practical lessons from OpenAI’s GPT-6 model guide on routing, context, instructions, long-running work, and verification."><title>GPT-6 Agent Building: Key Points and Lessons · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/gpt-6-agent-building-lessons</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>GPT-6 Agent Building: Key Points and Lessons</h1><p class="lede">Practical lessons from OpenAI’s GPT-6 model guide on routing, context, instructions, long-running work, and verification.</p><div class="artifact-meta"><span>2026-10-03</span><span>html</span></div></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#thesis">The core idea</a><a href="#key-points">Key points</a><a href="#lessons">Lessons learned for agent engineering</a><a href="#next-steps">A practical adoption checklist</a><a href="#source">Source and scope</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#thesis">The core idea</a><a href="#key-points">Key points</a><a href="#lessons">Lessons learned for agent engineering</a><a href="#next-steps">A practical adoption checklist</a><a href="#source">Source and scope</a></details><div data-artifact-content class="legacy-content">
+  <p><strong>Reading note · 3 October 2026.</strong> A concise interpretation of OpenAI’s <a href="https://openai.com/index/practical-guide-building-gpt-6">model guide for the GPT‑6 family</a>, published 2 October 2026. This is guidance from the model vendor, not an independent benchmark. <a href="#source-1">[1]</a></p>
+
+  <section aria-labelledby="thesis">
+    <h2 id="thesis">The core idea</h2>
+    <p>Optimize the <em>whole task</em>, not just the model call: choose the least expensive model and reasoning level that still meet the quality bar; keep the right evidence in context; specify what “done” means; and measure success, latency, and cost on representative work. <a href="#source-1">[1]</a></p>
+  </section>
+
+  <section aria-labelledby="key-points">
+    <h2 id="key-points">Key points</h2>
+    <ol>
+      <li><strong>Route work by difficulty.</strong> OpenAI positions Astra for the hardest reasoning, Sol for complex coding and research, and Luna for repeatable, focused tasks. Reasoning effort is a separate dial: start lower on routine work and raise it when measured outcomes justify the extra time and cost. Faster processing modes trade higher price for latency. <a href="#source-1">[1]</a></li>
+      <li><strong>Reduce context without losing evidence.</strong> Remove irrelevant material, place stable instructions before changing task details to improve cache reuse, and use compaction for longer conversations while preserving what the next step needs. The guide says cached input can cost up to 95% less depending on model; that is a provider claim, not a savings forecast for every workflow. <a href="#source-1">[1]</a></li>
+      <li><strong>Specify outcomes and autonomy.</strong> A useful assignment names the audience, result, constraints, and completion test. Keep skills focused, explain which repository documents and tests matter, authorize safe routine steps, and draw a clear line around actions needing approval. “Done” includes running the work, inspecting output, and fixing failures—not merely writing code. <a href="#source-1">[1]</a></li>
+      <li><strong>Keep long jobs steerable.</strong> Mid-turn corrections can redirect upcoming work but do not undo finished tool calls. Asynchronous tools help with independent work while a slow tool runs; dependent steps still wait for its result. Delegate independent subtasks where supported rather than multiplying agents for tightly coupled work. <a href="#source-1">[1]</a></li>
+      <li><strong>Use the simplest reliable interface.</strong> Prefer APIs and connected tools for direct operations; use computer interaction when a screen or UI is the actual boundary. Before production, evaluate representative tasks and monitor success, latency, cost, and data controls. <a href="#source-1">[1]</a></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="lessons">
+    <h2 id="lessons">Lessons learned for agent engineering</h2>
+    <p><em>The following are implementation takeaways inferred from the guide, not claims that OpenAI tested a particular stack.</em></p>
+    <ul>
+      <li><strong>Build a small workload evaluation before changing model routing.</strong> Compare quality and cost per successful task—not token price alone—on routine extraction, difficult debugging, and long-running multi-tool runs. <a href="#source-1">[1]</a></li>
+      <li><strong>Make permissions part of the task contract.</strong> Spell out safe autonomous actions and explicit human approval points; a broad “ask for everything” policy slows work, while an undefined boundary makes side effects risky. <a href="#source-1">[1]</a></li>
+      <li><strong>Preserve an evidence trail across compaction and steering.</strong> Carry forward decisions, tool results, blockers, and remaining work. Treat a mid-run correction as a change to future steps, not a rollback of already executed actions. <a href="#source-1">[1]</a></li>
+      <li><strong>Verify the result in the user’s real interface.</strong> A passing tool call is not necessarily a working feature; inspect the rendered output or application behavior and report what remained untested. This operational rule follows from the guide’s emphasis on persistence, representative tests, and computer-use verification. <a href="#source-1">[1]</a></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="next-steps">
+    <h2 id="next-steps">A practical adoption checklist</h2>
+    <ol>
+      <li>Pick three representative task classes and define success, latency, and cost metrics.</li>
+      <li>Set a baseline model and reasoning effort for each; change one dial at a time.</li>
+      <li>Audit instructions and skills for contradictory rules, unclear approval boundaries, and missing “done” criteria.</li>
+      <li>Keep stable context cache-friendly; confirm that compaction retains evidence and pending decisions.</li>
+      <li>Test steering, tool failure, resume, and user-visible verification before promoting a long-running agent flow.</li>
+    </ol>
+    <p>This checklist is my synthesis of the vendor guidance, not a claim that a particular model or configuration will pass your workload. <a href="#source-1">[1]</a></p>
+  </section>
+
+  <section aria-labelledby="source">
+    <h2 id="source">Source and scope</h2>
+    <p id="source-1">[1] OpenAI, <a href="https://openai.com/index/practical-guide-building-gpt-6">“A model guide for the GPT‑6 family”</a>, 2 October 2026. This artifact summarizes that page only. It does not independently verify model rankings, price-performance, caching savings, or production suitability.</p>
+  </section>
+</div>
+</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · gpt-6-agent-building-lessons</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>

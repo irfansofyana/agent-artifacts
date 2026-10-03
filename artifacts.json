@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "GPT-6 Agent Building: Key Points and Lessons",
+      "slug": "gpt-6-agent-building-lessons",
+      "description": "Practical lessons from OpenAI\u2019s GPT-6 model guide on routing, context, instructions, long-running work, and verification.",
+      "createdAt": "2026-10-03",
+      "type": "html",
+      "url": "artifacts/gpt-6-agent-building-lessons/"
+    },
+    {
       "title": "Codemode in Pi Coding Agent",
       "slug": "pi-codemode-research",
       "description": "A grounded guide to Pi\u2019s first-party Codemode: tool composition, MCP exposure, safety boundaries, and community-package name collisions.",
