@@ -1,0 +1,6 @@
+{
+  "name": "tool-pulse",
+  "version": "0.1.0",
+  "description": "Count tool calls and show the current count beside Claude Code's spinner",
+  "author": { "name": "Example contributor" }
+}

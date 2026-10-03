@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="Capability map, real examples, and a build-test runbook for your first Claude Code mod."><title>Claude Code Mods: Developer Guide · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/claude-code-mods-developer-guide</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>Claude Code Mods: Developer Guide</h1><p class="lede">Capability map, real examples, and a build-test runbook for your first Claude Code mod.</p><div class="artifact-meta"><span>2026-10-03</span><span>html</span></div></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#mental-model">The mental model</a><a href="#capability-map">Capability map: what can you change?</a><a href="#choose-the-right-extension">Choose the smallest extension</a><a href="#real-examples">Real mods worth studying</a><a href="#build-first-mod">Build your first mod: Tool Pulse</a><a href="#limits">Limits that change your design</a><a href="#security-and-distribution">Review, then distribute</a><a href="#verification-note">Verification note</a><a href="#sources">Sources</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#mental-model">The mental model</a><a href="#capability-map">Capability map: what can you change?</a><a href="#choose-the-right-extension">Choose the smallest extension</a><a href="#real-examples">Real mods worth studying</a><a href="#build-first-mod">Build your first mod: Tool Pulse</a><a href="#limits">Limits that change your design</a><a href="#security-and-distribution">Review, then distribute</a><a href="#verification-note">Verification note</a><a href="#sources">Sources</a></details><div data-artifact-content class="legacy-content">
+  <p><strong>Bottom line:</strong> a Claude Code mod is a JavaScript or TypeScript module inside a plugin that intercepts Claude Code events. It can observe, rewrite, or replace behavior and render parts of the interface. Use one when you need control <em>inside</em> the agent loop; use a skill, settings hook, or MCP server when those simpler mechanisms suffice.<a class="citation" href="#source-7" aria-label="Source 7">[7]</a></p>
+  <p><strong>Scope:</strong> Claude Code v2.1.287+, as documented on 3 October 2026. Mods are new and the API may change; inspect the type declarations your installed version generates, not only an online example.<a class="citation" href="#source-8" aria-label="Source 8">[8]</a><a class="citation" href="#source-11" aria-label="Source 11">[11]</a></p>
+
+  <h2 id="mental-model">The mental model</h2>
+  <p>Claude Code emits events when a prompt is submitted, a tool is called, a turn advances, or UI is drawn. Your plugin's <code>register(on)</code> function attaches handlers. Each gets <code>($, e, next)</code>: the mods API, immutable event data, and the continuation. <code>return next(e)</code> observes and passes through; <code>next({...e, field: changed})</code> rewrites; returning a valid result without <code>next</code> handles the event instead. Mods form an ordered middleware chain, so ordering and short-circuiting matter.<a class="citation" href="#source-10" aria-label="Source 10">[10]</a></p>
+  <pre><code class="language-js">export function register(on) {
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) =&gt; {
+    // Observe only: ordinary permission checks and the tool still run.
+    $.ui.log('About to run a Bash tool call')
+    return next(e)
+  })
+}</code></pre>
+  <p>The hook module has no direct Node.js APIs or DOM; file, process, HTTP, model, state, and UI access go through the <code>$</code> API. <strong>This is not a security sandbox:</strong> those API calls operate with the installing user's access.<a class="citation" href="#source-9" aria-label="Source 9">[9]</a><a class="citation" href="#source-7" aria-label="Source 7">[7]</a></p>
+
+  <h2 id="capability-map">Capability map: what can you change?</h2>
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Claude Code Mods capability map">
+  <table><thead><tr><th>Surface</th><th>What a mod can do</th><th>Starting point</th><th>Example</th></tr></thead><tbody>
+    <tr><td>Prompts &amp; context</td><td>Rewrite or drop a submitted prompt; change system-prompt sections, context blocks, attachments, or expanded skill text.</td><td><code>prompt.submit</code>, <code>prompt.section</code>, <code>prompt.context</code></td><td>Add project context or redact a class of text before submission.</td></tr>
+    <tr><td>Tools &amp; approvals</td><td>Observe, change, deny, answer, or retry tool calls; participate in the permission decision.</td><td><code>tool.call</code>, <code>tool.check</code></td><td>Hold a deployment command for a second confirmation; preview its impact.</td></tr>
+    <tr><td>Commands &amp; tools</td><td>Register a slash command for the user or a tool callable by Claude; run its handler without a model turn for a command.</td><td><code>$.command.register</code>, <code>$.tool.register</code>, <code>command.run</code></td><td><code>/pulse</code> reports observed activity; a ticket lookup becomes a model tool.</td></tr>
+    <tr><td>Agent loop &amp; sessions</td><td>React to turns and sessions; call a model, schedule work, persist plugin state, or message another session.</td><td><code>turn.*</code>, <code>session.*</code>, <code>$.model</code>, <code>$.clock</code>, <code>$.store</code></td><td>A CI status indicator updated between turns.</td></tr>
+    <tr><td>Interface</td><td>Add panes, buttons, text fields, status lines and toasts; replace supported render sites such as spinner, tool row, or question view.</td><td><code>ui.render</code>, <code>$.ui.open</code>, <code>$.ui.resolve</code></td><td>A context meter above the prompt or an edit-review pane.</td></tr>
+    <tr><td>Host integration</td><td>Read/write files, run processes, fetch HTTP URLs, inspect settings or usage through mediated APIs.</td><td><code>$.fs</code>, <code>$.process</code>, <code>$.http</code>, <code>$.session.usage()</code></td><td>Show PR checks beside the conversation.</td></tr>
+  </tbody></table></div>
+  <p>The table is a map, <em>not</em> an unrestricted guarantee for every UI element or event. The API is limited to named events, result shapes, render sites, and per-surface elements; consult your build's generated types and the reference before designing a feature.<a class="citation" href="#source-11" aria-label="Source 11">[11]</a><a class="citation" href="#source-15" aria-label="Source 15">[15]</a> A mod can restyle much of the UI, but cannot alter the permission prompt itself.<a class="citation" href="#source-7" aria-label="Source 7">[7]</a></p>
+
+  <h2 id="choose-the-right-extension">Choose the smallest extension</h2>
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Extension choice comparison"><table><thead><tr><th>Need</th><th>Use first</th><th>Why</th></tr></thead><tbody>
+    <tr><td>Persistent instructions or a reusable procedure</td><td>Skill / project instructions</td><td>Text is enough; no executable interception.</td></tr>
+    <tr><td>Call an external service or database</td><td>MCP server</td><td>A tool boundary is clearer than embedding service logic in the agent loop.</td></tr>
+    <tr><td>Simple event logging, blocking, or script-based automation</td><td>Settings hook</td><td>Often sufficient without a long-lived in-process UI/state component.</td></tr>
+    <tr><td>Interactive UI, cross-event state, rewritten behavior, or replacement of built-ins</td><td>Mod</td><td>Its event handlers run inside Claude Code and can draw or take over supported events.</td></tr>
+  </tbody></table></div>
+  <p>A plugin is the packaging unit and can contain a mod alongside skills, hooks, and MCP servers; these are not mutually exclusive.<a class="citation" href="#source-7" aria-label="Source 7">[7]</a></p>
+
+  <h2 id="real-examples">Real mods worth studying</h2>
+  <ul>
+    <li><a href="https://github.com/anthropics/claude-code-playground/tree/main/claude-code/mods/token-weather">Token Weather</a> — a live context-window forecast above the prompt. Study it for turn events, state, and a small custom render site.</li>
+    <li><a href="https://github.com/anthropics/claude-code-playground/tree/main/claude-code/mods/blast-radius">Blast Radius</a> — holds a risky shell command and gives a preview with Proceed/Cancel. Study it for tool interception and user-driven UI; do not treat its pattern matcher as a comprehensive security policy.</li>
+    <li><a href="https://github.com/anthropics/claude-code-playground/tree/main/claude-code/mods/replay-theater">Replay Theater</a> — steps through edits from the last turn. Study it for event capture and an interactive review surface.</li>
+    <li><a href="https://github.com/anthropics/claude-code/tree/main/mods/diff">Built-in diff mod</a> — Anthropic's own <code>/diff</code> implementation; proof that a built-in view can be implemented as a mod.</li>
+  </ul>
+  <p>The first three are Anthropic's <em>sample</em> plugins, shared without support, not a curated security approval or a claim that they cover all possibilities.<a class="citation" href="#source-14" aria-label="Source 14">[14]</a><a class="citation" href="#source-7" aria-label="Source 7">[7]</a></p>
+
+  <h2 id="build-first-mod">Build your first mod: Tool Pulse</h2>
+  <p>This original, deliberately low-risk example counts observed tool calls, shows the count beside the terminal spinner, and adds <code>/pulse</code>. It does <strong>not</strong> modify the tool's input, bypass a permission, or call a model. Download the three plugin files and test below; keep their directory layout.<a class="citation" href="#source-8" aria-label="Source 8">[8]</a></p>
+  <pre><code>example-mod/
+├── .claude-plugin/plugin.json
+├── hooks/hooks.json
+├── hooks/register.js
+└── tests/tool-pulse.test.ts</code></pre>
+  <p><a href="tool-pulse-example.zip">Download the complete Tool Pulse example (.zip)</a>, then extract it so <code>example-mod/</code> contains the layout above. You can also inspect the <a href="example-mod/hooks/register.js">source</a> and <a href="example-mod/tests/tool-pulse.test.ts">test</a> separately. The plugin manifest lives in the ZIP under <code>.claude-plugin/</code>; GitHub Pages may not serve dot-directories as standalone files.</p>
+  <p><strong>Step 1 — prerequisite:</strong> install or update Claude Code using the <a href="https://code.claude.com/docs/en/quickstart">official quickstart</a>, then check <code>claude --version</code> is at least <code>2.1.287</code>. Use a trusted disposable project directory for your first session. The native installation and sign-in are separate from this mod example.<a class="citation" href="#source-8" aria-label="Source 8">[8]</a></p>
+  <p><strong>Step 2 — inspect the source.</strong> The manifest names the plugin; <code>hooks/hooks.json</code> points to <code>register.js</code>. This is the complete behavior:</p>
+  <pre><code class="language-js">let calls = 0
+export function register(on) {
+  on('session.start', async ($, e, next) =&gt; {
+    await $.command.register({ name: 'pulse', description: 'Show tool calls observed since this mod loaded' })
+    return next(e)
+  })
+  on('tool.call', async ($, e, next) =&gt; {
+    calls += 1
+    $.ui.invalidate('ui.render')
+    return next(e)
+  })
+  on('command.run', { command: 'pulse' }, async () =&gt; ({
+    text: 'Tool Pulse observed ' + calls + ' tool calls since this mod loaded.'
+  }))
+  on('ui.render', { component: 'Spinner' }, async ($, e, next) =&gt;
+    next({ ...e, props: { ...e.props, suffix: ' · tools: ' + calls } })
+  )
+}</code></pre>
+  <p><strong>Step 3 — validate and test from your shell</strong> (replace the path with where you saved <code>example-mod</code>):</p>
+  <pre><code class="language-sh">claude plugin validate ./example-mod --strict
+claude plugin test ./example-mod</code></pre>
+  <p>Validation reports the handled events and API calls; tests use <code>claude-code/testing</code> and stub the real tool so no shell command or file read occurs.<a class="citation" href="#source-11" aria-label="Source 11">[11]</a><a class="citation" href="#source-16" aria-label="Source 16">[16]</a> If tests say hooks modules are turned off, follow the message's rollout/network guidance rather than treating validation as a test pass.</p>
+  <p><strong>Step 4 — load for one session:</strong></p>
+  <pre><code class="language-sh">claude --plugin-dir ./example-mod</code></pre>
+  <p>In the Claude Code prompt, ask <code>list the files in this project</code>, then type <code>/pulse</code>. Expect a tool count in the command response and, where UI drawing is supported, beside the spinner while Claude works. Use <code>/plugin</code> to check that Tool Pulse loaded; if it does not, consult <a href="https://code.claude.com/docs/en/plugins/mods/troubleshoot">Mods troubleshooting</a>. A one-session <code>--plugin-dir</code> load is a safer first experiment than installing a marketplace plugin globally.<a class="citation" href="#source-8" aria-label="Source 8">[8]</a></p>
+  <p><strong>Step 5 — iterate:</strong> try a <code>turn.complete</code> count, a status line, or a pane. Add tests for each new behavior. Module variables reset on reload; use <code>$.state</code> for reload-safe session state or <code>$.store</code> when data must persist between sessions.<a class="citation" href="#source-15" aria-label="Source 15">[15]</a></p>
+
+  <h2 id="limits">Limits that change your design</h2>
+  <ul>
+    <li><strong>UI is surface-dependent.</strong> Hooks run in terminal, Desktop Code tab, VS Code chat panel, and <code>claude -p</code> when the plugin loads; custom drawing appears in terminal and supported Desktop surfaces, not VS Code chat or print mode. Desktop WSL sessions do not load plugins. Provide a text/status fallback if your feature must work headlessly.<a class="citation" href="#source-7" aria-label="Source 7">[7]</a></li>
+    <li><strong>Mod events have contracts.</strong> Event data is frozen; pass a copy to <code>next</code>. Returning the wrong shape may skip your hook. One handler per event/matcher combination within a module; consult generated types for exact fields and supported UI elements.<a class="citation" href="#source-10" aria-label="Source 10">[10]</a><a class="citation" href="#source-11" aria-label="Source 11">[11]</a></li>
+    <li><strong>Guards are not automatically fail-closed.</strong> A hook that throws before <code>next</code> can be skipped; use a <code>.catch</code> denial handler for a safety-critical guard and test failure cases. A user-installed mod can affect approval behavior; managed organization policy is a separate layer.<a class="citation" href="#source-10" aria-label="Source 10">[10]</a><a class="citation" href="#source-7" aria-label="Source 7">[7]</a></li>
+    <li><strong>Hot reload resets ordinary module state.</strong> Tests and interactive reloads should cover your state strategy; persistent store writes across sessions are not atomic read-modify-write transactions.<a class="citation" href="#source-15" aria-label="Source 15">[15]</a></li>
+  </ul>
+
+  <h2 id="security-and-distribution">Review, then distribute</h2>
+  <p><strong>Treat every mod as executable code you install as yourself.</strong> It may read secrets, see prompts and tool calls, start processes, access the network, submit prompts, and use your model allowance. The module's restricted JavaScript globals do not make the host effects safe. Review source and dependencies before loading another author's mod; run <code>claude plugin validate ./some-mod</code> to inspect declared hooks and calls, but do not mistake this inventory or passing tests for a security audit.<a class="citation" href="#source-7" aria-label="Source 7">[7]</a></p>
+  <p>Start with <code>--plugin-dir</code>, keep a versioned manifest and tests, then share a plugin directory or publish it through a marketplace if other developers need it. Installed plugins can be disabled in <code>/plugin</code>; <code>--safe-mode</code> disables installed mods for a session along with other customizations, but built-in mods have separate behavior.<a class="citation" href="#source-8" aria-label="Source 8">[8]</a><a class="citation" href="#source-7" aria-label="Source 7">[7]</a></p>
+
+  <h2 id="verification-note">Verification note</h2>
+  <p>The downloadable Tool Pulse plugin passed <code>claude plugin validate ./example-mod --strict</code> and <code>claude plugin test ./example-mod</code> on Claude Code <code>2.1.288</code> (<strong>1 test passed, 0 failed</strong>). This machine's default Claude configuration initially reported a cached-off Mods rollout switch; the test passed with a clean, isolated <code>CLAUDE_CONFIG_DIR</code> under a disposable scratch directory. The interactive TUI behavior was <strong>not exercised</strong>; test it in your own enabled session before relying on the spinner rendering. This did not modify the user's installed CLI.</p>
+  <h2 id="sources">Sources</h2>
+  <p id="source-7">[7] <a href="https://code.claude.com/docs/en/plugins/mods/overview">https://code.claude.com/docs/en/plugins/mods/overview</a></p>
+<p id="source-8">[8] <a href="https://code.claude.com/docs/en/plugins/mods/create">https://code.claude.com/docs/en/plugins/mods/create</a></p>
+<p id="source-9">[9] <a href="https://code.claude.com/docs/en/plugins/mods/api">https://code.claude.com/docs/en/plugins/mods/api</a></p>
+<p id="source-10">[10] <a href="https://code.claude.com/docs/en/plugins/mods/events">https://code.claude.com/docs/en/plugins/mods/events</a></p>
+<p id="source-11">[11] <a href="https://code.claude.com/docs/en/plugins/mods/reference">https://code.claude.com/docs/en/plugins/mods/reference</a></p>
+<p id="source-14">[14] <a href="https://github.com/anthropics/claude-code-playground/tree/main/claude-code/mods">https://github.com/anthropics/claude-code-playground/tree/main/claude-code/mods</a></p>
+<p id="source-15">[15] <a href="https://code.claude.com/docs/en/plugins/mods/interface">https://code.claude.com/docs/en/plugins/mods/interface</a></p>
+<p id="source-16">[16] <a href="https://code.claude.com/docs/en/plugins/mods/test">https://code.claude.com/docs/en/plugins/mods/test</a></p>
+</div>
+</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · claude-code-mods-developer-guide</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>

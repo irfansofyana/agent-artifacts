@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Claude Code Mods: Developer Guide",
+      "slug": "claude-code-mods-developer-guide",
+      "description": "Capability map, real examples, and a build-test runbook for your first Claude Code mod.",
+      "createdAt": "2026-10-03",
+      "type": "html",
+      "url": "artifacts/claude-code-mods-developer-guide/"
+    },
+    {
       "title": "GPT-6 Agent Building: Key Points and Lessons",
       "slug": "gpt-6-agent-building-lessons",
       "description": "Practical lessons from OpenAI\u2019s GPT-6 model guide on routing, context, instructions, long-running work, and verification.",

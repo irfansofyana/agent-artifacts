@@ -1,0 +1,4 @@
+{
+  "description": "Tool Pulse hooks module",
+  "modules": ["./register.js"]
+}
