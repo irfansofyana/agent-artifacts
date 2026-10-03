@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Keyless Web Search and Fetch for AI Agents",
+      "slug": "keyless-agent-web-search",
+      "description": "A source-checked decision guide to no-API-key search and fetching for n8n and Pi: limits, risks, live probes, and integration paths.",
+      "createdAt": "2026-10-03",
+      "type": "html",
+      "url": "artifacts/keyless-agent-web-search/"
+    },
+    {
       "title": "Claude Code Mods: Developer Guide",
       "slug": "claude-code-mods-developer-guide",
       "description": "Capability map, real examples, and a build-test runbook for your first Claude Code mod.",
