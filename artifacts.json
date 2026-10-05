@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Pi Durable: what it is and when to use it",
+      "slug": "pi-durable-explained",
+      "description": "A practical guide to Pi Durable versus the Pi coding agent: crash recovery, setup, use cases, and sharp edges.",
+      "createdAt": "2026-10-05",
+      "type": "html",
+      "url": "artifacts/pi-durable-explained/"
+    },
+    {
       "title": "Keyless Web Search and Fetch for AI Agents",
       "slug": "keyless-agent-web-search",
       "description": "A source-checked decision guide to no-API-key search and fetching for n8n and Pi: limits, risks, live probes, and integration paths.",
