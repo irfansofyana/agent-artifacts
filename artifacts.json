@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Scanned PDF OCR on CPU Kubernetes: Tool Assessment",
+      "slug": "scanned-pdf-ocr-kubernetes-assessment",
+      "description": "Decision-focused assessment of MarkItDown OCR, PaddleOCR, MinerU, and Docling for 100-page scanned PDFs and external LLM integration.",
+      "createdAt": "2026-10-07",
+      "type": "html",
+      "url": "artifacts/scanned-pdf-ocr-kubernetes-assessment/"
+    },
+    {
       "title": "Pi Durable: what it is and when to use it",
       "slug": "pi-durable-explained",
       "description": "A practical guide to Pi Durable versus the Pi coding agent: crash recovery, setup, use cases, and sharp edges.",
