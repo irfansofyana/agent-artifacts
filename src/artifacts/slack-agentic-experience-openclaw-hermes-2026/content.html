@@ -17,6 +17,52 @@
       <p class="snapshot">Code reviewed: OpenClaw <a href="https://github.com/openclaw/openclaw/tree/fc23bc864e4553c2d215e479eeec47b67a0bf943"><code>v2026.9.8 · fc23bc8</code></a> and Hermes <a href="https://github.com/NousResearch/hermes-agent/tree/1744a19e0df568c647e4f3ff9c37f2a284a282fb"><code>1744a19</code></a>.</p>
     </header>
 
+    <section id="plan-support" aria-labelledby="plan-support-title">
+      <div class="section-label">Plan compatibility</div>
+      <h2 id="plan-support-title">Free can deliver a strong bot; paid unlocks Slack's native agent shell</h2>
+      <p class="section-intro">The safe product contract is not “every public API works on every plan.” Build one runtime with two Slack renderers: a bot-style fallback for Free workspaces and the native Agent Session experience for paid workspaces.</p>
+      <div class="plan-summary" aria-label="Slack plan support summary">
+        <article class="plan-card plan-free">
+          <span class="plan-badge">Slack Free</span>
+          <h3>Bot-style agent experience</h3>
+          <ul>
+            <li>Receive mentions, DMs, and thread replies</li>
+            <li>Post a placeholder, then update it as work progresses</li>
+            <li>Render Block Kit, buttons, approvals, and tables</li>
+            <li>Offer custom Stop through a button, <code>/stop</code>, or <code>!stop</code></li>
+            <li>Use Events API or Socket Mode</li>
+          </ul>
+          <p><strong>Trade-off:</strong> no guaranteed Agent container, Agent Session sidebar/status, native stream UI, or Slack-owned Stop control.</p>
+        </article>
+        <article class="plan-card plan-paid">
+          <span class="plan-badge">Any paid Slack plan</span>
+          <h3>Full native agent experience</h3>
+          <ul>
+            <li>Everything in the Free-compatible fallback</li>
+            <li>Agent app container and dedicated conversation surface</li>
+            <li><code>chat.startStream</code>, <code>chat.appendStream</code>, and <code>chat.stopStream</code></li>
+            <li><code>agents.sessions.setStatus</code> and session naming</li>
+            <li>Slack's native Stop button and <code>agent_session_stopped</code></li>
+          </ul>
+          <p><strong>Build target:</strong> Pro, Business+, and Enterprise. A fully featured Developer Program sandbox is the free development path.</p>
+        </article>
+      </div>
+      <div class="support-matrix table-wrap" tabindex="0" aria-label="Scrollable Slack plan capability matrix">
+        <table>
+          <thead><tr><th>Capability</th><th>Free workspace</th><th>Paid workspace</th><th>Recommended implementation</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Messages and threads</th><td><span class="status yes">Supported</span></td><td><span class="status yes">Supported</span></td><td><code>chat.postMessage</code>, <code>chat.update</code>, Events API</td></tr>
+            <tr><th scope="row">Block Kit and app buttons</th><td><span class="status yes">Supported</span></td><td><span class="status yes">Supported</span></td><td>Use Interactivity and route actions to the same backend commands.</td></tr>
+            <tr><th scope="row">Custom Stop</th><td><span class="status yes">Supported</span></td><td><span class="status yes">Supported</span></td><td>Provide a Block Kit Stop button plus <code>/stop</code> or <code>!stop</code>.</td></tr>
+            <tr><th scope="row">Agent container and sessions</th><td><span class="status no">Do not assume</span></td><td><span class="status yes">Native</span></td><td>Gate <code>agent_view</code> and <code>agents.sessions.*</code>; fall back to an ordinary app thread.</td></tr>
+            <tr><th scope="row">Native text streaming</th><td><span class="status no">Do not assume</span></td><td><span class="status yes">Native</span></td><td>On Free, coalesce output through rate-aware <code>chat.update</code>; do not fake token-by-token updates.</td></tr>
+            <tr><th scope="row">Slack-owned Stop button</th><td><span class="status no">Do not assume</span></td><td><span class="status yes">Native</span></td><td>On paid, set the session to <code>processing</code> and handle <code>agent_session_stopped</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <aside class="plan-evidence"><strong>Why the conservative boundary?</strong> Slack's end-user help page currently labels working with agents as available on all plans, while its developer guide says some AI features require a paid plan and its Marketplace rules explicitly say the AI agent app container requires paid Slack. For a custom app, design and market against the stricter developer contract until Slack harmonizes those pages. <a href="https://slack.com/help/articles/33076000248851-Work-with-AI-agents-in-Slack">End-user help</a> · <a href="https://docs.slack.dev/ai/developing-agents/">Developer guide</a> · <a href="https://docs.slack.dev/slack-marketplace/slack-marketplace-app-guidelines-and-requirements/#agent-or-assistant-ui">Marketplace requirement</a></aside>
+    </section>
+
     <section id="anatomy" aria-labelledby="anatomy-title">
       <div class="section-label">The runtime loop</div>
       <h2 id="anatomy-title">Six Slack operations create the agent experience</h2>
@@ -104,17 +150,17 @@ async def stop_session(...):
       <h2 id="api-title">APIs, scopes, events, and app settings</h2>
       <div class="table-wrap" tabindex="0" aria-label="Scrollable Slack API requirements table">
         <table class="api-table">
-          <thead><tr><th>Experience</th><th>Slack surface</th><th>Required access</th></tr></thead>
+          <thead><tr><th>Experience</th><th>Plan boundary</th><th>Slack surface</th><th>Required access</th></tr></thead>
           <tbody>
-            <tr><th scope="row">Receive prompts</th><td><code>app_mention</code>; <code>message.channels</code>, <code>message.groups</code>, <code>message.im</code>, <code>message.mpim</code></td><td><code>app_mentions:read</code> plus matching conversation <code>*:history</code>; add <code>*:read</code> when you resolve conversation metadata.</td></tr>
-            <tr><th scope="row">Post/edit fallback</th><td><code>chat.postMessage</code>, <code>chat.update</code></td><td><code>chat:write</code></td></tr>
-            <tr><th scope="row">Native stream</th><td><code>chat.startStream</code>, <code>chat.appendStream</code>, <code>chat.stopStream</code></td><td><code>chat:write</code>; keep <code>thread_ts</code>, <code>recipient_user_id</code>, and <code>recipient_team_id</code> for channel streams.</td></tr>
-            <tr><th scope="row">Agent lifecycle</th><td><code>agents.sessions.setStatus</code>, optional <code>agents.sessions.rename</code></td><td><code>chat:write</code>; declare the app as an Agent. OpenClaw retains <code>assistant:write</code> for Agent/legacy Assistant compatibility.</td></tr>
-            <tr><th scope="row">Native Stop</th><td><code>agent_session_stopped</code> event</td><td>Subscribe in <code>bot_events</code>; set status to <code>processing</code>; event scope is <code>chat:write</code>.</td></tr>
-            <tr><th scope="row">Typed Stop</th><td>Slash command payload for <code>/stop</code></td><td><code>commands</code> plus a manifest command declaration.</td></tr>
-            <tr><th scope="row">Buttons and approvals</th><td>Block Kit <code>block_actions</code>; <code>chat.update</code> or <code>response_url</code></td><td>Enable Interactivity. Acknowledge within three seconds. OAuth depends on the Web API method used after the click.</td></tr>
-            <tr><th scope="row">Socket Mode</th><td>Events and interactions over WebSocket</td><td>App-level token with <code>connections:write</code>; bot token for Web API calls; no public ingress URL.</td></tr>
-            <tr><th scope="row">HTTP mode</th><td>Events, slash commands, and Interactivity Request URLs</td><td>Public HTTPS endpoint, Slack Signing Secret, signature verification, replay protection, and prompt acknowledgement.</td></tr>
+            <tr><th scope="row">Receive prompts</th><td><span class="plan-inline free">Free+</span></td><td><code>app_mention</code>; <code>message.channels</code>, <code>message.groups</code>, <code>message.im</code>, <code>message.mpim</code></td><td><code>app_mentions:read</code> plus matching conversation <code>*:history</code>; add <code>*:read</code> when you resolve conversation metadata.</td></tr>
+            <tr><th scope="row">Post/edit fallback</th><td><span class="plan-inline free">Free+</span></td><td><code>chat.postMessage</code>, <code>chat.update</code></td><td><code>chat:write</code></td></tr>
+            <tr><th scope="row">Native stream</th><td><span class="plan-inline paid">Paid native</span></td><td><code>chat.startStream</code>, <code>chat.appendStream</code>, <code>chat.stopStream</code></td><td><code>chat:write</code>; keep <code>thread_ts</code>, <code>recipient_user_id</code>, and <code>recipient_team_id</code> for channel streams.</td></tr>
+            <tr><th scope="row">Agent lifecycle</th><td><span class="plan-inline paid">Paid native</span></td><td><code>agents.sessions.setStatus</code>, optional <code>agents.sessions.rename</code></td><td><code>chat:write</code>; declare the app as an Agent. OpenClaw retains <code>assistant:write</code> for Agent/legacy Assistant compatibility.</td></tr>
+            <tr><th scope="row">Native Stop</th><td><span class="plan-inline paid">Paid native</span></td><td><code>agent_session_stopped</code> event</td><td>Subscribe in <code>bot_events</code>; set status to <code>processing</code>; event scope is <code>chat:write</code>.</td></tr>
+            <tr><th scope="row">Typed Stop</th><td><span class="plan-inline free">Free+</span></td><td>Slash command payload for <code>/stop</code></td><td><code>commands</code> plus a manifest command declaration.</td></tr>
+            <tr><th scope="row">Buttons and approvals</th><td><span class="plan-inline free">Free+</span></td><td>Block Kit <code>block_actions</code>; <code>chat.update</code> or <code>response_url</code></td><td>Enable Interactivity. Acknowledge within three seconds. OAuth depends on the Web API method used after the click.</td></tr>
+            <tr><th scope="row">Socket Mode</th><td><span class="plan-inline free">Free+</span></td><td>Events and interactions over WebSocket</td><td>App-level token with <code>connections:write</code>; bot token for Web API calls; no public ingress URL.</td></tr>
+            <tr><th scope="row">HTTP mode</th><td><span class="plan-inline free">Free+</span></td><td>Events, slash commands, and Interactivity Request URLs</td><td>Public HTTPS endpoint, Slack Signing Secret, signature verification, replay protection, and prompt acknowledgement.</td></tr>
           </tbody>
         </table>
       </div>
@@ -148,6 +194,9 @@ async def stop_session(...):
       <h2 id="sources-title">Docs and code reviewed</h2>
       <div class="sources-grid">
         <div><h3>Slack</h3><ul>
+          <li><a href="https://docs.slack.dev/ai/developing-agents/">Agent development and paid-plan caveat</a></li>
+          <li><a href="https://docs.slack.dev/slack-marketplace/slack-marketplace-app-guidelines-and-requirements/#agent-or-assistant-ui">Marketplace rule for paid Agent container access</a></li>
+          <li><a href="https://slack.com/help/articles/33076000248851-Work-with-AI-agents-in-Slack">End-user agent availability guidance</a></li>
           <li><a href="https://docs.slack.dev/ai/agent-sessions/">Agent Sessions and native Stop lifecycle</a></li>
           <li><a href="https://docs.slack.dev/reference/events/agent_session_stopped/">agent_session_stopped event</a></li>
           <li><a href="https://docs.slack.dev/reference/methods/chat.startStream/">chat.startStream</a>, <a href="https://docs.slack.dev/reference/methods/chat.appendStream/">chat.appendStream</a>, <a href="https://docs.slack.dev/reference/methods/chat.stopStream/">chat.stopStream</a></li>
