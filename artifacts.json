@@ -320,6 +320,14 @@
       "type": "html",
       "url": "artifacts/deep-agents-typescript-guide/",
       "updatedAt": "2026-09-27"
+    },
+    {
+      "title": "Slack Agentic Experience: OpenClaw vs Hermes",
+      "slug": "slack-agentic-experience-openclaw-hermes-2026",
+      "description": "A source-backed implementation brief on Slack agent streaming, native Stop, Agent Sessions, progress cards, formatting, and the exact API contract, compared across OpenClaw and Hermes.",
+      "createdAt": "2026-10-09",
+      "type": "html",
+      "url": "artifacts/slack-agentic-experience-openclaw-hermes-2026/"
     }
   ]
 }

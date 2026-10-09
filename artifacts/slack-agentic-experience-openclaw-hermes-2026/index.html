@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="A source-backed implementation brief on Slack agent streaming, native Stop, Agent Sessions, progress cards, formatting, and the exact API contract, compared across OpenClaw and Hermes."><title>Slack Agentic Experience: OpenClaw vs Hermes · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script><link rel="stylesheet" href="../../src/artifacts/slack-agentic-experience-openclaw-hermes-2026/module.css"></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/slack-agentic-experience-openclaw-hermes-2026</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>Slack Agentic Experience: OpenClaw vs Hermes</h1><p class="lede">A source-backed implementation brief on Slack agent streaming, native Stop, Agent Sessions, progress cards, formatting, and the exact API contract, compared across OpenClaw and Hermes.</p><div class="artifact-meta"><span>2026-10-09</span><span>html</span></div></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#anatomy-title">Six Slack operations create the agent experience</a><a href="#comparison-title">OpenClaw closes the control loop; Hermes leaves Stop to commands</a><a href="#openclaw-title">OpenClaw treats Stop as a control-plane event</a><a href="#openclaw">1 · Slack emits the stop intent</a><a href="#hermes-title">Hermes already has the cancellation engine; Slack cannot invoke it by click</a><a href="#api-title">APIs, scopes, events, and app settings</a><a href="#formatting-title">Use three render paths, because Slack has three text models</a><a href="#formatting">Standard Markdown</a><a href="#blueprint-title">One cancellation function, two ways to invoke it</a><a href="#sources-title">Docs and code reviewed</a><a href="#sources">Slack</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#anatomy-title">Six Slack operations create the agent experience</a><a href="#comparison-title">OpenClaw closes the control loop; Hermes leaves Stop to commands</a><a href="#openclaw-title">OpenClaw treats Stop as a control-plane event</a><a href="#openclaw">1 · Slack emits the stop intent</a><a href="#hermes-title">Hermes already has the cancellation engine; Slack cannot invoke it by click</a><a href="#api-title">APIs, scopes, events, and app settings</a><a href="#formatting-title">Use three render paths, because Slack has three text models</a><a href="#formatting">Standard Markdown</a><a href="#blueprint-title">One cancellation function, two ways to invoke it</a><a href="#sources-title">Docs and code reviewed</a><a href="#sources">Slack</a></details><div class="legacy-content" data-artifact-content>
+  <main class="slack-field-guide">
+    <header class="hero">
+      <p class="kicker">Implementation brief · Slack agents · 9 October 2026</p>
+      <h1>Streaming is the easy part.<br><span>Stopping the work is the contract.</span></h1>
+      <p class="dek">A source-backed comparison of OpenClaw and Hermes on Slack: live responses, native Stop, progress cards, threads, formatting, and the exact APIs your app needs.</p>
+      <div class="verdict-grid" aria-label="Comparison verdict">
+        <article class="verdict verdict-openclaw">
+          <div class="verdict-head"><strong>OpenClaw</strong><span>Complete native loop</span></div>
+          <p>Streams one final message, drives Agent Session status, handles Slack's native Stop event, and routes the click through the same cancellation path as <code>/stop</code>.</p>
+        </article>
+        <article class="verdict verdict-hermes">
+          <div class="verdict-head"><strong>Hermes</strong><span>One event short</span></div>
+          <p>Streams well and cancels through <code>/stop</code> or <code>!stop</code>. Its inspected manifest and adapter omit <code>agent_session_stopped</code>, so Slack cannot show a working native Stop control.</p>
+        </article>
+      </div>
+      <p class="snapshot">Code reviewed: OpenClaw <a href="https://github.com/openclaw/openclaw/tree/fc23bc864e4553c2d215e479eeec47b67a0bf943"><code>v2026.9.8 · fc23bc8</code></a> and Hermes <a href="https://github.com/NousResearch/hermes-agent/tree/1744a19e0df568c647e4f3ff9c37f2a284a282fb"><code>1744a19</code></a>.</p>
+    </header>
+
+    <section id="anatomy" aria-labelledby="anatomy-title">
+      <div class="section-label">The runtime loop</div>
+      <h2 id="anatomy-title">Six Slack operations create the agent experience</h2>
+      <p class="section-intro">Slack splits the experience across message streaming, session lifecycle, and cancellation. Your backend must connect them to one run keyed by workspace, channel, and thread.</p>
+      <div class="event-rail" role="list" aria-label="Slack agent turn lifecycle">
+        <div class="rail-step" role="listitem"><span class="rail-no">01</span><strong>User prompt</strong><code>message.* / app_mention</code></div>
+        <div class="rail-step" role="listitem"><span class="rail-no">02</span><strong>Working state</strong><code>agents.sessions.setStatus<br>processing</code></div>
+        <div class="rail-step" role="listitem"><span class="rail-no">03</span><strong>Open stream</strong><code>chat.startStream</code></div>
+        <div class="rail-step" role="listitem"><span class="rail-no">04</span><strong>Append deltas</strong><code>chat.appendStream<br>text / plan / task</code></div>
+        <div class="rail-step stop-step" role="listitem"><span class="rail-no">05</span><strong>User clicks Stop</strong><code>agent_session_stopped</code></div>
+        <div class="rail-step" role="listitem"><span class="rail-no">06</span><strong>Abort and settle</strong><code>cancel run + active<br>or chat.stopStream</code></div>
+      </div>
+      <aside class="hard-rule"><strong><code>chat.stopStream</code> does not cancel your model or tools.</strong> Slack stops the visible stream. Your handler must abort the run, clean up resources, discard buffered output, and move the Agent Session away from <code>processing</code>. <a href="https://docs.slack.dev/ai/agent-sessions/#stopping-a-session">Slack documents that responsibility explicitly.</a></aside>
+    </section>
+
+    <section id="comparison" aria-labelledby="comparison-title">
+      <div class="section-label">Side by side</div>
+      <h2 id="comparison-title">OpenClaw closes the control loop; Hermes leaves Stop to commands</h2>
+      <div class="table-wrap" tabindex="0" aria-label="Scrollable OpenClaw and Hermes capability comparison">
+        <table>
+          <thead><tr><th>Capability</th><th>OpenClaw</th><th>Hermes</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Native response stream</th><td><span class="status yes">Yes</span> Node SDK <code>ChatStreamer</code>; one stream becomes the final message.</td><td><span class="status yes">Yes</span> Python Slack SDK; delta appends, then seals the same message.</td></tr>
+            <tr><th scope="row">Progress surface</th><td>Default <code>progress</code> mode uses native plan/task chunks in threads, with Block Kit and compact-text fallbacks.</td><td>Optional <code>native_task_cards</code>; edit-based text fallback after recoverable failures.</td></tr>
+            <tr><th scope="row">Session status</th><td>Uses <code>processing</code>, <code>suspended</code>, and <code>active</code> through <code>agents.sessions.setStatus</code>.</td><td>Supports status UI, but the inspected adapter can send legacy free-form status text to the enum-only Agent Sessions API.</td></tr>
+            <tr><th scope="row">Native clickable Stop</th><td><span class="status yes">Yes</span> Subscribes to <code>agent_session_stopped</code>, authorizes the actor, cancels owning runs, and settles status.</td><td><span class="status no">No</span> The generated manifest and adapter contain no subscription or handler.</td></tr>
+            <tr><th scope="row">Typed cancellation</th><td><code>/stop</code> reaches the same cancellation machinery used by native Stop.</td><td><code>/stop</code> works; <code>!stop</code> handles Slack's refusal to run slash commands inside thread replies.</td></tr>
+            <tr><th scope="row">Formatting</th><td>Parses standard Markdown into an intermediate form, then emits chunk-safe Slack <code>mrkdwn</code> or structured blocks.</td><td>Converts Markdown to <code>mrkdwn</code>; optional <code>rich_blocks</code> adds headers, nested lists, and native tables.</td></tr>
+            <tr><th scope="row">Transport</th><td>Socket Mode or signed HTTP Request URLs.</td><td>Socket Mode through Slack Bolt.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="openclaw" aria-labelledby="openclaw-title">
+      <div class="section-label">Reference implementation</div>
+      <h2 id="openclaw-title">OpenClaw treats Stop as a control-plane event</h2>
+      <div class="code-map">
+        <article>
+          <h3>1 · Slack emits the stop intent</h3>
+          <p>The app subscribes to <code>agent_session_stopped</code>. Slack includes the actor, channel, thread root, and timestamps of streams it halted.</p>
+        </article>
+        <article>
+          <h3>2 · OpenClaw authorizes and resolves ownership</h3>
+          <p>The handler maps the visible Slack thread to current run owners. It keeps workspace identity attached so Enterprise Grid and Slack Connect cannot cross wires.</p>
+        </article>
+        <article>
+          <h3>3 · The handler dispatches canonical <code>/stop</code></h3>
+          <p>Typed and clicked Stop share authorization, queue cleanup, agent abort, and subagent cancellation. One cancellation function prevents behavior drift.</p>
+        </article>
+        <article>
+          <h3>4 · Delivery bookkeeping blocks late output</h3>
+          <p>OpenClaw marks Slack-halted stream timestamps before abort cleanup. Buffered tails cannot leak into a message after the user pressed Stop.</p>
+        </article>
+      </div>
+      <p class="source-line">Primary source: <a href="https://github.com/openclaw/openclaw/blob/fc23bc864e4553c2d215e479eeec47b67a0bf943/extensions/slack/src/monitor/events/agent.ts#L51-L120">OpenClaw Stop event handler</a>, <a href="https://github.com/openclaw/openclaw/blob/fc23bc864e4553c2d215e479eeec47b67a0bf943/extensions/slack/src/session-status.ts#L20-L67">Agent Session status implementation</a>, and <a href="https://github.com/openclaw/openclaw/blob/fc23bc864e4553c2d215e479eeec47b67a0bf943/extensions/slack/src/streaming.ts#L99-L308">stream lifecycle and halted-stream bookkeeping</a>.</p>
+    </section>
+
+    <section id="hermes" aria-labelledby="hermes-title">
+      <div class="section-label">Hermes snapshot</div>
+      <h2 id="hermes-title">Hermes already has the cancellation engine; Slack cannot invoke it by click</h2>
+      <div class="gap-layout">
+        <div>
+          <p>Hermes streams deltas into one Slack message and seals it with <code>chat.stopStream</code>. It can render plan/task chunks, switch to <code>chat.postMessage</code> plus <code>chat.update</code>, and cancel a busy run through <code>/stop</code>.</p>
+          <p>The missing bridge is small in surface area and serious in behavior: add the event to the manifest, register a handler, authorize the user, resolve the thread's active run, invoke the existing stop path, and settle session state.</p>
+        </div>
+        <aside class="gap-card">
+          <span>Missing in inspected commit</span>
+          <code>bot_events:
+  - agent_session_stopped</code>
+          <code>@app.event("agent_session_stopped")
+async def stop_session(...):
+    await canonical_stop(...)</code>
+        </aside>
+      </div>
+      <div class="risk-strip">
+        <p><strong>Manifest gap:</strong> Hermes also omits <code>reactions:write</code> while its lifecycle code calls <code>reactions.add</code> and <code>reactions.remove</code>.</p>
+        <p><strong>Migration gap:</strong> the modern <code>agents.sessions.setStatus</code> API accepts lifecycle enums, not custom strings such as <code>is thinking...</code>.</p>
+      </div>
+      <p class="source-line">Primary source: <a href="https://github.com/NousResearch/hermes-agent/blob/1744a19e0df568c647e4f3ff9c37f2a284a282fb/hermes_cli/slack_cli.py#L28-L76">Hermes generated manifest</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/1744a19e0df568c647e4f3ff9c37f2a284a282fb/plugins/platforms/slack/adapter.py#L2450-L2715">native streaming and finalization</a>, and <a href="https://github.com/NousResearch/hermes-agent/blob/1744a19e0df568c647e4f3ff9c37f2a284a282fb/gateway/slash_commands.py#L420-L482">canonical stop command</a>.</p>
+    </section>
+
+    <section id="api" aria-labelledby="api-title">
+      <div class="section-label">Slack bill of materials</div>
+      <h2 id="api-title">APIs, scopes, events, and app settings</h2>
+      <div class="table-wrap" tabindex="0" aria-label="Scrollable Slack API requirements table">
+        <table class="api-table">
+          <thead><tr><th>Experience</th><th>Slack surface</th><th>Required access</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Receive prompts</th><td><code>app_mention</code>; <code>message.channels</code>, <code>message.groups</code>, <code>message.im</code>, <code>message.mpim</code></td><td><code>app_mentions:read</code> plus matching conversation <code>*:history</code>; add <code>*:read</code> when you resolve conversation metadata.</td></tr>
+            <tr><th scope="row">Post/edit fallback</th><td><code>chat.postMessage</code>, <code>chat.update</code></td><td><code>chat:write</code></td></tr>
+            <tr><th scope="row">Native stream</th><td><code>chat.startStream</code>, <code>chat.appendStream</code>, <code>chat.stopStream</code></td><td><code>chat:write</code>; keep <code>thread_ts</code>, <code>recipient_user_id</code>, and <code>recipient_team_id</code> for channel streams.</td></tr>
+            <tr><th scope="row">Agent lifecycle</th><td><code>agents.sessions.setStatus</code>, optional <code>agents.sessions.rename</code></td><td><code>chat:write</code>; declare the app as an Agent. OpenClaw retains <code>assistant:write</code> for Agent/legacy Assistant compatibility.</td></tr>
+            <tr><th scope="row">Native Stop</th><td><code>agent_session_stopped</code> event</td><td>Subscribe in <code>bot_events</code>; set status to <code>processing</code>; event scope is <code>chat:write</code>.</td></tr>
+            <tr><th scope="row">Typed Stop</th><td>Slash command payload for <code>/stop</code></td><td><code>commands</code> plus a manifest command declaration.</td></tr>
+            <tr><th scope="row">Buttons and approvals</th><td>Block Kit <code>block_actions</code>; <code>chat.update</code> or <code>response_url</code></td><td>Enable Interactivity. Acknowledge within three seconds. OAuth depends on the Web API method used after the click.</td></tr>
+            <tr><th scope="row">Socket Mode</th><td>Events and interactions over WebSocket</td><td>App-level token with <code>connections:write</code>; bot token for Web API calls; no public ingress URL.</td></tr>
+            <tr><th scope="row">HTTP mode</th><td>Events, slash commands, and Interactivity Request URLs</td><td>Public HTTPS endpoint, Slack Signing Secret, signature verification, replay protection, and prompt acknowledgement.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="formatting" aria-labelledby="formatting-title">
+      <div class="section-label">Rendering</div>
+      <h2 id="formatting-title">Use three render paths, because Slack has three text models</h2>
+      <div class="render-grid">
+        <article><span>Stream body</span><h3>Standard Markdown</h3><p><code>chat.*Stream</code> accepts <code>markdown_text</code>. Append deltas only. The field caps each call's Markdown payload at 12,000 characters.</p></article>
+        <article><span>Ordinary message</span><h3>Slack <code>mrkdwn</code></h3><p>Convert authored Markdown. Slack uses <code>*bold*</code>, <code>_italic_</code>, <code>~strike~</code>, and <code>&lt;url|label&gt;</code>. Escape untrusted angle tokens and preserve code fences.</p></article>
+        <article><span>Structure and controls</span><h3>Blocks and chunks</h3><p>Use Block Kit for buttons, approvals, tables, and durable layouts. Use <code>plan_update</code> and <code>task_update</code> inside streams. Include plain fallback text for notifications and assistive technology.</p></article>
+      </div>
+      <aside class="limit-note"><strong>Useful limits:</strong> 50 Block Kit blocks per message; 3,000 characters per standard text object; 100 rows, 20 columns, and 10,000 aggregate cell characters for one table block. Treat limits as renderer inputs, not production surprises.</aside>
+    </section>
+
+    <section id="blueprint" aria-labelledby="blueprint-title">
+      <div class="section-label">Recommended build</div>
+      <h2 id="blueprint-title">One cancellation function, two ways to invoke it</h2>
+      <ol class="blueprint">
+        <li><strong>Key runs by <code>(team_id, channel_id, thread_ts)</code>.</strong><span>Store the runtime handle, cancellation token, stream timestamps, and session generation under that key.</span></li>
+        <li><strong>Open the lifecycle before output.</strong><span>Set <code>processing</code>, then start one append-only stream. Coalesce routine progress to protect rate limits.</span></li>
+        <li><strong>Route native Stop and <code>/stop</code> together.</strong><span>Authorize the actor, mark the generation cancelled, abort model/tools/subagents, clear queued work, and reject later output.</span></li>
+        <li><strong>Settle visibility after runtime cancellation.</strong><span>Record Slack-halted stream timestamps, finalize only when safe, send one confirmation, then set <code>active</code> or <code>closed</code>.</span></li>
+        <li><strong>Make the handler idempotent.</strong><span>Slack can retry events. A repeated Stop must not resurrect work, duplicate confirmations, or append stale buffers.</span></li>
+      </ol>
+    </section>
+
+    <section id="sources" aria-labelledby="sources-title">
+      <div class="section-label">Primary sources</div>
+      <h2 id="sources-title">Docs and code reviewed</h2>
+      <div class="sources-grid">
+        <div><h3>Slack</h3><ul>
+          <li><a href="https://docs.slack.dev/ai/agent-sessions/">Agent Sessions and native Stop lifecycle</a></li>
+          <li><a href="https://docs.slack.dev/reference/events/agent_session_stopped/">agent_session_stopped event</a></li>
+          <li><a href="https://docs.slack.dev/reference/methods/chat.startStream/">chat.startStream</a>, <a href="https://docs.slack.dev/reference/methods/chat.appendStream/">chat.appendStream</a>, <a href="https://docs.slack.dev/reference/methods/chat.stopStream/">chat.stopStream</a></li>
+          <li><a href="https://docs.slack.dev/messaging/formatting-message-text/">Message formatting</a> and <a href="https://docs.slack.dev/interactivity/handling-user-interaction/">interaction handling</a></li>
+          <li><a href="https://docs.slack.dev/block-kit/">Block Kit limits</a> and <a href="https://docs.slack.dev/reference/block-kit/blocks/table-block">table block limits</a></li>
+        </ul></div>
+        <div><h3>Implementations</h3><ul>
+          <li><a href="https://github.com/openclaw/openclaw/blob/fc23bc864e4553c2d215e479eeec47b67a0bf943/docs/channels/slack/messaging.md#L62-L152">OpenClaw streaming modes</a></li>
+          <li><a href="https://github.com/openclaw/openclaw/blob/fc23bc864e4553c2d215e479eeec47b67a0bf943/docs/channels/slack/manifest-and-scopes.md#L151-L159">OpenClaw Agent Session manifest</a></li>
+          <li><a href="https://github.com/NousResearch/hermes-agent/blob/1744a19e0df568c647e4f3ff9c37f2a284a282fb/website/docs/user-guide/messaging/slack.md#L543-L565">Hermes native streaming</a></li>
+          <li><a href="https://github.com/NousResearch/hermes-agent/blob/1744a19e0df568c647e4f3ff9c37f2a284a282fb/plugins/platforms/slack/block_kit.py">Hermes Block Kit renderer</a></li>
+        </ul></div>
+      </div>
+      <footer>Primary-source review only. Claims describe the pinned code snapshots above; Slack's Agent APIs moved fast in 2026, so recheck the deployed SDK and workspace feature surface before implementation.</footer>
+    </section>
+  </main>
+</div>
+</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · slack-agentic-experience-openclaw-hermes-2026</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>
