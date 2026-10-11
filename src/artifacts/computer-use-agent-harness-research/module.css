@@ -1,0 +1,11 @@
+[data-artifact-content] .research-citation{font-size:.85em;white-space:nowrap;text-decoration:none;margin-left:.1em}
+[data-artifact-content] .research-table{max-width:100%;overflow-x:auto;border:1px solid var(--border-chrome);border-radius:4px}
+[data-artifact-content] .research-table table{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed}
+[data-artifact-content] .research-table th,[data-artifact-content] .research-table td{padding:12px;vertical-align:top;overflow-wrap:break-word;border-bottom:1px solid var(--border-chrome)}
+[data-artifact-content] .research-table th{color:var(--text-primary);background:var(--bg-chrome);text-align:left}
+[data-artifact-content] .research-hint{font-size:.85em;color:var(--text-secondary)}
+[data-artifact-content] .research-sources{padding-left:2.5em}
+[data-artifact-content] .research-sources li{margin-bottom:.65em;overflow-wrap:anywhere;scroll-margin-top:20px}
+[data-artifact-content] pre{max-width:100%;overflow-x:auto;background:var(--bg-chrome);color:var(--text-primary);padding:16px;border:1px solid var(--border-chrome);border-radius:4px}
+[data-artifact-content] code{color:var(--text-primary);background:var(--bg-chrome)}
+[data-artifact-content] pre code{background:transparent}

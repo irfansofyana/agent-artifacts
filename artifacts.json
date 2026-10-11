@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Computer use for AI agents: building our own harness",
+      "slug": "computer-use-agent-harness-research",
+      "description": "A primary-source guide to GUI-agent mechanics, open-source libraries, model contracts, safety, evaluation, and a vendor-neutral harness architecture.",
+      "createdAt": "2026-10-12",
+      "type": "html",
+      "url": "artifacts/computer-use-agent-harness-research/"
+    },
+    {
       "title": "Scanned PDF OCR on CPU Kubernetes: Tool Assessment",
       "slug": "scanned-pdf-ocr-kubernetes-assessment",
       "description": "Decision-focused assessment of MarkItDown OCR, PaddleOCR, MinerU, and Docling for 100-page scanned PDFs and external LLM integration.",

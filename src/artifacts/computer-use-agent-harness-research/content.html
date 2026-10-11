@@ -1,0 +1,338 @@
+<div data-artifact-content class="legacy-content">
+<p><a href="research.md" download>Download the research as Markdown</a></p>
+<p>Research snapshot: October 11 to 12, 2026, Western Indonesian Time (UTC+07:00).</p>
+<h2 id="the-short-answer">The short answer</h2>
+<p>Computer use means letting an agent operate software through its interface: inspect a page or desktop, identify controls, click, type, scroll, and check what changed. It is useful when the workflow lives in a GUI rather than a suitable application API. But a model that can point at a button is not yet a dependable automation system.</p>
+<p>Three components need separate names. The model proposes actions. The harness manages observations, conversation state, authorization, execution, recovery, and verification. The driver delivers input and obtains interface state. A screenshot-to-action model, a browser automation library, and a desktop input driver are therefore not interchangeable purchases or dependencies.</p>
+<p>The engineering recommendation in this article is deliberately narrow: start with a Python-first harness, Playwright for browser execution, and one versioned model adapter. Add Cua Driver behind a small native-desktop adapter only when desktop workflows justify it and the selected components’ licenses are acceptable. Use PyAutoGUI only as an explicitly authorized fallback on an agent-owned desktop. Evaluate browser workflows with BrowserGym and AgentLab; consider ShowUI or UI-TARS as optional open-weight baselines, not mandatory infrastructure.</p>
+<p>This is a primary-source research synthesis, not a benchmark run or a working implementation. Documentation, papers, repository code, and license files were inspected. No authenticated model inference, cross-platform desktop acceptance test, or benchmark reproduction was performed. The interface sketch below is typed pseudocode, not runnable or verified code. Recommendations are engineering judgments; published capabilities and measurements receive numbered citations.</p>
+<h2 id="1-a-loop-not-a-magic-click-function">1. A loop, not a magic click function</h2>
+<p>Consider a user asking an agent to change a notification setting in a test application. The authorized goal is specific: disable promotional email while leaving security alerts enabled.</p>
+<p>A useful execution loop has five stages:</p>
+<ol>
+<li>Observe the current application, account context, controls, and visible state.</li>
+<li>Decide which action would advance the goal.</li>
+<li>Authorize that action against the task scope and current target.</li>
+<li>Act through a driver with explicit delivery semantics.</li>
+<li>Verify the resulting setting, then continue or stop.</li>
+</ol>
+<p>The model might recognize two toggles and propose disabling the first. The harness should not interpret that proposal as authority to edit arbitrary account settings. It binds the proposal to the observed promotional-email control, checks that the application and account are still correct, and invokes the driver. Afterward it reads the setting again, ideally after navigating away and returning or through an authorized application-state check. A changed-looking toggle proves less than a persisted setting.</p>
+<p>This distinction appears in provider contracts: the client-executed computer-use interfaces from OpenAI, Anthropic, and Google require the application to execute requests and return observations. A tool request is not an action already performed.<a aria-label="Source 1" class="research-citation" href="#source-1">[1]</a><a aria-label="Source 2" class="research-citation" href="#source-2">[2]</a><a aria-label="Source 3" class="research-citation" href="#source-3">[3]</a></p>
+<p>A useful conceptual design model is a partially observable Markov decision process, or POMDP. Here that is an engineering analogy, not a claim that the proposed harness implements a formal POMDP solver. The real state includes hidden account settings, pending network requests, application focus, permission grants, and unsaved changes. A screenshot reveals only part of it. A semantic tree reveals another part. History supports a belief about what happened, but does not eliminate uncertainty.</p>
+<p>Consequently, an agent sometimes needs to act to learn: open a menu, inspect a dialog, or revisit a setting. The harness should preserve uncertainty rather than compress every outcome into “success.” It should distinguish task verified complete, delivered but unverified, user help required, safety refusal, execution failure, and budget exhaustion. These are proposed lifecycle states, not upstream API names.</p>
+<h2 id="2-grounding-from-instructions-to-executable-targets">2. Grounding: from instructions to executable targets</h2>
+<p>Grounding connects “disable promotional email” to a concrete control. There are several observation channels, and their trade-offs should remain visible.</p>
+<h3 id="pixels-semantic-structure-and-ocr">Pixels, semantic structure, and OCR</h3>
+<p>Pixels show what a user sees, including canvases, icons, and visual grouping. They also leave the agent to infer meaning and location. DOM or accessibility observations can supply roles, labels, values, hierarchy, and control identity. BrowserGym exposes screenshots and accessibility-tree observations; native platforms offer their own accessibility interfaces rather than one universal desktop tree.<a aria-label="Source 4" class="research-citation" href="#source-4">[4]</a><a aria-label="Source 5" class="research-citation" href="#source-5">[5]</a><a aria-label="Source 6" class="research-citation" href="#source-6">[6]</a></p>
+<p>OCR supplies text locations without necessarily identifying a button’s behavior. Set-of-marks, or SoM, annotates a screenshot with numbered regions and lets a reasoning model select a region. OmniParser combines detection, OCR, and icon captioning into structured elements and annotated screenshots; it is a perception component, not by itself the whole agent loop.<a aria-label="Source 7" class="research-citation" href="#source-7">[7]</a></p>
+<p>Engineering recommendation: keep pixels and semantic metadata side by side. Prefer a validated semantic target for ordinary controls, and retain visual fallback for controls absent from the tree. Record which channel grounded the action. A DOM-assisted agent has more privileged information than a screenshot-only agent; report that difference in evaluation rather than treating both as the same model capability.</p>
+<p>Do not assume semantic metadata is complete or trustworthy. Windows UIA control patterns can vary dynamically, and Linux AT-SPI depends on accessibility providers and the session bus. An application’s visible button may lack an actionable semantic representation.<a aria-label="Source 6" class="research-citation" href="#source-6">[6]</a><a aria-label="Source 8" class="research-citation" href="#source-8">[8]</a></p>
+<h3 id="end-to-end-vla-versus-modular-perception">End-to-end VLA versus modular perception</h3>
+<p>A vision-language-action model can learn perception, grounding, reasoning, and action generation together. UI-TARS presents this end-to-end screenshot-to-action approach, while ShowUI uses UI-guided visual-token selection and interleaved visual/action history. Their training methods do not establish that an arbitrary deployed harness will automatically improve from every failed task.<a aria-label="Source 9" class="research-citation" href="#source-9">[9]</a><a aria-label="Source 10" class="research-citation" href="#source-10">[10]</a></p>
+<p>A modular system instead combines a planner with a separate locator or parser. That makes it easier to measure whether failure came from target localization, action selection, or execution. It also adds another model or processing stage. The modular versus end-to-end choice should therefore be an ablation, not an ideology.</p>
+<p>For an initial open-weight comparison, ShowUI is a lightweight candidate and UI-TARS is a native-agent candidate. Pin the checkpoint, processor, prompt template, and parser together. ShowUI’s published action positions are normalized from zero to one; that is not the same frame as provider screenshot pixels or Google’s normalized coordinates.<a aria-label="Source 11" class="research-citation" href="#source-11">[11]</a></p>
+<p>Never execute a model’s Python-like action text with unrestricted <code>eval</code>. The recommended boundary is a closed, validated action grammar. Even when a provider supports general code execution, that should be a separate capability with a larger isolation and permission boundary.</p>
+<h2 id="3-browser-libraries-choose-the-layer-you-need">3. Browser libraries: choose the layer you need</h2>
+<h3 id="playwright-as-the-execution-baseline">Playwright as the execution baseline</h3>
+<p>Playwright is the recommended browser driver, not a model planner. Its click actionability checks cover a unique target, visibility, stability, event reception, and enablement; it also provides retrying assertions. Its source license is Apache-2.0.<a aria-label="Source 12" class="research-citation" href="#source-12">[12]</a><a aria-label="Source 13" class="research-citation" href="#source-13">[13]</a></p>
+<p>These checks solve an important execution problem: the agent can identify the right button while the page is still animating or an overlay intercepts input. They do not prove that clicking it achieved the business goal. Keep actionability checks and postcondition checks separate.</p>
+<p>Playwright supports Chromium, Firefox, and WebKit, but attaching over Chrome DevTools Protocol is Chromium-specific and documented as lower fidelity than a Playwright-protocol connection. Choose the attachment route intentionally rather than assuming every remotely controlled browser offers identical behavior.<a aria-label="Source 14" class="research-citation" href="#source-14">[14]</a></p>
+<p>Playwright MCP packages browser tools for an MCP client and emphasizes structured accessibility snapshots. It is a tool-access integration, not a replacement for an authorization policy or a complete security boundary.<a aria-label="Source 15" class="research-citation" href="#source-15">[15]</a></p>
+<h3 id="browser-use-when-you-want-more-of-the-agent-stack">browser-use when you want more of the agent stack</h3>
+<p>browser-use supplies a browser-agent framework rather than just deterministic execution primitives. The current project uses a CDP-based browser architecture; describing it as merely a thin Playwright wrapper is misleading. Its inspected license is MIT.<a aria-label="Source 16" class="research-citation" href="#source-16">[16]</a><a aria-label="Source 17" class="research-citation" href="#source-17">[17]</a></p>
+<p>Engineering recommendation: evaluate it when its observation management, agent loop, and browser integration save meaningful work. Avoid putting two independent planners in charge of the same session. Either adopt its orchestration deliberately or expose a narrow integration under your own harness; do not casually mix competing recovery and state-management loops.</p>
+<h3 id="stagehand-v4-for-controlled-ai-assisted-primitives">Stagehand v4 for controlled AI-assisted primitives</h3>
+<p>Stagehand v4 combines <code>act</code>, <code>observe</code>, and <code>extract</code> with deterministic locator methods. Its migration guide removes <code>agent()</code> and puts ownership of the agent loop with the caller. The inspected repository license is MIT.<a aria-label="Source 18" class="research-citation" href="#source-18">[18]</a><a aria-label="Source 19" class="research-citation" href="#source-19">[19]</a></p>
+<p>This is a useful middle layer when an application needs occasional natural-language grounding without delegating the entire workflow. Current model configuration allows direct provider credentials or a client-side LLM callback. Local browsers are possible; Browserbase hosting is not universally required. The automatic Model Gateway, however, requires a Browserbase session.<a aria-label="Source 20" class="research-citation" href="#source-20">[20]</a></p>
+<p>Engineering recommendation: use deterministic locators for known, stable interactions and AI primitives for the ambiguous remainder. Keep provider routing explicit during evaluation; automatic per-call model selection is a different experimental condition from one pinned model.</p>
+<h3 id="browsergym-and-agentlab-belong-in-evaluation">BrowserGym and AgentLab belong in evaluation</h3>
+<p>BrowserGym offers a browser environment framework integrating multiple benchmark suites, not one benchmark or a production planner.<a aria-label="Source 21" class="research-citation" href="#source-21">[21]</a>
+AgentLab provides associated experimental tooling.<a aria-label="Source 22" class="research-citation" href="#source-22">[22]</a>
+Both inspected license files declare Apache-2.0.<a aria-label="Source 23" class="research-citation" href="#source-23">[23]</a><a aria-label="Source 24" class="research-citation" href="#source-24">[24]</a></p>
+<p>AgentLab is experiment tooling rather than a production browser driver.<a aria-label="Source 22" class="research-citation" href="#source-22">[22]</a></p>
+<p>BrowserGym is not a secure sandbox for arbitrary generated code. Treat evaluation environments, site fixtures, model execution, and host isolation as separate concerns. A repeatable reset/step interface helps measure behavior; it does not by itself grant permission to execute hostile programs on the host.</p>
+<h2 id="4-native-desktop-control-is-platform-specific">4. Native desktop control is platform-specific</h2>
+<p>Browser automation has a relatively coherent execution surface. Native desktops do not. Separate capture, semantic accessibility, targeted input, global input, and environmental isolation before comparing tools.</p>
+<h3 id="cua-driver-reuse-the-driver-audit-the-assembled-stack">Cua Driver: reuse the driver, audit the assembled stack</h3>
+<p>Cua Driver exposes CLI/MCP and native SDK interfaces independently of model inference. Its Python and TypeScript bindings load the native runtime; the older <code>cua-agent</code> package is explicitly deprecated.<a aria-label="Source 25" class="research-citation" href="#source-25">[25]</a><a aria-label="Source 26" class="research-citation" href="#source-26">[26]</a></p>
+<p>Its documented observation workflow can return a window screenshot and accessibility tree, with snapshot-bound element references and distinct screen versus screenshot frames. A subsequent observation can invalidate a pending handle, including observations initiated by another actor. This is a concrete reason to make staleness part of the harness contract.<a aria-label="Source 27" class="research-citation" href="#source-27">[27]</a></p>
+<p>The action-support documentation distinguishes delivered behavior, explicit refusals, and unproven gaps. Pixel-addressed behavior may resolve through semantic hit-testing; that is not proof of unrestricted background pointer delivery into arbitrary canvases or games.<a aria-label="Source 28" class="research-citation" href="#source-28">[28]</a></p>
+<p>Licensing is component-specific. Cua Driver, core SDK, Lume, and the Python sandbox wrapper are MIT, while Spaces and several associated components use FSL source-available terms. Optional perception components introduce additional licenses. An MIT wrapper does not make the resulting guest stack entirely MIT.<a aria-label="Source 29" class="research-citation" href="#source-29">[29]</a><a aria-label="Source 30" class="research-citation" href="#source-30">[30]</a></p>
+<p>Engineering recommendation: pin the driver binary and schema, discover capabilities at startup, and place it behind a small adapter. Do not inherit a whole ecosystem simply to obtain screenshot and click functions. Treat unsupported background input as refusal, not permission to steal focus.</p>
+<h3 id="the-operating-system-constraints">The operating-system constraints</h3>
+<p>On macOS, AXUIElement supplies application accessibility queries and actions. Cua’s documented background pixel path uses private SkyLight mechanisms, and its production setup requires appropriate Accessibility/Screen Recording grants with correct host attribution. Expect permission and OS-version regression work, not only Python packaging.<a aria-label="Source 5" class="research-citation" href="#source-5">[5]</a><a aria-label="Source 31" class="research-citation" href="#source-31">[31]</a></p>
+<p>On Windows, UIA exposes control patterns such as Invoke, Value, Selection, and Scroll. Input injection through SendInput is constrained by UIPI and existing keyboard state. The desktop driver must run in the interactive user session; Session 0 is not an equivalent automation environment.<a aria-label="Source 6" class="research-citation" href="#source-6">[6]</a><a aria-label="Source 32" class="research-citation" href="#source-32">[32]</a><a aria-label="Source 33" class="research-citation" href="#source-33">[33]</a></p>
+<p>On Linux, AT-SPI provides semantic interfaces, while input and capture depend on the display stack. Cua documents different restrictions for X11, Sway, GNOME, KDE, and experimental nested compositor routes. “Wayland supported” is too broad without naming the compositor, permissions, delivery mode, and tested action.<a aria-label="Source 8" class="research-citation" href="#source-8">[8]</a><a aria-label="Source 34" class="research-citation" href="#source-34">[34]</a><a aria-label="Source 28" class="research-citation" href="#source-28">[28]</a></p>
+<p>The RemoteDesktop portal uses session creation, device selection, and user-granted access, with an EIS connection path for input. A portal grant does not establish arbitrary occluded-window targeting or unconditional unattended permission.<a aria-label="Source 35" class="research-citation" href="#source-35">[35]</a></p>
+<h3 id="other-native-building-blocks">Other native building blocks</h3>
+<p>PyAutoGUI provides mouse, keyboard, screenshot, and image-location primitives, not planning or accessibility. Its Linux input implementation uses Xlib/XTest; its license text is BSD-3-Clause. Restrict it to an owned desktop fallback unless user-input interference has been explicitly addressed.<a aria-label="Source 36" class="research-citation" href="#source-36">[36]</a><a aria-label="Source 37" class="research-citation" href="#source-37">[37]</a><a aria-label="Source 38" class="research-citation" href="#source-38">[38]</a></p>
+<p>Enigo and XCap are separate Rust input and capture libraries, with MIT and Apache-2.0 declarations respectively. Their platform/backend features should be checked for the actual build rather than inferred from a broad platform list.<a aria-label="Source 39" class="research-citation" href="#source-39">[39]</a><a aria-label="Source 40" class="research-citation" href="#source-40">[40]</a></p>
+<p>Microsoft UFO is a useful Windows architectural reference: HostAgent/AppAgent coordination, state machines, a blackboard, and GUI/COM execution seams. Its repository is MIT. Galaxy’s cross-device orchestration does not imply native GUI parity everywhere: its LinuxAgent is a CLI executor.<a aria-label="Source 41" class="research-citation" href="#source-41">[41]</a><a aria-label="Source 42" class="research-citation" href="#source-42">[42]</a><a aria-label="Source 43" class="research-citation" href="#source-43">[43]</a></p>
+<p>The inspected <code>suitedaces/computer-agent</code> is a Tauri application with an Anthropic-specific loop and internal Rust computer control, not an established model-neutral external driver. Its license contains additional derivative/work-for-hire and license-back terms despite an Apache heading. Do not classify it as unmodified Apache-2.0 based on a badge.<a aria-label="Source 44" class="research-citation" href="#source-44">[44]</a><a aria-label="Source 45" class="research-citation" href="#source-45">[45]</a><a aria-label="Source 46" class="research-citation" href="#source-46">[46]</a></p>
+<h2 id="5-provider-portability-requires-versioned-contracts">5. Provider portability requires versioned contracts</h2>
+<p>A vendor-neutral harness should normalize intent and lifecycle without pretending the wire formats are identical. Version adapters by endpoint family and tool version. Preserve native call identifiers, result correlation, image rules, and safety metadata.</p>
+<h3 id="openai">OpenAI</h3>
+<p>The retrieved Responses computer-use guide describes both ordinary function-based code execution and a structured <code>computer</code> tool. The structured route returns <code>computer_call</code> items containing an ordered <code>actions</code> array, not necessarily one <code>action</code>. The client executes them and returns <code>computer_call_output</code> with the matching <code>call_id</code> and a <code>computer_screenshot</code> result, continuing the session through <code>previous_response_id</code>.<a aria-label="Source 1" class="research-citation" href="#source-1">[1]</a></p>
+<p>The guide’s code-execution alternative requires an isolated persistent environment and client-managed limits. A separate Agents API hosted-browser contract uses hosted execution; it is not a spelling change for the Responses tool.<a aria-label="Source 1" class="research-citation" href="#source-1">[1]</a><a aria-label="Source 47" class="research-citation" href="#source-47">[47]</a></p>
+<p>Recommendation: implement the structured route first if a closed action vocabulary meets the task. Treat generated code as a later, separately authorized execution product. Do not perpetuate preview-only model names or safety fields as timeless requirements.</p>
+<h3 id="anthropic">Anthropic</h3>
+<p>The current guide defines <code>computer_toolset_20260801</code>, a client toolset with 17 member tools and no beta header. Member calls are distinguished by <code>toolset_name: "computer"</code>; correlated tool results must echo that toolset identity. Older beta computer tools remain a separate compatibility path.<a aria-label="Source 2" class="research-citation" href="#source-2">[2]</a></p>
+<p>Ordered batches execute sequentially. After a failure, later dependent actions stop, but every requested block still needs a correlated error result. Coordinates remain in the full-display screenshot frame; zoom does not switch later actions to crop-relative coordinates. Screenshot/zoom images must meet the toolset’s image limits.<a aria-label="Source 2" class="research-citation" href="#source-2">[2]</a></p>
+<p>Recommendation: do not silently prune image history or migrate tool versions without contract tests. Preserve requested, executed, skipped, and failed actions separately.</p>
+<h3 id="google">Google</h3>
+<p>The retrieved Google guide uses the Interactions API and documents browser, desktop, and mobile environments. Calls are read from interaction steps and answered with matching <code>function_result</code> call IDs; continuation uses <code>previous_interaction_id</code>.<a aria-label="Source 3" class="research-citation" href="#source-3">[3]</a></p>
+<p>Its coordinate tables specify a normalized 1000-by-1000 frame with integers from 0 through 999; examples denormalize using the screen dimensions. Calls can include a safety decision requiring user confirmation, followed by a safety acknowledgement in the result.<a aria-label="Source 3" class="research-citation" href="#source-3">[3]</a></p>
+<p>Recommendation: keep current Interactions and legacy generateContent adapters separate. An example helper returning a continuation string is not a real approval mechanism. Provider safety flags are inputs to your policy, not the entire policy.</p>
+<p>Across all three, documentation examples are not proof that every account or cloud has the same model availability. This research did not test authenticated requests, quotas, streaming behavior, retention, or multi-turn contract compatibility.</p>
+<h2 id="6-coordinates-stale-observations-and-ambiguous-actions">6. Coordinates, stale observations, and ambiguous actions</h2>
+<p>Engineering recommendation: every observation should identify its environment, session, target window or viewport, capture time, revision, original dimensions, presented dimensions, crop offset, and transform. Every target reference should identify the observation that produced it.</p>
+<p>Coordinate errors often masquerade as model failures. A model may output screenshot pixels, normalized fractions, or provider-specific normalized integers. The driver may expect CSS pixels, display pixels, or desktop coordinates. Cropping, browser chrome, device scale, window movement, multiple monitors, and negative monitor origins all affect the conversion.</p>
+<p>Represent the mapping as an explicit transform, not scattered arithmetic. A crop-relative point first maps into the captured image; image scaling then maps it to the target window or display; the window origin maps it into desktop space if that delivery route requires it. Preserve aspect ratio or describe separate axes explicitly. Reject out-of-range coordinates rather than quietly steering them onto an unrelated control.</p>
+<p>Use synthetic fixtures to test transforms before asking a model to operate a desktop. Place controls at known positions, resize the window, change display scale, move it between monitors, and verify the delivered target. Those are proposed acceptance tests, not tests performed for this article.</p>
+<p>Action ambiguity needs equally explicit treatment. “Click” may mean accessibility Invoke, a window-targeted pointer event, or global foreground input. “Type” may insert at the caret or replace a value. A pixel-targeted semantic action is not equivalent to raw pointer delivery. Cua’s documented distinctions make these materially different routes.<a aria-label="Source 27" class="research-citation" href="#source-27">[27]</a><a aria-label="Source 28" class="research-citation" href="#source-28">[28]</a></p>
+<p>Stale targets should fail closed or trigger re-observation. A delayed model response may refer to a page before navigation or a desktop before a dialog opened. A stale approval is worse: the user approved one recipient, but the interface now shows another.</p>
+<p>Batch only while assumptions remain valid. Filling two harmless fields may be safe within one stable form; clicking a navigation control and then guessing the next page’s coordinates is not. Stop at failure, approval boundaries, unexpected dialogs, and target changes. Do not measure one batch as though it were necessarily comparable to one atomic action.</p>
+<p>Cancellation also needs a delivery boundary. If a transport times out after a click, the result is unknown, not automatically “not executed.” Re-observe before retrying a non-idempotent operation. Bind input ownership to a lease and release held buttons/modifier keys after errors. In-flight side effects cannot be assumed reversible merely because the planner stopped.</p>
+<h2 id="7-security-untrusted-observations-meet-powerful-sinks">7. Security: untrusted observations meet powerful sinks</h2>
+<p>A GUI agent reads attacker-influenced text while holding permission to act. Web pages, documents, filenames, accessibility labels, OCR output, and screenshots are task data, not new authority. Visual presentation does not sanitize an instruction.</p>
+<p>WASP studies prompt injection against web agents with constrained attacker control and finds vulnerabilities in tested configurations. AgentDojo evaluates tool-using agents with utility and security checks over untrusted data; it is not primarily a visual desktop benchmark. BrowserART addresses a different issue: harmful browser requests can expose action-level failures even when a model refuses similar requests in chat.<a aria-label="Source 48" class="research-citation" href="#source-48">[48]</a><a aria-label="Source 49" class="research-citation" href="#source-49">[49]</a><a aria-label="Source 50" class="research-citation" href="#source-50">[50]</a></p>
+<p>OpenAI’s prompt-injection defense discussion emphasizes source-sink analysis and constraining dangerous actions even when reasoning is deceived. Anthropic describes layered browser defenses and adaptive testing, while warning that low attack-success rates can still matter. These are evidence about documented product/configuration defenses, not protections automatically inherited by a custom executor.<a aria-label="Source 51" class="research-citation" href="#source-51">[51]</a><a aria-label="Source 52" class="research-citation" href="#source-52">[52]</a></p>
+<p>The recommended threat model identifies sources an attacker can influence and sinks the agent can reach. Sources include a comment or downloaded document. Sinks include a navigation URL, form field, upload, email recipient, filesystem write, purchase, or shell command. The important question is not only whether the model repeats malicious text, but whether data or authority crosses an unauthorized boundary.</p>
+<p>For example, a document might tell the agent to “validate access” by visiting a URL containing confidential text. Reject that transmission even if the planner believes it advances the task. Origin restrictions, scoped credentials, and data-flow controls should remain effective after model deception.</p>
+<p>Approval must precede exposure. Typing sensitive information into a web form can transmit it before final submission; OpenAI’s guide explicitly treats such typing as transmission. A submit-only approval gate is therefore insufficient.<a aria-label="Source 1" class="research-citation" href="#source-1">[1]</a></p>
+<p>Recommended controls are concrete:</p>
+<ul>
+<li>Use disposable browser profiles or owned desktops, least privilege, restricted mounts, and explicit network policy.</li>
+<li>Keep credential material outside model context and bind autofill to the actual origin and authorized operation.</li>
+<li>Bind approval to the exact target, recipient, data, amount, action, and observation revision.</li>
+<li>Reject unknown tool versions, unsupported capabilities, and unauthorized delivery-mode widening.</li>
+<li>Separate code/shell execution from GUI actions; constrain downloads and executable opening.</li>
+<li>Maintain redacted audit records with access and retention limits; screenshots can contain secrets.</li>
+<li>Provide human takeover and deadline-driven cancellation without blind replay of uncertain actions.</li>
+</ul>
+<p>Interaction isolation and compromise containment are different. QEMU provides VM management/input/capture seams, while gVisor supplies a Linux-like application kernel, not a Windows/macOS desktop. An Xvfb display or separate interaction session is not by itself a security sandbox.<a aria-label="Source 53" class="research-citation" href="#source-53">[53]</a><a aria-label="Source 54" class="research-citation" href="#source-54">[54]</a></p>
+<p>For Apple-host guests, Lume is an MIT virtualization option with macOS host requirements. Tart’s retrieved license is FSL-1.1-ALv2 with version-specific conversion terms. Evaluate the exact virtualization package, guest OS, firmware, and image licenses separately.<a aria-label="Source 55" class="research-citation" href="#source-55">[55]</a><a aria-label="Source 56" class="research-citation" href="#source-56">[56]</a><a aria-label="Source 57" class="research-citation" href="#source-57">[57]</a></p>
+<h2 id="8-a-minimal-python-first-architecture">8. A minimal Python-first architecture</h2>
+<p>The proposed design has six replaceable boundaries: environment lifecycle, observation, policy/model adapters, authorization, execution, and verification/recording. Begin with one planner and one environment. Multi-agent orchestration is not a prerequisite for moving a pointer, and it adds shared-state and ownership problems before basic execution is reliable.</p>
+<p>The environment provider creates, attaches, resets, and destroys a leased workspace. The observer reports pixels, optional semantic structure, provenance, transforms, and degradation. The model adapter translates provider-native exchanges into typed proposals while retaining native correlation metadata. The authorization service evaluates authority independently. The executor selects only advertised delivery routes. The verifier checks task-specific postconditions.</p>
+<p>The following is interface pseudocode in Python notation. It omits implementations, wire formats, full action schemas, persistence, image handling, and cleanup code. It was not executed and must not be presented as a tested library.</p>
+<pre><code class="language-python">from dataclasses import dataclass
+from typing import Literal, Protocol
+
+@dataclass(frozen=True)
+class Observation:
+    environment_id: str
+    session_id: str
+    target_id: str
+    revision: str
+    capture_id: str
+    transform_id: str
+    screenshot_ref: str
+    semantic_ref: str | None
+    capabilities: frozenset[str]
+
+@dataclass(frozen=True)
+class Proposal:
+    action_id: str
+    expected_revision: str
+    target_id: str
+    operation: str          # closed tagged union in real code
+    delivery_mode: str      # semantic, targeted, owned_foreground
+    validated_arguments: object
+    provider_call_ref: str
+
+@dataclass(frozen=True)
+class Permit:
+    action_id: str
+    target_id: str
+    observation_revision: str
+    approval_ref: str | None
+    expires_at: str
+
+@dataclass(frozen=True)
+class Execution:
+    action_id: str
+    status: Literal["delivered", "refused", "unknown", "failed"]
+    audit_ref: str
+
+class Observer(Protocol):
+    async def observe(self, target_id: str) -&gt; Observation: ...
+
+class Policy(Protocol):
+    async def propose(self, goal: str, obs: Observation) -&gt; Proposal: ...
+
+class Authorizer(Protocol):
+    async def authorize(self, p: Proposal, obs: Observation) -&gt; Permit: ...
+
+class Executor(Protocol):
+    async def execute(self, p: Proposal, permit: Permit) -&gt; Execution: ...
+
+class Verifier(Protocol):
+    async def check(self, goal: str, obs: Observation) -&gt; bool: ...
+</code></pre>
+<p>The critical implementation invariant is that <code>execute</code> validates the permit, target, lease, capability, expiry, and expected revision at dispatch, not only when the planner proposed the action. The concrete driver may offer stronger snapshot checks or weaker ones; the adapter must report that difference. Authorization and verification should not simply ask the same planner whether its own action was acceptable and successful.</p>
+<p>A production action schema should distinguish invoke, insert-text, replace-value, pointer-click, key sequence, drag, scroll, navigate, wait, and finish. It should carry risk and idempotency information without letting model-supplied labels grant authority. Persist execution IDs so retries can be correlated; never imply exactly-once side effects when the driver and application cannot provide them.</p>
+<h2 id="9-evaluation-measure-the-model-harness-pair">9. Evaluation: measure the model-harness pair</h2>
+<p>Grounding, workflow completion, and safety require separate tracks. ScreenSpot-Pro targets professional/high-resolution localization; it is not an end-to-end workflow score. Original OSWorld evaluates real-computer tasks with initialization and execution-based checks. Original WebArena evaluates realistic multi-step web tasks with outcome-based scoring.<a aria-label="Source 58" class="research-citation" href="#source-58">[58]</a><a aria-label="Source 59" class="research-citation" href="#source-59">[59]</a><a aria-label="Source 60" class="research-citation" href="#source-60">[60]</a></p>
+<p>Version names matter. OSWorld-Verified updates the original suite. OSWorld 2.0 is a long-horizon successor; at retrieval its repository recommended <code>osworld-v2.1</code>, with a release manifest pinning code, tasks, assets, and images. WebArena-Verified revises tasks and evaluators and supports deterministic JSON/network-event-based scoring. Do not mix these scores with their original suites without identifying the revision.<a aria-label="Source 61" class="research-citation" href="#source-61">[61]</a><a aria-label="Source 62" class="research-citation" href="#source-62">[62]</a><a aria-label="Source 63" class="research-citation" href="#source-63">[63]</a></p>
+<p>The OSWorld 2.0 paper reports 108 long-horizon workflows and, for one specified model/budget condition, 20.6% strict completion versus 54.8% partial score. That gap illustrates why both measures matter; it is an author-reported result, not this article’s reproduction or a claim about today’s best model.<a aria-label="Source 64" class="research-citation" href="#source-64">[64]</a></p>
+<p>The retrieved successor release manifest also records incomplete runtime verification, including no full 108-task agent evaluation and no VM boot in its stated setup. Treat those as upstream manifest limitations, not evidence that this research reran or certified the suite.<a aria-label="Source 62" class="research-citation" href="#source-62">[62]</a></p>
+<p>Recommended reporting includes the exact model/checkpoint, endpoint/tool version, prompts, image handling, observation channels, code permissions, driver build, task/evaluator commits, environment images, and memory policy. Count actions, model turns, tool calls, and steps separately. Record wall time, tokens/cost, setup failures, intervention frequency, refusals, and unknown deliveries alongside completion.</p>
+<p>Use clean resets, repeated trials, a private holdout, and explicit exclusions. Keep infrastructure failures in view rather than quietly removing them from the denominator. Compare screenshot-only and semantic-assisted agents as separate conditions. Useful ablations hold the planner fixed while changing grounding, observation channels, batching, or executor routes.</p>
+<p>Safety evaluation should measure benign utility, utility under injection, attacker success, attempted unauthorized actions, executor-blocked effects, and approval burden. A harness that refuses everything is safe only in a trivial and useless sense. Use deterministic state/network checks where available; final model prose is not the acceptance oracle.</p>
+<h2 id="10-decision-matrix-and-implementation-roadmap">10. Decision matrix and implementation roadmap</h2>
+<p>The matrix combines inspected component properties with engineering choices. “Recommended” means fit for the proposed narrow architecture, not a benchmark ranking.</p>
+<p class="research-hint">On narrow screens, scroll the table horizontally.</p><div aria-label="Library decision matrix; scroll horizontally to view all columns" class="research-table" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Starting point</th>
+<th>Reason to consider it</th>
+<th>Boundary to preserve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Browser execution</td>
+<td>Playwright</td>
+<td>Deterministic locators, actionability, assertions</td>
+<td>No built-in task authority; verify outcomes separately</td>
+</tr>
+<tr>
+<td>Full browser-agent framework</td>
+<td>browser-use</td>
+<td>Existing CDP-based agent/browser integration</td>
+<td>Adopt or isolate its loop deliberately</td>
+</tr>
+<tr>
+<td>AI-assisted browser primitives</td>
+<td>Stagehand v4</td>
+<td><code>act</code>/<code>observe</code>/<code>extract</code> plus deterministic methods</td>
+<td>Caller owns loop; pin routing and inference configuration</td>
+</tr>
+<tr>
+<td>Native desktop driver</td>
+<td>Cua Driver adapter</td>
+<td>Native control and snapshot-aware observations</td>
+<td>Per-platform capabilities; component-specific licensing</td>
+</tr>
+<tr>
+<td>Simple owned-desktop fallback</td>
+<td>PyAutoGUI</td>
+<td>Small Python input/capture surface</td>
+<td>Global input, no accessibility, X11-specific Linux path</td>
+</tr>
+<tr>
+<td>Windows architecture reference</td>
+<td>UFO</td>
+<td>GUI/COM seams and structured orchestration</td>
+<td>Windows GUI scope is not universal desktop parity</td>
+</tr>
+<tr>
+<td>Browser experiments</td>
+<td>BrowserGym + AgentLab</td>
+<td>Environment and experiment tooling</td>
+<td>Not a secure generated-code sandbox</td>
+</tr>
+<tr>
+<td>Open-weight comparison</td>
+<td>ShowUI / UI-TARS</td>
+<td>Alternative VLA/grounding baselines</td>
+<td>Pin weights, preprocessing, parser, and coordinates</td>
+</tr>
+<tr>
+<td>Optional modular perception</td>
+<td>OmniParser</td>
+<td>OCR/icon/SoM grounding</td>
+<td>Resolve artifact-specific license and revision issues</td>
+</tr>
+</tbody>
+</table></div>
+<p>The component facts in this summary are documented in the browser, driver, and model sections above. The selection itself is an engineering recommendation.</p>
+<p>Phase one is a deterministic browser slice. Implement environment leasing, Playwright execution, one provider adapter, authorization, and postcondition verification for a small local application. Acceptance requires persisted settings, stale-target rejection, failure propagation, no unapproved origin changes, and clean cancellation.</p>
+<p>Phase two adds adversarial and operational tests before more capability. Inject hostile page instructions, change targets after approval, create overlays, interrupt transport after delivery, and simulate denied credentials. Verify blocked transmissions independently and report benign utility alongside safety. Acceptance requires evidence that executor controls survive a deceived planner.</p>
+<p>Phase three introduces one native OS and one owned desktop. Add Cua Driver only after checking the precise selected components. Test permissions, accessibility degradation, display transforms, focus preservation, text insertion versus replacement, unsupported background delivery, and concurrency. Acceptance is action-specific; “driver started” is not sufficient.</p>
+<p>Phase four introduces measured comparisons: BrowserGym/AgentLab for browser tasks, pinned desktop suites after infrastructure smoke tests, and optional ShowUI/UI-TARS baselines. Compare equivalent observation and budget conditions. Add modular perception only if localization failures justify its cost and licensing work.</p>
+<p>Phase five expands scope selectively: additional OS adapters, durable recovery, richer approvals, and possibly constrained code execution. Do not add multi-agent orchestration until single-session ownership and cancellation are reliable. Each expansion changes the authority boundary and deserves its own acceptance suite.</p>
+<h2 id="11-licensing-and-unresolved-research-gaps">11. Licensing and unresolved research gaps</h2>
+<p>Code and weights need separate inventory entries. UI-TARS code is Apache-2.0; the inspected UI-TARS-1.5-7B weight card declares Apache-2.0, but a separate top-level weight-license retrieval failed. ShowUI code is Apache-2.0 while the ShowUI-2B weight card declares MIT. Those declarations do not license every derivative checkpoint or dependency.<a aria-label="Source 65" class="research-citation" href="#source-65">[65]</a><a aria-label="Source 66" class="research-citation" href="#source-66">[66]</a><a aria-label="Source 67" class="research-citation" href="#source-67">[67]</a></p>
+<p>ShowUI’s weight declaration is a distinct artifact, not evidence that its code license changed.<a aria-label="Source 68" class="research-citation" href="#source-68">[68]</a></p>
+<p>OmniParser needs particular care. The inspected repository license is CC-BY-4.0 despite an MIT README badge. Original detector weights carry AGPL-3.0; <code>icon_detect_v3</code> and icon-caption folder licenses declare MIT. The hub’s broad pipeline description does not erase the code-license discrepancy or revision-selection questions.<a aria-label="Source 69" class="research-citation" href="#source-69">[69]</a><a aria-label="Source 70" class="research-citation" href="#source-70">[70]</a><a aria-label="Source 71" class="research-citation" href="#source-71">[71]</a></p>
+<p>The icon-caption license is independently inspectable; resolve the entire assembled artifact set before redistribution rather than certifying the project name as “MIT.”<a aria-label="Source 72" class="research-citation" href="#source-72">[72]</a></p>
+<p>No complete transitive SBOM, training-data audit, benchmark-asset clearance, or cloud-terms analysis was performed. License findings describe inspected declarations, not legal advice. Pin release artifacts and retain notices before shipping.</p>
+<p>Runtime gaps remain substantial: no paid model calls, compositor acceptance tests, multi-monitor experiments, accessibility coverage measurements, or independent benchmark runs. Provider contracts and live branch licenses can change. The right next deliverable is a narrow tested harness with auditable failure states, not another unqualified leaderboard claim.</p>
+<p>The first implementation should expose its observation revisions, action delivery routes, authorization decisions, and postcondition evidence in a single trace. That trace is what lets a failed task become a reproducible test case.</p>
+<section aria-labelledby="sources"><h2 id="sources">Sources</h2><ol class="research-sources"><li id="source-1" value="1"><a href="https://developers.openai.com/api/docs/guides/tools-computer-use">OpenAI Responses computer-use guide</a></li>
+<li id="source-2" value="2"><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool">Anthropic computer-use tool guide</a></li>
+<li id="source-3" value="3"><a href="https://ai.google.dev/gemini-api/docs/computer-use">Google Gemini computer-use guide</a></li>
+<li id="source-4" value="4"><a href="https://raw.githubusercontent.com/ServiceNow/BrowserGym/main/browsergym/core/src/browsergym/core/env.py">BrowserGym environment implementation</a></li>
+<li id="source-5" value="5"><a href="https://developer.apple.com/documentation/applicationservices/axuielement">Apple AXUIElement</a></li>
+<li id="source-6" value="6"><a href="https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-controlpatternsoverview">Windows UIA control patterns</a></li>
+<li id="source-7" value="7"><a href="https://arxiv.org/html/2408.00203v1">OmniParser paper</a></li>
+<li id="source-8" value="8"><a href="https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi">GNOME AT-SPI2 API and LGPL</a></li>
+<li id="source-9" value="9"><a href="https://arxiv.org/html/2501.12326v1">UI-TARS paper</a></li>
+<li id="source-10" value="10"><a href="https://arxiv.org/html/2411.17465v1">ShowUI paper</a></li>
+<li id="source-11" value="11"><a href="https://huggingface.co/showlab/ShowUI-2B">ShowUI-2B model card</a></li>
+<li id="source-12" value="12"><a href="https://playwright.dev/docs/actionability">Playwright actionability and auto-waiting</a></li>
+<li id="source-13" value="13"><a href="https://raw.githubusercontent.com/microsoft/playwright/main/LICENSE">Playwright license</a></li>
+<li id="source-14" value="14"><a href="https://playwright.dev/docs/api/class-browsertype">Playwright browser connections and CDP</a></li>
+<li id="source-15" value="15"><a href="https://github.com/microsoft/playwright-mcp">Playwright MCP repository</a></li>
+<li id="source-16" value="16"><a href="https://github.com/browser-use/browser-use">browser-use repository</a></li>
+<li id="source-17" value="17"><a href="https://raw.githubusercontent.com/browser-use/browser-use/main/LICENSE">browser-use license</a></li>
+<li id="source-18" value="18"><a href="https://docs.stagehand.dev/v4/migrations/v3">Stagehand v3-to-v4 migration</a></li>
+<li id="source-19" value="19"><a href="https://raw.githubusercontent.com/browserbase/stagehand/main/LICENSE">Stagehand license</a></li>
+<li id="source-20" value="20"><a href="https://docs.stagehand.dev/v4/configuration/models">Stagehand v4 model configuration</a></li>
+<li id="source-21" value="21"><a href="https://github.com/ServiceNow/BrowserGym">BrowserGym repository</a></li>
+<li id="source-22" value="22"><a href="https://github.com/ServiceNow/AgentLab">AgentLab repository</a></li>
+<li id="source-23" value="23"><a href="https://raw.githubusercontent.com/ServiceNow/BrowserGym/main/LICENSE">BrowserGym license</a></li>
+<li id="source-24" value="24"><a href="https://raw.githubusercontent.com/ServiceNow/AgentLab/main/LICENSE">AgentLab license</a></li>
+<li id="source-25" value="25"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/cua-driver/README.md">Cua Driver README</a></li>
+<li id="source-26" value="26"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/python/agent/README.md">Cua deprecated agent</a></li>
+<li id="source-27" value="27"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/cua-driver/rust/Skills/cua-driver/WORKFLOW.md">Cua Driver workflow</a></li>
+<li id="source-28" value="28"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/cua-driver/docs/action-support.md">Cua Driver empirical action support</a></li>
+<li id="source-29" value="29"><a href="https://raw.githubusercontent.com/trycua/cua/main/LICENSING.md">Cua licensing</a></li>
+<li id="source-30" value="30"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/cua-driver/rust/crates/cua-perception/models/THIRD_PARTY_NOTICES.md">Cua perception model notices</a></li>
+<li id="source-31" value="31"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/cua-driver/rust/Skills/cua-driver/MACOS.md">Cua Driver macOS</a></li>
+<li id="source-32" value="32"><a href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput">Windows SendInput constraints</a></li>
+<li id="source-33" value="33"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/cua-driver/rust/Skills/cua-driver/WINDOWS.md">Cua Driver Windows</a></li>
+<li id="source-34" value="34"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/cua-driver/rust/Skills/cua-driver/LINUX.md">Cua Driver Linux</a></li>
+<li id="source-35" value="35"><a href="https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.RemoteDesktop.html">Wayland portal control</a></li>
+<li id="source-36" value="36"><a href="https://pyautogui.readthedocs.io/en/latest">PyAutoGUI documentation</a></li>
+<li id="source-37" value="37"><a href="https://raw.githubusercontent.com/asweigart/pyautogui/master/pyautogui/_pyautogui_x11.py">PyAutoGUI X11 implementation</a></li>
+<li id="source-38" value="38"><a href="https://raw.githubusercontent.com/asweigart/pyautogui/master/LICENSE.txt">PyAutoGUI BSD-3 license</a></li>
+<li id="source-39" value="39"><a href="https://raw.githubusercontent.com/enigo-rs/enigo/main/Cargo.toml">Enigo package and features</a></li>
+<li id="source-40" value="40"><a href="https://raw.githubusercontent.com/nashaofu/xcap/master/Cargo.toml">XCap package and license</a></li>
+<li id="source-41" value="41"><a href="https://raw.githubusercontent.com/microsoft/UFO/a795552d976c4c019d7c2f778a0effb5cef7de6b/documents/docs/ufo2/overview.md">UFO2 architecture</a></li>
+<li id="source-42" value="42"><a href="https://raw.githubusercontent.com/microsoft/UFO/a795552d976c4c019d7c2f778a0effb5cef7de6b/LICENSE">UFO MIT license</a></li>
+<li id="source-43" value="43"><a href="https://microsoft.github.io/UFO/linux/overview">UFO Linux CLI distinction</a></li>
+<li id="source-44" value="44"><a href="https://raw.githubusercontent.com/suitedaces/computer-agent/92795e717b5bd254d1894d46d180eb29b690525b/src-tauri/src/agent.rs">computer-agent agent loop</a></li>
+<li id="source-45" value="45"><a href="https://raw.githubusercontent.com/suitedaces/computer-agent/92795e717b5bd254d1894d46d180eb29b690525b/src-tauri/src/computer.rs">computer-agent input implementation</a></li>
+<li id="source-46" value="46"><a href="https://raw.githubusercontent.com/suitedaces/computer-agent/92795e717b5bd254d1894d46d180eb29b690525b/LICENSE">computer-agent custom license</a></li>
+<li id="source-47" value="47"><a href="https://developers.openai.com/api/docs/guides/agents-api/tools/computer-use">OpenAI Agents API hosted computer use</a></li>
+<li id="source-48" value="48"><a href="https://arxiv.org/html/2504.18575v1">WASP web-agent prompt-injection paper</a></li>
+<li id="source-49" value="49"><a href="https://arxiv.org/html/2406.13352v3">AgentDojo paper</a></li>
+<li id="source-50" value="50"><a href="https://arxiv.org/html/2410.13886v1">BrowserART harmful-browser-task paper</a></li>
+<li id="source-51" value="51"><a href="https://openai.com/index/designing-agents-to-resist-prompt-injection">OpenAI agent prompt-injection defense design</a></li>
+<li id="source-52" value="52"><a href="https://www.anthropic.com/news/prompt-injection-defenses">Anthropic browser prompt-injection defenses</a></li>
+<li id="source-53" value="53"><a href="https://qemu.readthedocs.io/en/master/interop/qemu-qmp-ref.html">QEMU QMP interface</a></li>
+<li id="source-54" value="54"><a href="https://raw.githubusercontent.com/google/gvisor/master/README.md">gVisor architecture</a></li>
+<li id="source-55" value="55"><a href="https://raw.githubusercontent.com/trycua/cua/main/libs/lume/README.md">Lume README</a></li>
+<li id="source-56" value="56"><a href="https://raw.githubusercontent.com/trycua/cua/9579e561613bbe7f7253fb561ae3ae4041c2cab3/libs/lume/Package.swift">Lume macOS package</a></li>
+<li id="source-57" value="57"><a href="https://raw.githubusercontent.com/cirruslabs/tart/main/LICENSE">Tart FSL license</a></li>
+<li id="source-58" value="58"><a href="https://github.com/likaixin2000/ScreenSpot-Pro-GUI-Grounding">ScreenSpot-Pro project</a></li>
+<li id="source-59" value="59"><a href="https://arxiv.org/html/2404.07972v2">OSWorld original paper</a></li>
+<li id="source-60" value="60"><a href="https://arxiv.org/html/2307.13854v4">WebArena original paper</a></li>
+<li id="source-61" value="61"><a href="https://github.com/xlang-ai/OSWorld">OSWorld repository and revision guidance</a></li>
+<li id="source-62" value="62"><a href="https://raw.githubusercontent.com/xlang-ai/OSWorld-V2/main/benchmark_releases/osworld-v2.1.json">OSWorld-v2.1 release manifest</a></li>
+<li id="source-63" value="63"><a href="https://servicenow.github.io/webarena-verified/dev">WebArena-Verified documentation</a></li>
+<li id="source-64" value="64"><a href="https://arxiv.org/html/2606.29537v2">OSWorld 2.0 paper</a></li>
+<li id="source-65" value="65"><a href="https://raw.githubusercontent.com/bytedance/UI-TARS/main/LICENSE">UI-TARS code license</a></li>
+<li id="source-66" value="66"><a href="https://huggingface.co/ByteDance-Seed/UI-TARS-1.5-7B/raw/main/README.md">UI-TARS-1.5-7B model-card license declaration</a></li>
+<li id="source-67" value="67"><a href="https://raw.githubusercontent.com/showlab/ShowUI/main/LICENSE">ShowUI code license</a></li>
+<li id="source-68" value="68"><a href="https://huggingface.co/showlab/ShowUI-2B/raw/main/README.md">ShowUI-2B model-card license declaration</a></li>
+<li id="source-69" value="69"><a href="https://raw.githubusercontent.com/microsoft/OmniParser/master/LICENSE">OmniParser repository license</a></li>
+<li id="source-70" value="70"><a href="https://huggingface.co/microsoft/OmniParser-v2.0/raw/main/icon_detect/LICENSE">OmniParser original icon_detect license</a></li>
+<li id="source-71" value="71"><a href="https://huggingface.co/microsoft/OmniParser-v2.0/raw/main/icon_detect_v3/LICENSE">OmniParser icon_detect_v3 license</a></li>
+<li id="source-72" value="72"><a href="https://huggingface.co/microsoft/OmniParser-v2.0/raw/main/icon_caption/LICENSE">OmniParser icon_caption license</a></li>
+</ol></section>
+</div>
