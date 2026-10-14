@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "AWS AgentCore Code Interpreter: practical POC runbook",
+      "slug": "bedrock-agentcore-code-interpreter-poc",
+      "description": "Prerequisites, SCP and IAM approval, console/CLI creation, local Python, Deep Agents/LangChain, and Terraform adoption with downloadable PDF and source files.",
+      "createdAt": "2026-10-14",
+      "type": "html",
+      "url": "artifacts/bedrock-agentcore-code-interpreter-poc/"
+    },
+    {
       "title": "Computer use for AI agents: building our own harness",
       "slug": "computer-use-agent-harness-research",
       "description": "A primary-source guide to GUI-agent mechanics, open-source libraries, model contracts, safety, evaluation, and a vendor-neutral harness architecture.",

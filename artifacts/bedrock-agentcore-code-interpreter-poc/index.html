@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="Prerequisites, SCP and IAM approval, console/CLI creation, local Python, Deep Agents/LangChain, and Terraform adoption with downloadable PDF and source files."><title>AWS AgentCore Code Interpreter: practical POC runbook · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script><link rel="stylesheet" href="../../src/artifacts/bedrock-agentcore-code-interpreter-poc/module.css"></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/bedrock-agentcore-code-interpreter-poc</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>AWS AgentCore Code Interpreter: practical POC runbook</h1><p class="lede">Prerequisites, SCP and IAM approval, console/CLI creation, local Python, Deep Agents/LangChain, and Terraform adoption with downloadable PDF and source files.</p><div class="artifact-meta"><span>2026-10-14</span><span>html</span></div></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#1-the-path-and-checkpoints">1. The path and checkpoints</a><a href="#what-is-and-is-not-validated">What is and is not validated</a><a href="#2-prerequisites-owner-deliverable-and-stop-condition">2. Prerequisites: owner, deliverable and stop condition</a><a href="#organizationsecurity-owner">Organization/security owner</a><a href="#iamplatform-owner">IAM/platform owner</a><a href="#developer-workstation-or-existing-runner">Developer workstation or existing runner</a><a href="#required-versus-optional-aws-services">Required versus optional AWS services</a><a href="#3-unblock-scps-before-debugging-application-code">3. Unblock SCPs before debugging application code</a><a href="#31-identify-the-actual-denial">3.1 Identify the actual denial</a><a href="#32-ask-the-organization-administrator-to-inspect-the-full-policy-path">3.2 Ask the organization administrator to inspect the full policy path</a><a href="#33-case-a-allow-list-scps-omit-agentcore">3.3 Case A: allow-list SCPs omit AgentCore</a><a href="#34-case-b-an-explicit-deny-blocks-agentcore">3.4 Case B: an explicit Deny blocks AgentCore</a><a href="#35-what-if-security-wants-to-enable-broader-agentcore-products">3.5 What if security wants to enable broader AgentCore products?</a><a href="#36-change-request-you-can-send-to-security">3.6 Change request you can send to security</a><a href="#4-prepare-iam-roles-and-generate-request-files">4. Prepare IAM roles and generate request files</a><a href="#41-platform-creates-or-supplies-the-execution-role">4.1 Platform creates or supplies the execution role</a><a href="#42-platform-grants-the-deployer-identity">4.2 Platform grants the deployer identity</a><a href="#43-keep-four-identity-boundaries-separate">4.3 Keep four identity boundaries separate</a><a href="#5-prepare-the-local-workstation">5. Prepare the local workstation</a><a href="#6-create-the-interpreter-manually-first">6. Create the interpreter manually first</a><a href="#61-console-path">6.1 Console path</a><a href="#62-cli-path">6.2 CLI path</a><a href="#63-grant-the-local-caller-the-exact-tool-arn">6.3 Grant the local caller the exact tool ARN</a><a href="#7-first-local-script-send-code-to-the-existing-tool">7. First local script: send code to the existing tool</a><a href="#8-stronger-service-smoke-tests-before-a-model">8. Stronger service smoke tests before a model</a><a href="#9-add-the-framework-dependencies">9. Add the framework dependencies</a><a href="#important-releasesource-mismatch">Important release/source mismatch</a><a href="#track-a-reviewed-source-pinned-candidate-recommended-for-evaluating-fixes">Track A: reviewed source-pinned candidate (recommended for evaluating fixes)</a><a href="#track-b-published-release-limited-exploratory-use">Track B: published release, limited exploratory use</a><a href="#install-and-run-offline-checks">Install and run offline checks</a><a href="#10-deep-agents-use-the-existing-tool-as-the-sandbox">10. Deep Agents: use the existing tool as the sandbox</a><a href="#run-the-supplied-integration">Run the supplied integration</a><a href="#file-transfer-and-paths">File transfer and paths</a><a href="#lifecycle-and-isolation-rules">Lifecycle and isolation rules</a><a href="#11-plain-langchain-native-toolkit-alternative">11. Plain LangChain: native toolkit alternative</a><a href="#12-verify-a-useful-output-synthetic-csv-analysis">12. Verify a useful output: synthetic CSV analysis</a><a href="#13-terraform-comes-after-the-working-local-path">13. Terraform comes after the working local path</a><a href="#131-support-provider-choices-and-coverage">13.1 Support, provider choices and coverage</a><a href="#alternative-awscc">Alternative: AWSCC</a><a href="#coverage-limits">Coverage limits</a><a href="#132-choose-adoption-or-a-separate-resource">13.2 Choose adoption or a separate resource</a><a href="#133-terraform-provisioning-procedure">13.3 Terraform provisioning procedure</a><a href="#prepare-state-and-inputs">Prepare state and inputs</a><a href="#validate-review-apply">Validate, review, apply</a><a href="#existing-resources">Existing resources</a><a href="#14-negative-tests-and-isolation-checks">14. Negative tests and isolation checks</a><a href="#command-failures">Command failures</a><a href="#execution-timeout">Execution timeout</a><a href="#missingbinary-files">Missing/binary files</a><a href="#ttl-expiry">TTL expiry</a><a href="#cross-session-isolation">Cross-session isolation</a><a href="#least-privilege">Least privilege</a><a href="#egress">Egress</a><a href="#15-optional-private-api-access-without-tool-vpc-mode">15. Optional: private API access without tool VPC mode</a><a href="#required-network-decisions">Required network decisions</a><a href="#bootstrap-and-verification">Bootstrap and verification</a><a href="#16-optional-sandbox-access-to-private-resources">16. Optional: sandbox access to private resources</a><a href="#network-controls">Network controls</a><a href="#schema-traps">Schema traps</a><a href="#17-packages-files-and-persistence">17. Packages, files and persistence</a><a href="#package-installation">Package installation</a><a href="#artifact-persistence">Artifact persistence</a><a href="#advanced-mounts">Advanced mounts</a><a href="#18-limits-and-application-controls">18. Limits and application controls</a><a href="#19-cost-controls">19. Cost controls</a><a href="#20-troubleshooting-by-layer">20. Troubleshooting by layer</a><a href="#terraform-does-not-recognize-the-resource-or-vpc-block">Terraform does not recognize the resource or VPC block</a><a href="#invalid-name-or-invalid-vpc-parameter">Invalid name or invalid VPC parameter</a><a href="#accessdenied-with-an-scp-indication">AccessDenied with an SCP indication</a><a href="#accessdenied-during-provisioning">AccessDenied during provisioning</a><a href="#accessdenied-starting-or-invoking-a-session">AccessDenied starting or invoking a session</a><a href="#connection-timeout-before-the-api-responds">Connection timeout before the API responds</a><a href="#sdk-works-but-the-agent-fails">SDK works but the agent fails</a><a href="#command-fails-but-agent-reports-success">Command fails but agent reports success</a><a href="#upload-reports-success-but-file-is-missing">Upload reports success but file is missing</a><a href="#session-unexpectedly-expires-or-switches-interpreter">Session unexpectedly expires or switches interpreter</a><a href="#pip-install-fails-inside-the-sandbox">pip install fails inside the sandbox</a><a href="#cleanup-or-sgsubnet-deletion-fails">Cleanup or SG/subnet deletion fails</a><a href="#21-teardown-follow-the-resource-owner">21. Teardown: follow the resource owner</a><a href="#manual-resource-cleanup-if-it-was-never-imported">Manual resource cleanup (if it was never imported)</a><a href="#22-poc-sign-off-checklist">22. POC sign-off checklist</a><a href="#appendix-a-reference-bundle-contents">Appendix A. Reference bundle contents</a><a href="#appendix-b-complete-deep-agents-and-langchain-functions">Appendix B. Complete Deep Agents and LangChain functions</a><a href="#appendix-c-complete-interpreter-terraform-root">Appendix C. Complete interpreter Terraform root</a><a href="#appendix-d-architecture-and-network-decision-reference">Appendix D. Architecture and network decision reference</a><a href="#a-where-the-agent-application-runs">A. Where the agent application runs</a><a href="#b-how-the-host-calls-the-aws-api">B. How the host calls the AWS API</a><a href="#c-what-network-access-executed-code-receives">C. What network access executed code receives</a><a href="#baseline-flow">Baseline flow</a><a href="#when-to-extend-the-baseline">When to extend the baseline</a><a href="#sources">Sources</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#1-the-path-and-checkpoints">1. The path and checkpoints</a><a href="#what-is-and-is-not-validated">What is and is not validated</a><a href="#2-prerequisites-owner-deliverable-and-stop-condition">2. Prerequisites: owner, deliverable and stop condition</a><a href="#organizationsecurity-owner">Organization/security owner</a><a href="#iamplatform-owner">IAM/platform owner</a><a href="#developer-workstation-or-existing-runner">Developer workstation or existing runner</a><a href="#required-versus-optional-aws-services">Required versus optional AWS services</a><a href="#3-unblock-scps-before-debugging-application-code">3. Unblock SCPs before debugging application code</a><a href="#31-identify-the-actual-denial">3.1 Identify the actual denial</a><a href="#32-ask-the-organization-administrator-to-inspect-the-full-policy-path">3.2 Ask the organization administrator to inspect the full policy path</a><a href="#33-case-a-allow-list-scps-omit-agentcore">3.3 Case A: allow-list SCPs omit AgentCore</a><a href="#34-case-b-an-explicit-deny-blocks-agentcore">3.4 Case B: an explicit Deny blocks AgentCore</a><a href="#35-what-if-security-wants-to-enable-broader-agentcore-products">3.5 What if security wants to enable broader AgentCore products?</a><a href="#36-change-request-you-can-send-to-security">3.6 Change request you can send to security</a><a href="#4-prepare-iam-roles-and-generate-request-files">4. Prepare IAM roles and generate request files</a><a href="#41-platform-creates-or-supplies-the-execution-role">4.1 Platform creates or supplies the execution role</a><a href="#42-platform-grants-the-deployer-identity">4.2 Platform grants the deployer identity</a><a href="#43-keep-four-identity-boundaries-separate">4.3 Keep four identity boundaries separate</a><a href="#5-prepare-the-local-workstation">5. Prepare the local workstation</a><a href="#6-create-the-interpreter-manually-first">6. Create the interpreter manually first</a><a href="#61-console-path">6.1 Console path</a><a href="#62-cli-path">6.2 CLI path</a><a href="#63-grant-the-local-caller-the-exact-tool-arn">6.3 Grant the local caller the exact tool ARN</a><a href="#7-first-local-script-send-code-to-the-existing-tool">7. First local script: send code to the existing tool</a><a href="#8-stronger-service-smoke-tests-before-a-model">8. Stronger service smoke tests before a model</a><a href="#9-add-the-framework-dependencies">9. Add the framework dependencies</a><a href="#important-releasesource-mismatch">Important release/source mismatch</a><a href="#track-a-reviewed-source-pinned-candidate-recommended-for-evaluating-fixes">Track A: reviewed source-pinned candidate (recommended for evaluating fixes)</a><a href="#track-b-published-release-limited-exploratory-use">Track B: published release, limited exploratory use</a><a href="#install-and-run-offline-checks">Install and run offline checks</a><a href="#10-deep-agents-use-the-existing-tool-as-the-sandbox">10. Deep Agents: use the existing tool as the sandbox</a><a href="#run-the-supplied-integration">Run the supplied integration</a><a href="#file-transfer-and-paths">File transfer and paths</a><a href="#lifecycle-and-isolation-rules">Lifecycle and isolation rules</a><a href="#11-plain-langchain-native-toolkit-alternative">11. Plain LangChain: native toolkit alternative</a><a href="#12-verify-a-useful-output-synthetic-csv-analysis">12. Verify a useful output: synthetic CSV analysis</a><a href="#13-terraform-comes-after-the-working-local-path">13. Terraform comes after the working local path</a><a href="#131-support-provider-choices-and-coverage">13.1 Support, provider choices and coverage</a><a href="#alternative-awscc">Alternative: AWSCC</a><a href="#coverage-limits">Coverage limits</a><a href="#132-choose-adoption-or-a-separate-resource">13.2 Choose adoption or a separate resource</a><a href="#133-terraform-provisioning-procedure">13.3 Terraform provisioning procedure</a><a href="#prepare-state-and-inputs">Prepare state and inputs</a><a href="#validate-review-apply">Validate, review, apply</a><a href="#existing-resources">Existing resources</a><a href="#14-negative-tests-and-isolation-checks">14. Negative tests and isolation checks</a><a href="#command-failures">Command failures</a><a href="#execution-timeout">Execution timeout</a><a href="#missingbinary-files">Missing/binary files</a><a href="#ttl-expiry">TTL expiry</a><a href="#cross-session-isolation">Cross-session isolation</a><a href="#least-privilege">Least privilege</a><a href="#egress">Egress</a><a href="#15-optional-private-api-access-without-tool-vpc-mode">15. Optional: private API access without tool VPC mode</a><a href="#required-network-decisions">Required network decisions</a><a href="#bootstrap-and-verification">Bootstrap and verification</a><a href="#16-optional-sandbox-access-to-private-resources">16. Optional: sandbox access to private resources</a><a href="#network-controls">Network controls</a><a href="#schema-traps">Schema traps</a><a href="#17-packages-files-and-persistence">17. Packages, files and persistence</a><a href="#package-installation">Package installation</a><a href="#artifact-persistence">Artifact persistence</a><a href="#advanced-mounts">Advanced mounts</a><a href="#18-limits-and-application-controls">18. Limits and application controls</a><a href="#19-cost-controls">19. Cost controls</a><a href="#20-troubleshooting-by-layer">20. Troubleshooting by layer</a><a href="#terraform-does-not-recognize-the-resource-or-vpc-block">Terraform does not recognize the resource or VPC block</a><a href="#invalid-name-or-invalid-vpc-parameter">Invalid name or invalid VPC parameter</a><a href="#accessdenied-with-an-scp-indication">AccessDenied with an SCP indication</a><a href="#accessdenied-during-provisioning">AccessDenied during provisioning</a><a href="#accessdenied-starting-or-invoking-a-session">AccessDenied starting or invoking a session</a><a href="#connection-timeout-before-the-api-responds">Connection timeout before the API responds</a><a href="#sdk-works-but-the-agent-fails">SDK works but the agent fails</a><a href="#command-fails-but-agent-reports-success">Command fails but agent reports success</a><a href="#upload-reports-success-but-file-is-missing">Upload reports success but file is missing</a><a href="#session-unexpectedly-expires-or-switches-interpreter">Session unexpectedly expires or switches interpreter</a><a href="#pip-install-fails-inside-the-sandbox">pip install fails inside the sandbox</a><a href="#cleanup-or-sgsubnet-deletion-fails">Cleanup or SG/subnet deletion fails</a><a href="#21-teardown-follow-the-resource-owner">21. Teardown: follow the resource owner</a><a href="#manual-resource-cleanup-if-it-was-never-imported">Manual resource cleanup (if it was never imported)</a><a href="#22-poc-sign-off-checklist">22. POC sign-off checklist</a><a href="#appendix-a-reference-bundle-contents">Appendix A. Reference bundle contents</a><a href="#appendix-b-complete-deep-agents-and-langchain-functions">Appendix B. Complete Deep Agents and LangChain functions</a><a href="#appendix-c-complete-interpreter-terraform-root">Appendix C. Complete interpreter Terraform root</a><a href="#appendix-d-architecture-and-network-decision-reference">Appendix D. Architecture and network decision reference</a><a href="#a-where-the-agent-application-runs">A. Where the agent application runs</a><a href="#b-how-the-host-calls-the-aws-api">B. How the host calls the AWS API</a><a href="#c-what-network-access-executed-code-receives">C. What network access executed code receives</a><a href="#baseline-flow">Baseline flow</a><a href="#when-to-extend-the-baseline">When to extend the baseline</a><a href="#sources">Sources</a></details><div data-artifact-content class="legacy-content ag-runbook"><section class="ag-downloads" aria-label="Download this runbook">
+<a href="agentcore-code-interpreter-runbook.pdf">Download PDF</a>
+<a href="agentcore-code-interpreter-runbook.md">Download Markdown</a>
+<a href="agentcore-poc-reference.zip">Download scripts and Terraform</a>
+</section><p class="ag-validation">Revision 2 · Prerequisites first · Local tests pass; live AWS/SCP evaluation remains an operator gate.</p>
+<p>Revision 2 · October 14, 2026 · us-west-2 · Python</p>
+<p><strong>Follow this order: organization approval and SCPs → IAM and dependencies → create one tool in the console or CLI → call it from a local Python script → add Deep Agents/LangChain → adopt the working resource into Terraform.</strong></p>
+<p>The baseline is a custom <strong>SANDBOX</strong> Code Interpreter. It requires no customer VPC, NAT gateway, container image, AgentCore Runtime, or S3 bucket for API-based file transfer.<a class="ag-cite" href="#source-3" aria-label="Source 3">[3]</a><a class="ag-cite" href="#source-6" aria-label="Source 6">[6]</a><a class="ag-cite" href="#source-9" aria-label="Source 9">[9]</a></p>
+<p>"Local" means the Python client runs on your workstation. <strong>Code execution still happens remotely in AWS and incurs AWS charges.</strong> This is not an offline AgentCore emulator.</p>
+<p>All identities, account IDs and organization-policy examples below are illustrative. They are not a diagnosis of any specific company's SCPs. Only the organization's authorized policy owners should approve or apply changes.</p>
+<h2 id="1-the-path-and-checkpoints">1. The path and checkpoints</h2>
+<p>You can finish the basic service test before installing Deep Agents or touching Terraform:</p>
+<ol>
+<li><strong>Organization/security owner:</strong> approve the POC account, us-west-2, SANDBOX mode and the API network path; identify any SCP deny.</li>
+<li><strong>IAM/platform owner:</strong> supply the execution role and a deployer role; ensure the caller permission set can be granted after creation.</li>
+<li><strong>Operator:</strong> create a custom interpreter in the console or CLI, wait for READY and record its returned ID and ARN.</li>
+<li><strong>IAM/platform owner:</strong> attach a caller policy scoped to that exact ARN.</li>
+<li><strong>Developer:</strong> run a small local boto3 script, inspect remote execution output and verify session termination.</li>
+<li><strong>Developer:</strong> run file/isolation/failure smoke tests, then Deep Agents and optionally plain LangChain.</li>
+<li><strong>Infrastructure owner:</strong> import the same working resource into Terraform, or create a separately named resource deliberately. Review every replacement plan.</li>
+</ol>
+<p>Do not use model output as the only success criterion. Observe the tool call, verify the result or downloaded artifact, exercise failure cases, and read back session state after cleanup.</p>
+<h3 id="what-is-and-is-not-validated">What is and is not validated</h3>
+<p>The reference includes locally exercised Python framework/mock-SDK tests, policy-generator tests, AWS request-schema checks, Terraform validation and four mock-provider tests. The PDF and site have separate layout checks. <strong>These checks do not establish effective company permissions.</strong></p>
+<p>No AWS resources, SCPs, IAM roles, model invocations or company policies were created or modified to produce this guide. Cloud acceptance steps require an authorized operator. Policy JSON validity, known action names and successful mock tests are not the same as AWS IAM Access Analyzer validation or a live Organizations/IAM evaluation.</p>
+<h2 id="2-prerequisites-owner-deliverable-and-stop-condition">2. Prerequisites: owner, deliverable and stop condition</h2>
+<h3 id="organizationsecurity-owner">Organization/security owner</h3>
+<p>Deliverable:</p>
+<ul>
+<li>Approved member account and <code>us-west-2</code>.</li>
+<li>Required AgentCore actions permitted by applicable SCPs at the root, every parent OU and the account; no matching explicit Deny remains.</li>
+<li>Approval for either regional public HTTPS endpoints or an existing PrivateLink path.</li>
+<li>Approval to process synthetic data in SANDBOX mode, plus a cost owner and cleanup date.</li>
+</ul>
+<p>Stop if the SCP or network decision is unresolved. An IAM administrator cannot override an SCP deny by attaching AdministratorAccess.<a class="ag-cite" href="#source-50" aria-label="Source 50">[50]</a><a class="ag-cite" href="#source-51" aria-label="Source 51">[51]</a></p>
+<h3 id="iamplatform-owner">IAM/platform owner</h3>
+<p>Deliverable:</p>
+<ul>
+<li>An execution role trusted by <code>bedrock-agentcore.amazonaws.com</code>, initially without production-data access.</li>
+<li>A deployer identity allowed to Create/Get/List/DeleteCodeInterpreter, manage POC tags and PassRole on that execution role only.</li>
+<li>A caller identity allowed Start/Invoke/Stop/Get/List sessions on the created custom interpreter ARN.</li>
+<li>Any required permission boundaries and federated session policies permit those actions too.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a><a class="ag-cite" href="#source-26" aria-label="Source 26">[26]</a><a class="ag-cite" href="#source-52" aria-label="Source 52">[52]</a></li>
+</ul>
+<p>Role creation is a platform/bootstrap operation. It is not necessary to grant IAM administration to the local script or sandbox.</p>
+<h3 id="developer-workstation-or-existing-runner">Developer workstation or existing runner</h3>
+<p>Deliverable:</p>
+<ul>
+<li>Approved Python (the complete framework track needs Python 3.11+; validated here on 3.14.7).</li>
+<li>Current AWS CLI v2 with <code>bedrock-agentcore-control</code> commands, normal company credential login and trusted corporate CA/proxy configuration.</li>
+<li>HTTPS access to AgentCore and credential endpoints; later, a separately approved model path.</li>
+<li>Access to an approved Python package repository. Terraform is <strong>not</strong> required yet.</li>
+</ul>
+<h3 id="required-versus-optional-aws-services">Required versus optional AWS services</h3>
+<ul>
+<li><strong>Required for the baseline:</strong> AgentCore Code Interpreter and applicable AWS authentication/IAM permissions.</li>
+<li><strong>Not required for the first direct script:</strong> Bedrock model inference. You send code directly; no LLM is involved.<a class="ag-cite" href="#source-9" aria-label="Source 9">[9]</a></li>
+<li><strong>Optional S3:</strong> only for an explicit S3 storage exercise. The API can upload/download files without your own bucket.<a class="ag-cite" href="#source-8" aria-label="Source 8">[8]</a><a class="ag-cite" href="#source-9" aria-label="Source 9">[9]</a></li>
+<li><strong>Optional Bedrock model access:</strong> needed by the supplied agent examples, not by Code Interpreter itself. <code>bedrock:*</code> and <code>bedrock-agentcore:*</code> are different IAM namespaces.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a></li>
+<li><strong>Optional VPC/EC2 permissions and PrivateLink:</strong> only for selected private connectivity or private-resource access. Keep caller-to-service and sandbox egress decisions separate.<a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a><a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a></li>
+<li><strong>Optional Secrets Manager/KMS, logs/telemetry, EFS or S3 Files:</strong> only when those features are explicitly used.<a class="ag-cite" href="#source-49" aria-label="Source 49">[49]</a></li>
+<li><strong>Optional ECR/Runtime host dependencies:</strong> only if you later deploy your agent host that way. Do not add them to a Code Interpreter-only POC.<a class="ag-cite" href="#source-6" aria-label="Source 6">[6]</a></li>
+<li><strong>Optional Cloud Control and Terraform-backend services:</strong> depend on your IaC provider and company state backend; native AWS provider support avoids an AWSCC-only management dependency.<a class="ag-cite" href="#source-27" aria-label="Source 27">[27]</a><a class="ag-cite" href="#source-29" aria-label="Source 29">[29]</a></li>
+</ul>
+<p>For conditional services, review both their IAM permissions and their SCP ceilings. Allowing AgentCore does not automatically permit S3 reads, KMS decrypt, model inference, EC2 endpoint creation or IAM PassRole.</p>
+<h2 id="3-unblock-scps-before-debugging-application-code">3. Unblock SCPs before debugging application code</h2>
+<h3 id="31-identify-the-actual-denial">3.1 Identify the actual denial</h3>
+<p>Keep the following evidence in an internal security ticket, not in a public artifact:</p>
+<ul>
+<li>Exact failing IAM action, region, caller role ARN and resource ARN.</li>
+<li>Error text and request ID; timestamp and management event details when available.</li>
+<li>Whether it is an explicit SCP deny or a missing SCP allow.</li>
+<li>The account's root-to-OU-to-account policy path.</li>
+</ul>
+<p>AccessDenied messages can identify a policy type or ARN, but not every service emits full enhanced context. Multiple policy types can block the same request while the message mentions only one. Resolving the first deny does not prove all permissions are now correct.<a class="ag-cite" href="#source-52" aria-label="Source 52">[52]</a></p>
+<p>The relevant IAM namespace is <strong><code>bedrock-agentcore:</code></strong>. The SDK/CLI management client is called <strong><code>bedrock-agentcore-control</code></strong>, but <strong><code>bedrock-agentcore-control:*</code> is not the IAM service prefix</strong>. Model inference permissions normally use <code>bedrock:</code> separately.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a></p>
+<p>An approved read-only diagnostic command is:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws bedrock-agentcore-control list-code-interpreters \
+  --region us-west-2 --max-results 10
+</code></pre>
+<p>List success proves only that list action works for that identity. It does not prove creation, PassRole, session invocation or model inference is permitted. There is no universal AgentCore authorization dry run that replaces controlled action-by-action tests.</p>
+<h3 id="32-ask-the-organization-administrator-to-inspect-the-full-policy-path">3.2 Ask the organization administrator to inspect the full policy path</h3>
+<p>An authorized organization operator can use:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws organizations list-parents --child-id &quot;$POC_ACCOUNT_ID&quot;
+aws organizations list-policies-for-target \
+  --target-id &quot;$POC_ACCOUNT_ID&quot; --filter SERVICE_CONTROL_POLICY
+aws organizations describe-policy --policy-id &quot;$POLICY_ID&quot;
+</code></pre>
+<p>Repeat <code>list-parents</code> for each returned OU until reaching the root. Run <code>list-policies-for-target</code> for <strong>each</strong> OU and the root, then inspect every applicable policy's content and conditions. The account-only list returns directly attached policies, not the inherited policy set. Preserve pagination; do not use <code>--no-paginate</code> to draw a completeness conclusion.<a class="ag-cite" href="#source-53" aria-label="Source 53">[53]</a><a class="ag-cite" href="#source-58" aria-label="Source 58">[58]</a></p>
+<p>These read operations require authorized Organizations access, generally from the management account or an appropriate delegated administrator. A developer failing to enumerate the organization's policies is not evidence that no SCP exists. Ask the organization/security owner for the evaluation instead.</p>
+<h3 id="33-case-a-allow-list-scps-omit-agentcore">3.3 Case A: allow-list SCPs omit AgentCore</h3>
+<p>For an action to pass the SCP layer, the applicable policy set must permit it at <strong>every level</strong> from root through all OUs to the account. Policies at the same level can contribute allows, but an allow at the account cannot compensate for an implicit deny at a parent.<a class="ag-cite" href="#source-51" aria-label="Source 51">[51]</a></p>
+<p><code>policy-examples/scp-allowlist-addition.json</code> is a <strong>reviewable additive statement</strong>, not a replacement for the company's full service allow-list. It permits the Code Interpreter POC actions in us-west-2:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-json">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;PermitCodeInterpreterPocCeiling&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: [
+        &quot;bedrock-agentcore:CreateCodeInterpreter&quot;,
+        &quot;bedrock-agentcore:GetCodeInterpreter&quot;,
+        &quot;bedrock-agentcore:ListCodeInterpreters&quot;,
+        &quot;bedrock-agentcore:DeleteCodeInterpreter&quot;,
+        &quot;bedrock-agentcore:TagResource&quot;,
+        &quot;bedrock-agentcore:UntagResource&quot;,
+        &quot;bedrock-agentcore:ListTagsForResource&quot;,
+        &quot;bedrock-agentcore:StartCodeInterpreterSession&quot;,
+        &quot;bedrock-agentcore:InvokeCodeInterpreter&quot;,
+        &quot;bedrock-agentcore:StopCodeInterpreterSession&quot;,
+        &quot;bedrock-agentcore:GetCodeInterpreterSession&quot;,
+        &quot;bedrock-agentcore:ListCodeInterpreterSessions&quot;
+      ],
+      &quot;Resource&quot;: &quot;*&quot;,
+      &quot;Condition&quot;: {
+        &quot;StringEquals&quot;: {
+          &quot;aws:RequestedRegion&quot;: &quot;us-west-2&quot;
+        }
+      }
+    }
+  ]
+}
+</code></pre>
+<p>The action set includes setup/read/tagging, execution lifecycle and teardown. Do not omit Stop/Delete just because the initial goal is to start a session. The exact action names were checked against AWS's published authorization catalog.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a><a class="ag-cite" href="#source-56" aria-label="Source 56">[56]</a></p>
+<p>This statement does not allow IAM PassRole or role creation. If the SCP strategy allow-lists those services/actions too, platform owners must ensure their existing IAM/bootstrap ceiling permits the narrowly scoped prerequisites. Apply region conditions to the regional AgentCore actions; do not blindly apply the same us-west-2 condition to global IAM/Organizations operations.</p>
+<p><strong>Do not replace the organization's SCP with this snippet or detach FullAWSAccess as a POC shortcut.</strong> It does not include the company's other needed services or guardrails. SCPs define maximum permissions and grant no IAM permissions themselves.<a class="ag-cite" href="#source-50" aria-label="Source 50">[50]</a></p>
+<h3 id="34-case-b-an-explicit-deny-blocks-agentcore">3.4 Case B: an explicit Deny blocks AgentCore</h3>
+<p>An extra Allow cannot override the Deny. The authorized owner must change the blocking statement, its scope, or its approved exception in <strong>every matching policy</strong>. Keep unrelated restrictions intact.<a class="ag-cite" href="#source-50" aria-label="Source 50">[50]</a><a class="ag-cite" href="#source-51" aria-label="Source 51">[51]</a></p>
+<p>For example, this hypothetical existing statement blocks all AgentCore actions:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-json">{
+  &quot;Effect&quot;: &quot;Deny&quot;,
+  &quot;Action&quot;: &quot;bedrock-agentcore:*&quot;,
+  &quot;Resource&quot;: &quot;*&quot;
+}
+</code></pre>
+<p>An organization owner might replace that <strong>particular service-specific deny</strong> with a reviewed principal exception:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-json">{
+  &quot;Sid&quot;: &quot;DenyAgentCoreExceptApprovedPocRoles&quot;,
+  &quot;Effect&quot;: &quot;Deny&quot;,
+  &quot;Action&quot;: &quot;bedrock-agentcore:*&quot;,
+  &quot;Resource&quot;: &quot;*&quot;,
+  &quot;Condition&quot;: {
+    &quot;ArnNotEquals&quot;: {
+      &quot;aws:PrincipalArn&quot;: [
+        &quot;arn:aws:iam::111122223333:role/ApprovedAgentCorePocDeployer&quot;,
+        &quot;arn:aws:iam::111122223333:role/ApprovedAgentCorePocCaller&quot;
+      ]
+    }
+  }
+}
+</code></pre>
+<p>This is an <strong>illustrative policy-edit pattern</strong>, not a ready-to-attach exception to an existing deny. Attaching it alongside the original unconditional deny changes nothing. In a real change, preserve the company's original conditions and every unrelated service restriction; use actual approved role ARNs, including paths. AWS SSO/Identity Center roles need their real generated IAM role ARN, not a guessed display name or an STS session ARN.<a class="ag-cite" href="#source-57" aria-label="Source 57">[57]</a></p>
+<p>The example exception covers the whole AgentCore namespace for those identities at that deny statement. Therefore security must review the role permissions/boundaries and the remaining SCP hierarchy; this is not an action-scoped exemption. Prefer the smallest POC account/role scope and an expiry/review date. A region deny, a second service deny, or a missing allow can still block the roles.</p>
+<p>Other common explicit-deny shapes:</p>
+<ul>
+<li><strong>Deny everything except an approved <code>NotAction</code> list:</strong> add only reviewed AgentCore action patterns to the existing exception list. A separate Allow does not bypass that deny.</li>
+<li><strong>Region guardrail:</strong> ensure us-west-2 is approved for the specific regional path. Do not weaken the entire region policy or remove global-service exceptions.</li>
+<li><strong>Network-origin guardrail:</strong> if policy requires a VPC endpoint, satisfy the approved private API path; changing the tool's network mode does not fix the caller's origin.</li>
+<li><strong>Mandatory tags or VPC conditions:</strong> supply the approved values where supported, or request a narrowly scoped exception for this SANDBOX baseline. Do not invent a network-mode condition key absent from the action's authorization reference.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a><a class="ag-cite" href="#source-52" aria-label="Source 52">[52]</a></li>
+</ul>
+<h3 id="35-what-if-security-wants-to-enable-broader-agentcore-products">3.5 What if security wants to enable broader AgentCore products?</h3>
+<p><code>policy-examples/scp-broader-agentcore-optional.json</code> contains an optional service-level ceiling:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-json">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;OptionalWholeAgentCoreNamespaceCeiling&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: &quot;bedrock-agentcore:*&quot;,
+      &quot;Resource&quot;: &quot;*&quot;,
+      &quot;Condition&quot;: {
+        &quot;StringEquals&quot;: {
+          &quot;aws:RequestedRegion&quot;: &quot;us-west-2&quot;
+        }
+      }
+    }
+  ]
+}
+</code></pre>
+<p>Use this only if security intentionally approves the whole namespace in us-west-2. It permits more products and future actions; it is <strong>not the default recommendation</strong> for a Code Interpreter POC. It still cannot override Deny, grant IAM privileges, approve other AWS services or guarantee product availability. Regional exceptions for other products must be reviewed separately.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a><a class="ag-cite" href="#source-50" aria-label="Source 50">[50]</a><a class="ag-cite" href="#source-51" aria-label="Source 51">[51]</a></p>
+<p>Use this expansion inventory instead of turning every role into an administrator:</p>
+<ul>
+<li><strong>Code Interpreter:</strong> the minimal POC policy above; optional S3/private data permissions only when used.</li>
+<li><strong>Browser:</strong> Create/Get/List/DeleteBrowser and Start/Get/List/StopBrowserSession families; streaming/profile permissions only when used. Public browsing and profiles require separate network/storage review.</li>
+<li><strong>Runtime:</strong> Create/Get/Update/DeleteAgentRuntime, endpoints and InvokeAgentRuntime/StopRuntimeSession as applicable. PassRole and the selected deployment artifact path are separate prerequisites.</li>
+<li><strong>Memory:</strong> Create/Get/List/Update/DeleteMemory plus the event/record actions the application actually invokes; extraction roles/models are conditional.</li>
+<li><strong>Gateway:</strong> gateway/target management and invocation permissions according to its ingress authentication and target types; add only required Lambda, OpenAPI, MCP, identity or network dependencies.</li>
+<li><strong>Identity:</strong> specific workload identity, token-vault and credential-provider operations; provider credentials and secret/encryption policies are separate boundaries.</li>
+<li><strong>Policy/evaluations/observability:</strong> policy/evaluator/configuration actions as used, associated execution roles and telemetry/model permissions. Code Interpreter does not require these products.</li>
+</ul>
+<p>The AWS authorization catalog is the action-level source of truth; the list above is an expansion checklist, not a complete deployment policy for each product. Both CLI planes use the same <code>bedrock-agentcore</code> IAM namespace.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a><a class="ag-cite" href="#source-56" aria-label="Source 56">[56]</a></p>
+<h3 id="36-change-request-you-can-send-to-security">3.6 Change request you can send to security</h3>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-text">Request: time-bounded AgentCore Code Interpreter POC
+Account/OU: [internal approved account and hierarchy]
+Region: us-west-2
+Data: synthetic files only
+Network: SANDBOX; approved API path [regional HTTPS or existing PrivateLink]
+Identities: approved deployer, approved local application caller
+SCP change: remove/except the matching explicit deny OR add the minimal
+  AgentCore action ceiling at each missing level; keep unrelated guardrails
+IAM prerequisites: scoped PassRole for the existing execution role;
+  platform-owned role/policy provisioning where needed
+Not requested: Runtime, ECR, NAT, production data, org-wide FullAccess
+Verification: create/get -&gt; start/invoke/stop -&gt; delete; independent negative tests
+Rollback: stop sessions, delete POC tool, remove dedicated permissions and
+  restore/expire the approved policy change through normal change control
+</code></pre>
+<p><strong>Gate:</strong> the organization owner confirms the actual policy path is unblocked. Do not attempt alternate accounts/roles, disable guardrails, or look for a way around an intentional denial.</p>
+<h2 id="4-prepare-iam-roles-and-generate-request-files">4. Prepare IAM roles and generate request files</h2>
+<p>Set the non-secret inputs explicitly before running the generator. For example, replace the documentation account ID below with your approved account; do not use it literally:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">export POC_ACCOUNT_ID='111122223333'
+export EXECUTION_ROLE_NAME='ApprovedAgentCorePocExecution'
+</code></pre>
+<p>Run the generator only after setting these values. <code>APPROVED_BOUNDARY_ARN</code>, <code>DEPLOYER_ROLE_NAME</code> and <code>CALLER_ROLE_NAME</code> in the platform-only commands below are values your IAM owner supplies; they are not inferred by the script.</p>
+<p>From the downloaded reference bundle's <code>reference/</code> directory, run the standard-library-only generator with your approved account ID and execution-role name:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">python prepare_poc.py \
+  --account-id &quot;$POC_ACCOUNT_ID&quot; \
+  --execution-role-name &quot;$EXECUTION_ROLE_NAME&quot; \
+  --output-dir generated
+</code></pre>
+<p>This writes local JSON only. It does not call AWS or attach SCP/IAM policies. It refuses to overwrite existing files so you cannot silently replace a reviewed request. If your organization uses IAM role paths, have the platform team adapt the templates to the actual ARN; this small generator intentionally accepts a pathless role name.</p>
+<p>Files for review:</p>
+<ul>
+<li><code>generated/execution-role-trust.json</code>: same-account service trust.</li>
+<li><code>generated/create-interpreter.json</code>: SANDBOX, underscore-only tool name and POC purpose tag.</li>
+<li><code>generated/iam-deployer.json</code>: regional tool management plus exact-role PassRole; no caller execution or IAM administration.</li>
+<li><code>generated/scp-allowlist-addition.json</code>: minimal AgentCore ceiling.</li>
+<li><code>generated/scp-broader-agentcore-optional.json</code>: broader alternative, not needed by default.</li>
+</ul>
+<h3 id="41-platform-creates-or-supplies-the-execution-role">4.1 Platform creates or supplies the execution role</h3>
+<p>Prefer an existing dedicated POC role with the approved trust and no production-data access. If the platform owner is authorized to create it through CLI, an example is:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws iam create-role \
+  --role-name &quot;$EXECUTION_ROLE_NAME&quot; \
+  --assume-role-policy-document file://generated/execution-role-trust.json \
+  --permissions-boundary &quot;$APPROVED_BOUNDARY_ARN&quot;
+
+aws iam get-role --role-name &quot;$EXECUTION_ROLE_NAME&quot;
+</code></pre>
+<p>The boundary argument is company-specific; use the company's approved boundary, and omit it only if policy explicitly permits role creation without one. Role creation/tagging/permission management belongs to the platform identity's own IAM/SCP approvals. The POC deployer policy deliberately does not grant it.</p>
+<p>For the first synthetic computation and API-file exercise, attach no downstream production-data permissions to the execution role. The execution role is what sandbox code can use for AWS data access; the local caller's data permissions are not the sandbox's data permissions.<a class="ag-cite" href="#source-8" aria-label="Source 8">[8]</a><a class="ag-cite" href="#source-26" aria-label="Source 26">[26]</a></p>
+<h3 id="42-platform-grants-the-deployer-identity">4.2 Platform grants the deployer identity</h3>
+<p>Apply the generated <code>iam-deployer.json</code> to the approved deployer role/permission set through your company's workflow. For an ordinary IAM role, an authorized IAM operator can use the inline-policy operation:<a class="ag-cite" href="#source-59" aria-label="Source 59">[59]</a></p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws iam put-role-policy \
+  --role-name &quot;$DEPLOYER_ROLE_NAME&quot; \
+  --policy-name AgentCorePocDeployment \
+  --policy-document file://generated/iam-deployer.json
+aws iam get-role-policy \
+  --role-name &quot;$DEPLOYER_ROLE_NAME&quot; \
+  --policy-name AgentCorePocDeployment
+</code></pre>
+<p>For Identity Center-managed roles, update the owning permission set/provisioning workflow rather than editing the generated role arbitrarily. Caller permissions are attached <strong>after</strong> the interpreter ARN is known.</p>
+<h3 id="43-keep-four-identity-boundaries-separate">4.3 Keep four identity boundaries separate</h3>
+<ul>
+<li><strong>Organization owner:</strong> SCP inspection/change approval. Neither the local script nor Terraform should modify SCPs as a side effect of this POC.</li>
+<li><strong>Deployer:</strong> custom tool management and scoped PassRole.</li>
+<li><strong>Caller:</strong> session execution on the exact returned custom ARN, plus separately approved model inference later.</li>
+<li><strong>Execution role:</strong> only the downstream access executed code needs.</li>
+</ul>
+<p>The VPC extension also has a distinct AWS network service-linked role. SCPs do not restrict service-linked roles, but your normal deployer/execution/caller roles and first-time role-creation calls remain subject to their own controls. Do not infer that all service-assumed roles are exempt.<a class="ag-cite" href="#source-30" aria-label="Source 30">[30]</a><a class="ag-cite" href="#source-50" aria-label="Source 50">[50]</a></p>
+<p><strong>Gate:</strong> the execution role exists with the right trust/boundary; the deployer has its scoped identity policy and applicable SCP clearance. No need to provision a VPC for the baseline.</p>
+<h2 id="5-prepare-the-local-workstation">5. Prepare the local workstation</h2>
+<p>Commands use Bash-compatible quoting. Use the company's standard SSO/credential process:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">export AWS_PROFILE=company-poc
+export AWS_REGION=us-west-2
+export AWS_DEFAULT_REGION=us-west-2
+export AWS_STS_REGIONAL_ENDPOINTS=regional
+export AWS_PAGER=''
+aws sts get-caller-identity
+aws --version
+python --version
+</code></pre>
+<p>Check the account ID and effective role. A successful STS identity lookup does not prove AgentCore permissions. Login under the <strong>deployer</strong> profile for creation; later switch to the <strong>caller</strong> profile for local execution.</p>
+<p>From <code>reference/</code>, create a small initial environment:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">python -m venv .venv-direct
+source .venv-direct/bin/activate
+python -m pip install 'boto3==1.43.113'
+python -m pip check
+</code></pre>
+<p>Use the approved internal package mirror/CA/proxy configuration where required. Do not disable TLS verification or install the full agent stack just to prove a direct code call. For PowerShell or another shell, use its equivalent environment and venv activation syntax.</p>
+<p>The Code Interpreter service API is remote. Your workstation must reach its normal regional endpoint or the approved PrivateLink/private-DNS path. An SCP approval does not establish that network route.<a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a></p>
+<h2 id="6-create-the-interpreter-manually-first">6. Create the interpreter manually first</h2>
+<p>Choose <strong>one</strong> creation path. Do not run both against the same tool name. Keep the console/CLI-created tool unmanaged by Terraform until the adoption stage.</p>
+<h3 id="61-console-path">6.1 Console path</h3>
+<ol>
+<li>Sign in using the approved deployer identity and select <strong>us-west-2</strong>.</li>
+<li>Open Amazon Bedrock AgentCore, then <strong>Built-in tools → Code Interpreter</strong>.</li>
+<li>Create a custom tool named <code>agentcore_poc</code>.</li>
+<li>Set the description to <code>Deep Agents Code Interpreter POC</code> and the purpose tag to <code>Purpose=agentcore-code-interpreter-poc</code>.</li>
+<li>Choose <strong>SANDBOX</strong>, not PUBLIC and not VPC.</li>
+<li>Select the existing dedicated execution role. Do not use automatic role creation unless the platform owner approved that extra IAM workflow.</li>
+<li>Create the tool; wait for READY.</li>
+<li>Copy the actual <strong>code interpreter ID</strong>, <strong>custom resource ARN</strong>, execution role and network mode from the resource details.<a class="ag-cite" href="#source-55" aria-label="Source 55">[55]</a></li>
+</ol>
+<p>The console may require list/read permissions to display roles and other UI elements beyond the minimal API policy. A UI dropdown failure does not prove the underlying create API is unsupported. Use the CLI with an approved explicit role ARN rather than broadly increasing permissions to satisfy every console panel.</p>
+<h3 id="62-cli-path">6.2 CLI path</h3>
+<p>Use the request generated earlier:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws bedrock-agentcore-control create-code-interpreter \
+  --region us-west-2 \
+  --cli-input-json file://generated/create-interpreter.json \
+  --output json &gt; created-interpreter.json
+</code></pre>
+<p>If the CLI exits nonzero, inspect the error before using that file. Do not blindly repeat a creation request after a network failure: check whether the tool was created first. A consistent <code>--client-token</code> can be supplied for controlled creation retries.<a class="ag-cite" href="#source-54" aria-label="Source 54">[54]</a></p>
+<p>Extract the ID and ARN, then read the resource back:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">export AGENTCORE_CODE_INTERPRETER_ID=&quot;$(python -c \
+  'import json; print(json.load(open(&quot;created-interpreter.json&quot;))[&quot;codeInterpreterId&quot;])')&quot;
+export AGENTCORE_CODE_INTERPRETER_ARN=&quot;$(python -c \
+  'import json; print(json.load(open(&quot;created-interpreter.json&quot;))[&quot;codeInterpreterArn&quot;])')&quot;
+
+aws bedrock-agentcore-control get-code-interpreter \
+  --region us-west-2 \
+  --code-interpreter-id &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+</code></pre>
+<p>Wait for <code>READY</code>; investigate <code>CREATE_FAILED</code>. Confirm SANDBOX and the intended execution role. For console creation, export the two returned values manually instead of fabricating <code>created-interpreter.json</code>.</p>
+<p>Use <strong><code>bedrock-agentcore-control create-code-interpreter</code></strong>, not the data-plane group used in some older introductory examples. The current CLI/API reference is the authority for request shape.<a class="ag-cite" href="#source-54" aria-label="Source 54">[54]</a></p>
+<h3 id="63-grant-the-local-caller-the-exact-tool-arn">6.3 Grant the local caller the exact tool ARN</h3>
+<p>Generate the caller policy in a fresh output directory:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">python prepare_poc.py \
+  --account-id &quot;$POC_ACCOUNT_ID&quot; \
+  --execution-role-name &quot;$EXECUTION_ROLE_NAME&quot; \
+  --interpreter-arn &quot;$AGENTCORE_CODE_INTERPRETER_ARN&quot; \
+  --output-dir generated-after-create
+</code></pre>
+<p>Have the platform owner apply <code>generated-after-create/iam-caller.json</code> to the approved caller permission set or ordinary IAM role. An authorized IAM operator can use:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws iam put-role-policy \
+  --role-name &quot;$CALLER_ROLE_NAME&quot; \
+  --policy-name AgentCorePocSessionAccess \
+  --policy-document file://generated-after-create/iam-caller.json
+aws iam get-role-policy \
+  --role-name &quot;$CALLER_ROLE_NAME&quot; \
+  --policy-name AgentCorePocSessionAccess
+</code></pre>
+<p>Then select the caller credential profile and confirm identity again. The caller policy contains Start/Invoke/Stop/Get/ListSession but no create/delete tool, PassRole or model inference permission.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a></p>
+<p><strong>ARN trap:</strong> custom tools use <code>code-interpreter-custom/ID</code>. Do not substitute an account-owned <code>code-interpreter/*</code> wildcard copied from a built-in-tool example. Use the returned ARN exactly.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a></p>
+<p><strong>Gate:</strong> one custom tool is READY; the caller policy references it; caller/deployer identities are distinguishable. You still have not needed Terraform or a model.</p>
+<h2 id="7-first-local-script-send-code-to-the-existing-tool">7. First local script: send code to the existing tool</h2>
+<p>Save the following as <code>local_execute.py</code>, or use the identical file in the reference bundle:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">&quot;&quot;&quot;First local Python -&gt; remote AgentCore exercise. Explicitly billable when enabled.&quot;&quot;&quot;
+import argparse
+import json
+import uuid
+
+import boto3
+from botocore.config import Config
+
+
+def consume(response):
+    results = []
+    for event in response[&quot;stream&quot;]:
+        if &quot;result&quot; not in event:
+            raise RuntimeError(f&quot;Service stream failure: {event}&quot;)
+        result = event[&quot;result&quot;]
+        exit_code = result.get(&quot;structuredContent&quot;, {}).get(&quot;exitCode&quot;)
+        if result.get(&quot;isError&quot;) or exit_code not in (None, 0):
+            raise RuntimeError(f&quot;Sandbox execution failed: {result}&quot;)
+        results.append(result)
+    if not results:
+        raise RuntimeError(&quot;Service returned no results&quot;)
+    return results
+
+
+def run(client, interpreter_id):
+    started = client.start_code_interpreter_session(
+        codeInterpreterIdentifier=interpreter_id, name=&quot;local-poc&quot;,
+        sessionTimeoutSeconds=600, clientToken=str(uuid.uuid4()),
+    )
+    sid = started[&quot;sessionId&quot;]
+    print(json.dumps({&quot;session_id&quot;: sid, &quot;interpreter_id&quot;: interpreter_id}))
+    try:
+        results = consume(client.invoke_code_interpreter(
+            codeInterpreterIdentifier=interpreter_id, sessionId=sid,
+            name=&quot;executeCode&quot;, arguments={
+                &quot;language&quot;: &quot;python&quot;, &quot;code&quot;:
+                &quot;import json; values=[10,20,30]; assert sum(values)==60; &quot;
+                &quot;print(json.dumps({'total':sum(values)}))&quot;,
+            },
+        ))
+        print(json.dumps(results, indent=2, default=str))
+        return results
+    finally:
+        client.stop_code_interpreter_session(codeInterpreterIdentifier=interpreter_id, sessionId=sid)
+        try:
+            status = client.get_code_interpreter_session(
+                codeInterpreterIdentifier=interpreter_id, sessionId=sid)[&quot;status&quot;]
+        except client.exceptions.ResourceNotFoundException:
+            status = &quot;TERMINATED&quot;
+        if status != &quot;TERMINATED&quot;:
+            raise RuntimeError(f&quot;Cleanup not yet verified: session={sid} status={status}&quot;)
+        print(json.dumps({&quot;session_id&quot;: sid, &quot;cleanup&quot;: status}))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(&quot;--interpreter-id&quot;, required=True)
+    parser.add_argument(&quot;--allow-live&quot;, action=&quot;store_true&quot;)
+    args = parser.parse_args()
+    if not args.allow_live or args.interpreter_id.startswith(&quot;aws.&quot;):
+        parser.error(&quot;Provide --allow-live and the custom interpreter ID created earlier&quot;)
+    client = boto3.client(&quot;bedrock-agentcore&quot;, region_name=&quot;us-west-2&quot;, config=Config(
+        connect_timeout=10, read_timeout=120, retries={&quot;mode&quot;: &quot;standard&quot;, &quot;total_max_attempts&quot;: 1},
+    ))
+    run(client, args.interpreter_id)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>Run it with the caller profile:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">export AWS_PROFILE=company-poc-caller
+aws sts get-caller-identity
+python local_execute.py \
+  --interpreter-id &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot; \
+  --allow-live
+</code></pre>
+<p>The script starts a remote session, executes a small standard-library computation, consumes the full result stream, stops the session and reads back termination. It disables automatic SDK request retries for this tiny example to avoid retrying unknown execution side effects.</p>
+<p><strong>Pass condition:</strong> inspect the real returned total (60), no streamed/tool error, and verified session termination. If cleanup returns a non-terminated state, record the session ID and follow up; do not call that a clean success. No pre-generated AWS output is included here.</p>
+<p>Do not create a new interpreter inside an application request. Interpreter configuration is a provisioned resource; a session is its temporary execution context.<a class="ag-cite" href="#source-26" aria-label="Source 26">[26]</a></p>
+<h2 id="8-stronger-service-smoke-tests-before-a-model">8. Stronger service smoke tests before a model</h2>
+<p>Do this before calling a model. It separates IAM/API/service problems from model and Deep Agents behavior.</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">python direct_smoke.py \
+  --interpreter-id &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot; \
+  --allow-live
+</code></pre>
+<p>This <strong>billable live command</strong> starts two 600-second sessions, transfers a non-UTF-8 file and compares returned bytes, runs a computation, checks that a marker from the first session is absent from the second, checks an explicit exit code 7, and stops both sessions in <code>finally</code>. It reads each session back to confirm termination or that it is no longer addressable. Evidence goes to <code>artifacts/direct-smoke.json</code>.</p>
+<p>Expected acceptance conditions, not pre-generated output:</p>
+<ul>
+<li>Two distinct session IDs.</li>
+<li>Identical bytes after write/read.</li>
+<li>Computation and isolation assertions succeed inside their intended sessions.</li>
+<li>The failing shell command exposes exit code 7.</li>
+<li>Every session stop is verified; <code>cleanup_errors</code> is empty.</li>
+</ul>
+<p>The code consumes the entire lazy response stream and rejects streamed exceptions, <code>isError</code> results and nonzero structured exit status. <code>HTTP 200</code> alone is not execution success.<a class="ag-cite" href="#source-9" aria-label="Source 9">[9]</a></p>
+<p>If the smoke test fails, stop here. Save the request ID/error and session IDs in the restricted POC ticket, then use the troubleshooting section. Do not add a model to obscure the failure.</p>
+<p>The full script is in the reference bundle. Its core API sequence is:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">response = client.start_code_interpreter_session(
+    codeInterpreterIdentifier=approved_custom_id,
+    sessionTimeoutSeconds=600,
+)
+session_id = response[&quot;sessionId&quot;]
+try:
+    response = client.invoke_code_interpreter(
+        codeInterpreterIdentifier=approved_custom_id,
+        sessionId=session_id,
+        name=&quot;executeCode&quot;,
+        arguments={&quot;language&quot;: &quot;python&quot;, &quot;code&quot;: &quot;print(1 + 1)&quot;},
+    )
+    results = collect(response)  # strict parser in direct_smoke.py
+finally:
+    client.stop_code_interpreter_session(
+        codeInterpreterIdentifier=approved_custom_id,
+        sessionId=session_id,
+    )
+</code></pre>
+<p>Never automatically retry an execution request with side effects just because the response stream broke. The command may already have run. Session-start idempotency and execution idempotency are different concerns.<a class="ag-cite" href="#source-7" aria-label="Source 7">[7]</a><a class="ag-cite" href="#source-9" aria-label="Source 9">[9]</a></p>
+<h2 id="9-add-the-framework-dependencies">9. Add the framework dependencies</h2>
+<p>Use the official LangChain-maintained integrations. A custom sandbox adapter is unnecessary for the demonstrated Deep Agents or LangChain paths.<a class="ag-cite" href="#source-36" aria-label="Source 36">[36]</a><a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a><a class="ag-cite" href="#source-47" aria-label="Source 47">[47]</a></p>
+<h3 id="important-releasesource-mismatch">Important release/source mismatch</h3>
+<p>The retrieved published <code>langchain-agentcore-codeinterpreter</code> <strong>0.0.5</strong> does not behave like current upstream source. Local fixtures reproduced these differences:</p>
+<ul>
+<li>An AWS result with <code>structuredContent.exitCode = 7</code> was returned as exit code <strong>0</strong> by the release; the candidate returned <strong>7</strong>.</li>
+<li><code>execute(..., timeout=1)</code> ignored the timeout in the release; the candidate wrapped execution with an in-sandbox GNU <code>timeout</code> command.</li>
+<li><code>writeFiles</code> with <code>isError=True</code> could be reported as a successful upload by the release; the candidate reported an error.</li>
+<li>Upstream has additional <code>.create()</code> and context-manager lifecycle APIs that are absent from the release.<a class="ag-cite" href="#source-38" aria-label="Source 38">[38]</a><a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a></li>
+</ul>
+<p>These are <strong>offline contract observations</strong>, not proof of every behavior on AWS. Do not rely on the release's exit code as your only success check. Timeout wrapping also requires the GNU utility in the actual sandbox and is not a server-side cancellation guarantee.</p>
+<h3 id="track-a-reviewed-source-pinned-candidate-recommended-for-evaluating-fixes">Track A: reviewed source-pinned candidate (recommended for evaluating fixes)</h3>
+<p>The supplied <code>requirements-candidate.txt</code> replaces only the sandbox package with this immutable upstream source:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-text">langchain-agentcore-codeinterpreter @ git+https://github.com/langchain-ai/langchain-aws.git@a0e80b9febaf21cf1cead8f0dc16b3ffd8633976#subdirectory=libs/agentcore-codeinterpreter
+</code></pre>
+<p>That VCS build/install was executed successfully in an isolated environment, and the installed candidate passed the offline tests. It still identifies its package version as 0.0.5, so <strong>version number alone cannot distinguish it from the released wheel</strong>. Record the source commit or internal wheel digest.</p>
+<p>Company gate: review the source, run your dependency/security process, and preferably promote a built wheel into your private package repository. An immutable commit is reproducible provenance, not a security approval or a promise of production readiness.</p>
+<h3 id="track-b-published-release-limited-exploratory-use">Track B: published release, limited exploratory use</h3>
+<p><code>requirements-release.lock</code> captures the published wheel and resolved dependencies. Use this only to reproduce the baseline integration and the known defects, or when company policy forbids a VCS candidate. Keep synthetic inputs, verify results independently, and do not mark timeout/error-handling acceptance complete until the chosen release passes those tests.</p>
+<p>The primary direct API smoke test remains useful regardless of which framework track is approved.</p>
+<h3 id="install-and-run-offline-checks">Install and run offline checks</h3>
+<p>From <code>reference/</code>, using the company's approved Python/package mirror:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">python -m venv .venv
+# Activate with your shell's normal venv activation command.
+python -m pip install -r requirements-candidate.txt
+python -m pip check
+python offline_verify.py
+</code></pre>
+<p>For the published release, use a separate environment:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">python -m pip install -r requirements-release.lock
+EXPECT_FIXED=0 python offline_verify.py
+</code></pre>
+<p>The release fixture passing means it reproduced the documented defects; it does <strong>not</strong> mean those defects are acceptable. The candidate test intentionally logs a caught upload-error traceback while testing failure handling.</p>
+<p>The installed snapshot includes <code>bedrock-agentcore==1.24.1</code> and <code>deepagents==0.7.25</code>.<a class="ag-cite" href="#source-39" aria-label="Source 39">[39]</a><a class="ag-cite" href="#source-40" aria-label="Source 40">[40]</a></p>
+<p>It also includes <code>langchain==1.4.5</code>, <code>langchain-aws==1.8.2</code>, and resolved <code>boto3/botocore==1.43.113</code>.<a class="ag-cite" href="#source-41" aria-label="Source 41">[41]</a><a class="ag-cite" href="#source-42" aria-label="Source 42">[42]</a> Do not update one dependency casually during the POC; refresh the lock and rerun the tests together.</p>
+<h2 id="10-deep-agents-use-the-existing-tool-as-the-sandbox">10. Deep Agents: use the existing tool as the sandbox</h2>
+<p>The integration boundary is <strong><code>create_deep_agent(..., backend=AgentCoreSandbox(...))</code></strong>. This gives the agent sandbox-backed filesystem and shell execution rather than access to your workstation filesystem.<a class="ag-cite" href="#source-36" aria-label="Source 36">[36]</a><a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a></p>
+<p>The exact portable lifecycle used by the reference is:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">from bedrock_agentcore.tools.code_interpreter_client import CodeInterpreter
+from langchain_agentcore_codeinterpreter import AgentCoreSandbox
+from deepagents import create_deep_agent
+
+interpreter = CodeInterpreter(region=&quot;us-west-2&quot;)
+interpreter.start(
+    identifier=approved_custom_id,
+    session_timeout_seconds=1800,
+)
+try:
+    backend = AgentCoreSandbox(interpreter=interpreter)
+    agent = create_deep_agent(model=model, backend=backend)
+    result = agent.invoke({&quot;messages&quot;: [
+        {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Use execute to run pwd and report it.&quot;}
+    ]})
+finally:
+    interpreter.stop()
+</code></pre>
+<p><strong>Do not copy imaginary constructor arguments:</strong> <code>AgentCoreSandbox</code> takes <code>interpreter=</code>, not <code>region=</code>, <code>client=</code>, or <code>session_id=</code>. <code>CodeInterpreter</code> takes <code>region=</code> and optional <code>session=</code>. Select the custom interpreter in <code>.start(identifier=...)</code>.<a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a><a class="ag-cite" href="#source-45" aria-label="Source 45">[45]</a></p>
+<h3 id="run-the-supplied-integration">Run the supplied integration</h3>
+<p>Set <code>BEDROCK_MODEL_ID</code> to the exact <strong>company-approved, tool-capable model ID</strong> available through the intended route in us-west-2. The guide intentionally does not choose a cross-region inference profile or assume model entitlement.</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">export BEDROCK_MODEL_ID='REPLACE_WITH_APPROVED_MODEL_ID'
+python run_agent.py deep --allow-live
+</code></pre>
+<p>The supplied <code>run_deep</code> function uploads <code>input.txt</code>, downloads it to verify the bytes, asks the agent to read it through the shell, and stops its session. Inspect the printed tool message, not only the final assistant answer.</p>
+<p>The model object uses:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">from langchain_aws import ChatBedrockConverse
+model = ChatBedrockConverse(
+    model_id=approved_model_id,
+    region_name=&quot;us-west-2&quot;,
+    temperature=0,
+    max_tokens=1024,
+)
+</code></pre>
+<p>This model choice adds its own IAM/inference costs and network route. Restrict it to the approved model resource(s); do not grant all-model permissions just to unblock a test. Validate the precise InvokeModel/streaming permissions needed by your chosen model/inference path with the platform owner. LangChain tracing and any outbound telemetry must follow company policy.</p>
+<h3 id="file-transfer-and-paths">File transfer and paths</h3>
+<p>Backend methods use these shapes:<a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a></p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">uploaded = backend.upload_files([(&quot;input.csv&quot;, b&quot;amount\n10\n20\n30\n&quot;)])
+if uploaded[0].error:
+    raise RuntimeError(uploaded[0].error)
+readback = backend.download_files([&quot;input.csv&quot;])[0]
+if readback.error or readback.content != b&quot;amount\n10\n20\n30\n&quot;:
+    raise RuntimeError(&quot;Upload verification failed&quot;)
+</code></pre>
+<p>Prepare nested directories before bulk upload. Prefer relative paths and discover the real working directory with <code>execute("pwd")</code>. Do not copy <code>/root/...</code> paths from another sandbox provider. Download responses contain bytes or an error; inspect each response rather than assuming a list of results implies success.<a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a></p>
+<h3 id="lifecycle-and-isolation-rules">Lifecycle and isolation rules</h3>
+<ul>
+<li>One backend/session per user task in the initial POC; do not share it across unrelated users.</li>
+<li>Pass the provisioned ID explicitly. A bare SDK <code>.start()</code> selects the built-in interpreter.</li>
+<li>Never reuse a backend after stopping its interpreter. SDK <code>invoke</code> may implicitly call bare <code>start()</code> when identifiers are missing, creating a different default session.</li>
+<li>Export required artifacts before stopping or TTL expiry. Do not treat ephemeral files as durable storage.</li>
+<li>Monitor failed stop calls; <code>finally</code> attempts cleanup but cannot guarantee it when the network fails.<a class="ag-cite" href="#source-45" aria-label="Source 45">[45]</a></li>
+</ul>
+<h2 id="11-plain-langchain-native-toolkit-alternative">11. Plain LangChain: native toolkit alternative</h2>
+<p>Use this path to compare an explicit tool-based agent with Deep Agents' richer backend integration. The supported factory is asynchronous:<a class="ag-cite" href="#source-47" aria-label="Source 47">[47]</a></p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">from langchain.agents import create_agent
+from langchain_aws.tools import create_code_interpreter_toolkit
+
+toolkit, tools = await create_code_interpreter_toolkit(
+    region=&quot;us-west-2&quot;,
+    code_interpreter_identifier=approved_custom_id,
+)
+config = {&quot;configurable&quot;: {&quot;thread_id&quot;: unique_task_id}}
+try:
+    agent = create_agent(model=model, tools=tools)
+    result = await agent.ainvoke(
+        {&quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Use execute_code to calculate 10+20+30.&quot;}]},
+        config=config,
+    )
+finally:
+    await toolkit.cleanup()
+</code></pre>
+<p>Run the supplied example with:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">python run_agent.py langchain --allow-live
+</code></pre>
+<p>It uploads a text file and reads it through <code>execute_command</code>. Reuse the same thread configuration for upload and agent calls; different keys can select different sessions. A per-task toolkit makes ownership simple for the POC.<a class="ag-cite" href="#source-47" aria-label="Source 47">[47]</a></p>
+<p><strong>Limitations in the inspected toolkit:</strong> it creates sessions lazily, uses the standard AWS credential chain and default 900-second TTL, has no injected boto3-session/TTL factory parameter, and reduces tool responses to text. Binary output and structured failures need independent verification. Cleanup logs errors rather than reliably propagating them, so read session state back during acceptance. The toolkit is a useful integration, not the authority for a pass/fail security result.<a class="ag-cite" href="#source-47" aria-label="Source 47">[47]</a></p>
+<p>Choose Deep Agents when you need its filesystem/shell backend contract. Choose the plain toolkit when you want selected code/file tools inside an existing LangChain agent. Neither requires a custom adapter for this POC.</p>
+<h2 id="12-verify-a-useful-output-synthetic-csv-analysis">12. Verify a useful output: synthetic CSV analysis</h2>
+<p>After the hello-file examples pass, extend <code>run_deep</code> inside its existing session lifetime:</p>
+<ol>
+<li>Upload <code>sales.csv</code> containing only synthetic values.</li>
+<li>Ask the agent to create and execute a Python script that reads it, computes total sales, and writes <code>report.json</code>.</li>
+<li>Download <code>report.json</code> through the backend <strong>before</strong> <code>finally</code> stops the interpreter.</li>
+<li>Parse the file on the host and assert the expected value. Do not use the model's final prose as the assertion.</li>
+</ol>
+<p>Input:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-csv">team,amount
+A,10
+B,20
+A,30
+</code></pre>
+<p>Prompt:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-text">Read sales.csv from the sandbox filesystem. Write and execute a Python
+script using the standard library. Produce report.json containing
+{&quot;total&quot;: 60, &quot;by_team&quot;: {&quot;A&quot;: 40, &quot;B&quot;: 20}}. Do not install packages.
+</code></pre>
+<p>Host-side check, inside the same <code>try</code> block:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">import json
+from pathlib import Path
+response = backend.download_files([&quot;report.json&quot;])[0]
+if response.error or response.content is None:
+    raise RuntimeError(f&quot;Missing report: {response.error}&quot;)
+report = json.loads(response.content)
+assert report == {&quot;total&quot;: 60, &quot;by_team&quot;: {&quot;A&quot;: 40, &quot;B&quot;: 20}}
+Path(&quot;artifacts&quot;).mkdir(exist_ok=True)
+Path(&quot;artifacts/report.json&quot;).write_bytes(response.content)
+</code></pre>
+<p>This is a live extension exercise, not an already executed cloud example. Add a second input and change one amount to prove the script reads input instead of reproducing the prompt's expected JSON. For production evaluation, use hidden expected outputs and verify the execution trace.</p>
+<h2 id="13-terraform-comes-after-the-working-local-path">13. Terraform comes after the working local path</h2>
+<p>Your manual tool is already enough to run every application exercise. Terraform now makes the infrastructure repeatable; it should not force you to debug SCPs and agent code at the same time.</p>
+<h3 id="131-support-provider-choices-and-coverage">13.1 Support, provider choices and coverage</h3>
+<p><strong>Yes: Terraform supports the Code Interpreter resource directly.</strong> This runbook pins <code>hashicorp/aws</code> to <strong>6.68.0</strong>, whose resource schema includes <code>SANDBOX</code>, <code>PUBLIC</code>, and <code>VPC</code> plus nested subnet/SG configuration.<a class="ag-cite" href="#source-13" aria-label="Source 13">[13]</a><a class="ag-cite" href="#source-14" aria-label="Source 14">[14]</a></p>
+<p>The native resource is:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-hcl">resource &quot;aws_bedrockagentcore_code_interpreter&quot; &quot;poc&quot; {
+  name               = &quot;agentcore_poc&quot;
+  execution_role_arn = var.execution_role_arn
+  network_configuration {
+    network_mode = &quot;SANDBOX&quot;
+  }
+}
+</code></pre>
+<p><code>name</code> must start with a letter and contain only letters, digits and underscores, up to 48 characters. Some provider examples use hyphens despite the service pattern. Use <code>agentcore_poc</code>; preserve the generated interpreter ID exactly, including any suffix/hyphen.<a class="ag-cite" href="#source-18" aria-label="Source 18">[18]</a></p>
+<p>The verified native provider replaces the interpreter when its name, description, execution role, or network configuration changes. Treat changing SANDBOX to VPC as a replacement: drain sessions, apply the replacement, refresh the application ID and caller policy, and repeat acceptance tests.<a class="ag-cite" href="#source-14" aria-label="Source 14">[14]</a></p>
+<h3 id="alternative-awscc">Alternative: AWSCC</h3>
+<p><code>hashicorp/awscc</code> <strong>1.105.0</strong> exposes <code>awscc_bedrockagentcore_code_interpreter_custom</code>, mapping to CloudFormation's custom interpreter resource. It also supports VPC in the retrieved schema. Its nested <code>network_configuration</code> is an <strong>object attribute</strong>, whereas the native provider uses a <strong>block</strong>.<a class="ag-cite" href="#source-15" aria-label="Source 15">[15]</a><a class="ag-cite" href="#source-16" aria-label="Source 16">[16]</a><a class="ag-cite" href="#source-17" aria-label="Source 17">[17]</a></p>
+<p>Use AWSCC only if it fits the company's provider policy or a needed feature is better supported there. It adds Cloud Control API permissions/connectivity and does not eliminate downstream AgentCore permissions. Do not manage one interpreter with both providers.<a class="ag-cite" href="#source-27" aria-label="Source 27">[27]</a><a class="ag-cite" href="#source-28" aria-label="Source 28">[28]</a><a class="ag-cite" href="#source-29" aria-label="Source 29">[29]</a></p>
+<h3 id="coverage-limits">Coverage limits</h3>
+<p>The native and AWSCC schemas verified for this snapshot do not expose every current service option. In particular, API-level <code>filesystemConfigurations</code> must not be assumed available as a Terraform argument. Optional certificate shapes/count limits also differ. Keep mounts/certificates out of the initial POC; reassess provider coverage when you need them.<a class="ag-cite" href="#source-14" aria-label="Source 14">[14]</a><a class="ag-cite" href="#source-16" aria-label="Source 16">[16]</a><a class="ag-cite" href="#source-18" aria-label="Source 18">[18]</a></p>
+<p>Avoid <code>null_resource</code> plus shell provisioning for a resource Terraform already supports. If your company's provider pin is older, check its actual schema, request a provider upgrade, or use an approved AWSCC version. Do not silently bypass infrastructure governance through application startup code.</p>
+<h3 id="132-choose-adoption-or-a-separate-resource">13.2 Choose adoption or a separate resource</h3>
+<p><strong>Recommended: adopt the manually created interpreter.</strong> Use one owning state and match its current configuration before importing:</p>
+<ol>
+<li>Have the infrastructure owner approve state/backend, account, execution role and ownership.</li>
+<li>Copy <code>terraform.tfvars.example</code> to a private <code>terraform.tfvars</code>. Supply the same account/execution role, an approved owner, and SANDBOX mode.</li>
+<li>Ensure resource name and description in <code>main.tf</code> exactly match the console/CLI-created tool. The CLI payload supplied here uses matching values.</li>
+<li>Initialize the company backend/provider and run the local validation/mock tests.</li>
+<li>Import by interpreter ID. Import changes Terraform state; it does not itself recreate the interpreter.</li>
+<li>Review the first plan. Resolve unexpected replacements before applying. An Owner tag added by provider default tags is expected only if the platform approves it.</li>
+</ol>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">terraform -chdir=terraform/interpreter init
+terraform -chdir=terraform/interpreter validate
+terraform -chdir=terraform/interpreter test
+terraform -chdir=terraform/interpreter import \
+  aws_bedrockagentcore_code_interpreter.poc \
+  &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+terraform -chdir=terraform/interpreter plan -out=adopt.tfplan
+terraform -chdir=terraform/interpreter show -no-color adopt.tfplan
+</code></pre>
+<p>Do not apply a replacement just to make the plan green. Mutable/default tags and immutable name/description/network/role fields are different concerns. If a separate Terraform-owned interpreter is desired, deliberately use a distinct valid name such as <code>agentcore_poc_iac</code>, record the second ID, update caller policy/configuration, rerun acceptance and delete the old manual tool through its original ownership path.<a class="ag-cite" href="#source-13" aria-label="Source 13">[13]</a><a class="ag-cite" href="#source-14" aria-label="Source 14">[14]</a></p>
+<h3 id="133-terraform-provisioning-procedure">13.3 Terraform provisioning procedure</h3>
+<p>The following is the full reference-root procedure for an intentionally Terraform-owned resource. For adoption, import before applying it; do not run a second creation against an existing same-name tool.</p>
+<p>Use <code>reference/terraform/interpreter/</code>. The root:</p>
+<ul>
+<li>Restricts the provider to the explicitly supplied company account and <code>us-west-2</code>.</li>
+<li>Defaults to <code>SANDBOX</code> with no subnets or security groups.</li>
+<li>Requires an explicit execution-role ARN and owner.</li>
+<li>Excludes PUBLIC mode.</li>
+<li>Emits the interpreter ID/ARN and caller policy.</li>
+<li>Supports an optional VPC extension with input validation.</li>
+</ul>
+<h3 id="prepare-state-and-inputs">Prepare state and inputs</h3>
+<p>Use the company's existing backend convention. The reference intentionally omits a backend block because bucket/workspace/locking settings are company-specific. Local state is acceptable only if your company permits it; protect state and never commit it.</p>
+<p>Copy <code>terraform.tfvars.example</code> to a private <code>terraform.tfvars</code>, replace the example account/role/owner, and keep <code>network_mode = "SANDBOX"</code>. Do not supply VPC inputs for this baseline.</p>
+<h3 id="validate-review-apply">Validate, review, apply</h3>
+<p>From the reference directory:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">terraform -chdir=terraform/interpreter init
+terraform -chdir=terraform/interpreter fmt -check -recursive
+terraform -chdir=terraform/interpreter validate
+# Mock-provider tests; Terraform &gt;=1.7. No live AWS resources.
+terraform -chdir=terraform/interpreter test
+
+# The commands below require company approval and AWS access.
+terraform -chdir=terraform/interpreter plan -out=poc.tfplan
+terraform -chdir=terraform/interpreter show -no-color poc.tfplan
+terraform -chdir=terraform/interpreter apply poc.tfplan
+</code></pre>
+<p>Use your CI approval process, not an unattended <code>-auto-approve</code>. Review that only the intended interpreter is created and that no VPC, NAT gateway, Runtime or ECR resources appear.</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">export AGENTCORE_CODE_INTERPRETER_ID=&quot;$(terraform \
+  -chdir=terraform/interpreter output -raw code_interpreter_id)&quot;
+terraform -chdir=terraform/interpreter output -raw code_interpreter_arn
+terraform -chdir=terraform/interpreter output -raw caller_policy_json
+aws bedrock-agentcore-control get-code-interpreter \
+  --region us-west-2 \
+  --code-interpreter-id &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+</code></pre>
+<p><strong>Gate:</strong> management read-back reports <code>READY</code> and <code>SANDBOX</code>, with the intended execution role. Have the emitted caller policy attached through the approved IAM workflow. The operator performing this management read needs GetCodeInterpreter; do not add that administrative permission to every application caller merely for a one-time check.</p>
+<h3 id="existing-resources">Existing resources</h3>
+<p>If an approved custom interpreter already exists, either consume it without claiming Terraform ownership or import it into the chosen state through a reviewed change. Native import uses its interpreter ID, not the full ARN:<a class="ag-cite" href="#source-13" aria-label="Source 13">[13]</a></p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">terraform -chdir=terraform/interpreter import \
+  aws_bedrockagentcore_code_interpreter.poc \
+  &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+</code></pre>
+<p>Inspect the subsequent plan before applying. Never import platform-owned resources into a throwaway state without agreeing ownership and teardown.</p>
+<h2 id="14-negative-tests-and-isolation-checks">14. Negative tests and isolation checks</h2>
+<p>Run these in a dedicated synthetic session. Record the command, observed result, session ID and package/source identity.</p>
+<h3 id="command-failures">Command failures</h3>
+<p><code>sh -c 'exit 7'</code> must not be treated as success. Compare direct API <code>structuredContent.exitCode</code> with <code>backend.execute(...).exit_code</code>. The released adapter issue is a reason to fail this gate, not to remove the test.<a class="ag-cite" href="#source-9" aria-label="Source 9">[9]</a><a class="ag-cite" href="#source-38" aria-label="Source 38">[38]</a><a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a></p>
+<h3 id="execution-timeout">Execution timeout</h3>
+<p>For the candidate, try <code>backend.execute("sleep 10", timeout=1)</code>. Measure elapsed time with a host monotonic clock and verify a non-success timeout result. First verify GNU <code>timeout</code> exists in the sandbox. A client read timeout is not a command deadline, and a session TTL is not a per-command timeout.<a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a><a class="ag-cite" href="#source-45" aria-label="Source 45">[45]</a></p>
+<h3 id="missingbinary-files">Missing/binary files</h3>
+<p>Read a nonexistent path and verify an explicit failure. Round-trip arbitrary non-UTF-8 bytes and compare them on the host. Add a nested-directory test; do not infer directory creation from a flat-file success.</p>
+<h3 id="ttl-expiry">TTL expiry</h3>
+<p>Start a dedicated short-TTL session (AWS recommends at least 60 seconds). After expiry, the old session must no longer run code. Download needed artifacts first. Expiry is <strong>absolute</strong>, regardless of activity, not an idle timeout.<a class="ag-cite" href="#source-7" aria-label="Source 7">[7]</a></p>
+<h3 id="cross-session-isolation">Cross-session isolation</h3>
+<p>Write a unique marker in session A. Confirm session B cannot read that marker from its scratch filesystem. The direct smoke includes this test. Shared S3/EFS storage, if later added, has a different isolation boundary.<a class="ag-cite" href="#source-4" aria-label="Source 4">[4]</a><a class="ag-cite" href="#source-49" aria-label="Source 49">[49]</a></p>
+<h3 id="least-privilege">Least privilege</h3>
+<p>With security approval, demonstrate that a separate test identity without permission cannot invoke the tool and that the execution role cannot access an unrelated synthetic bucket/object. Never test denial by probing production data. A caller having no S3 policy does not prove sandbox code has no S3 access; the execution identity is separate.</p>
+<h3 id="egress">Egress</h3>
+<p>If no public internet egress is required, test a security-approved destination with a short timeout from inside the sandbox and review the observed behavior with security. Do not claim SANDBOX is an air gap; limited supported AWS access exists. For VPC mode, inspect routing/firewall controls as well as testing reachability.<a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a><a class="ag-cite" href="#source-3" aria-label="Source 3">[3]</a></p>
+<h2 id="15-optional-private-api-access-without-tool-vpc-mode">15. Optional: private API access without tool VPC mode</h2>
+<p>Use this when company policy requires the application's API traffic to stay on a private path. <strong>You can keep the interpreter in SANDBOX mode.</strong><a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a><a class="ag-cite" href="#source-3" aria-label="Source 3">[3]</a></p>
+<p>For us-west-2:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-text">Session/invoke API:
+com.amazonaws.us-west-2.bedrock-agentcore
+
+Provision/get/delete API:
+com.amazonaws.us-west-2.bedrock-agentcore-control
+</code></pre>
+<p>Use <code>reference/terraform/endpoints/</code> only if platform/network owners approve dedicated endpoint creation. If endpoints already exist, reuse their approved path instead of creating duplicate private-DNS endpoints. This optional root intentionally creates both planes; if only application access must be private, the platform can retain control-plane access through its existing approved management route.</p>
+<h3 id="required-network-decisions">Required network decisions</h3>
+<ul>
+<li>Endpoint VPC and subnets, one endpoint subnet per AZ.</li>
+<li>Private DNS enabled; VPC DNS support and hostnames enabled.</li>
+<li>Endpoint SG inbound TCP 443 from approved caller/admin sources, and matching caller egress.</li>
+<li>Routes/NACLs and DNS forwarding for a corporate workstation outside the VPC.</li>
+<li>Explicit endpoint policies allowing the relevant principal, actions, and resources.</li>
+<li>Ownership/cost/teardown responsibility, especially for shared VPCs.<a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a><a class="ag-cite" href="#source-23" aria-label="Source 23">[23]</a></li>
+</ul>
+<p>The endpoint root takes <code>data_endpoint_policy_json</code> and <code>control_endpoint_policy_json</code> as required strings. Read policy files into these values through your company module/wrapper. Do not leave the default full-access endpoint policy as an accidental security choice.</p>
+<p>A data-plane policy should allow the approved caller's Start/Invoke/Stop/Get/ListSession actions on the exact custom ARN. The control-plane policy should allow the deployer management actions, with Create/List on <code>*</code> and supported resource-level actions scoped separately. IAM permissions, endpoint policy and SCPs must all permit the request.<a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a><a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a></p>
+<h3 id="bootstrap-and-verification">Bootstrap and verification</h3>
+<p>An isolated infrastructure runner cannot create its first private endpoints through those nonexistent endpoints. Have platform owners bootstrap the approved management path. Provider/module downloads, Python packages, credentials, Terraform state and Bedrock inference each need their own allowed route or mirror. AgentCore PrivateLink does not make the public package registry private.</p>
+<p>Read-only discovery:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws ec2 describe-vpc-endpoint-services --region us-west-2 \
+  --service-names \
+  com.amazonaws.us-west-2.bedrock-agentcore \
+  com.amazonaws.us-west-2.bedrock-agentcore-control
+</code></pre>
+<p>From the actual caller environment, verify that the normal regional AgentCore names resolve to the intended endpoint ENI private IPs, test API reachability, and inspect private flow evidence through the company's network controls. Merely creating an endpoint does not disable the service's public endpoint or enforce private-only use. If enforcement is required, review applicable IAM/SCP network-origin conditions and egress controls with security.<a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a></p>
+<p>A Bedrock-hosted model additionally needs its separate approved <code>bedrock-runtime</code> access path; do not confuse that with the AgentCore endpoint.</p>
+<h2 id="16-optional-sandbox-access-to-private-resources">16. Optional: sandbox access to private resources</h2>
+<p>Use this only for a real requirement such as a private synthetic database or an internal test API. Change the interpreter inputs:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-hcl">network_mode            = &quot;VPC&quot;
+tool_subnet_ids         = [&quot;subnet-REPLACE_ONE&quot;, &quot;subnet-REPLACE_TWO&quot;]
+tool_security_group_ids = [&quot;sg-REPLACE&quot;]
+</code></pre>
+<p>Supply real approved identifiers, then review the replacement plan. Do not use those illustrative strings literally.</p>
+<p>AWS currently lists <strong><code>usw2-az1</code>, <code>usw2-az2</code>, <code>usw2-az3</code></strong> for tool VPC connectivity. Verify subnet <strong>AZ IDs</strong>, not hard-coded <code>us-west-2a/b</code> letters. The reference requires at least two subnets as a POC design choice; the service supports 1-16.<a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a><a class="ag-cite" href="#source-20" aria-label="Source 20">[20]</a></p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws ec2 describe-subnets --region us-west-2 \
+  --subnet-ids subnet-REPLACE_ONE subnet-REPLACE_TWO \
+  --query 'Subnets[].{Id:SubnetId,Vpc:VpcId,AZID:AvailabilityZoneId,FreeIPs:AvailableIpAddressCount}'
+</code></pre>
+<h3 id="network-controls">Network controls</h3>
+<ul>
+<li>Tool SG egress only to the intended private test resource/port.</li>
+<li>Target SG ingress from the tool SG on that port.</li>
+<li>No broad production-network allow rules for a code-execution tool.</li>
+<li>Approved DNS and subnet IP capacity.</li>
+<li>If no internet is allowed, inspect existing default routes/NAT/firewall paths. A VPC attachment alone does not block internet.</li>
+<li>A public subnet does not give the service-managed ENI a public IP. Add NAT only if deliberately approved; it is not required for this POC.<a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a></li>
+</ul>
+<h3 id="schema-traps">Schema traps</h3>
+<p>Current Code Interpreter API uses:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-json">{
+  &quot;networkConfiguration&quot;: {
+    &quot;networkMode&quot;: &quot;VPC&quot;,
+    &quot;vpcConfig&quot;: {
+      &quot;subnets&quot;: [&quot;APPROVED_SUBNET_ID&quot;],
+      &quot;securityGroups&quot;: [&quot;APPROVED_SECURITY_GROUP_ID&quot;]
+    }
+  }
+}
+</code></pre>
+<p>Use <code>vpcConfig</code>, not the conflicting <code>networkModeConfig</code> shown in some generic VPC examples. Creation belongs to <code>bedrock-agentcore-control</code>. Terraform uses <code>vpc_config</code>. The shared API's <code>requireServiceS3Endpoint</code> setting is Runtime-only and must not be copied into this tool configuration.<a class="ag-cite" href="#source-20" aria-label="Source 20">[20]</a></p>
+<p>ECR/S3 image-layer endpoint instructions in the generic Runtime guide are not evidence that a Code Interpreter-only setup needs an ECR repository. Inventory only the AWS services your actual host/code path invokes.</p>
+<h2 id="17-packages-files-and-persistence">17. Packages, files and persistence</h2>
+<h3 id="package-installation">Package installation</h3>
+<p>The dependencies installed on your Python host are separate from packages available inside the sandbox. Begin with standard-library computations. Inventory interpreter packages at runtime before relying on pandas or plotting libraries. No-NAT/private mode will not automatically permit PyPI downloads.<a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a></p>
+<p>For extra packages, use approved preinstalled dependencies or upload vetted compatible wheels through the API/use an approved private artifact path. Check Python/platform compatibility, transitive dependencies, licenses and malware policy. Do not open internet egress simply to make <code>pip install</code> work.</p>
+<h3 id="artifact-persistence">Artifact persistence</h3>
+<p>Session-local scratch is temporary. Download approved artifacts before stop/expiry or use scoped, approved S3 operations if persistence becomes a requirement. The execution role, bucket policy and any KMS permissions must allow only the intended data path.<a class="ag-cite" href="#source-4" aria-label="Source 4">[4]</a><a class="ag-cite" href="#source-8" aria-label="Source 8">[8]</a></p>
+<p>AWS's session guide also mentions a 30-day session-data retention policy. Do not promise that stopping a session proves immediate deletion of every service-retained record; confirm retention/data-handling requirements with AWS and your company before introducing sensitive data.<a class="ag-cite" href="#source-4" aria-label="Source 4">[4]</a></p>
+<h3 id="advanced-mounts">Advanced mounts</h3>
+<p>Current APIs document S3 Files and EFS mounts for Code Interpreter. These bring VPC, mount targets, IAM and NFS connectivity requirements. The inspected SDK convenience <code>start</code> method and Terraform schemas do not expose all current mount options; generic backend path translation also needs care. Treat mounts as a separate follow-up, not a hidden dependency of sandbox execution.<a class="ag-cite" href="#source-14" aria-label="Source 14">[14]</a><a class="ag-cite" href="#source-45" aria-label="Source 45">[45]</a><a class="ag-cite" href="#source-49" aria-label="Source 49">[49]</a></p>
+<h2 id="18-limits-and-application-controls">18. Limits and application controls</h2>
+<p>Published Code Interpreter defaults include <strong>1,000 concurrent sessions</strong>, <strong>1,000 tool configurations</strong>, <strong>2 vCPU / 8 GB memory per session</strong>, <strong>10 GB disk</strong>, <strong>100 MB request/response payload</strong>, <strong>15-minute synchronous requests</strong>, and <strong>8-hour asynchronous commands</strong>. These are service defaults, not a guarantee of account capacity or measured throughput.<a class="ag-cite" href="#source-5" aria-label="Source 5">[5]</a></p>
+<p>Session TTL defaults to 900 seconds and can be configured up to 28,800 seconds. It is absolute. The reference direct test uses 600 seconds; the Deep Agents example uses 1,800 seconds.<a class="ag-cite" href="#source-7" aria-label="Source 7">[7]</a></p>
+<p>For the company POC, use stricter application controls:</p>
+<ul>
+<li>One active task initially; small synthetic files.</li>
+<li>Explicit task/session deadlines and a bounded agent recursion/tool-call budget before unattended use.</li>
+<li>Small model output caps and an approved model.</li>
+<li>No unbounded retry loop or automatic session recreation after expiry.</li>
+<li>Record interpreter ID, session ID, task owner, start/stop result and elapsed time without logging sensitive inputs or credentials.</li>
+<li>Reconcile outstanding sessions after crashes rather than relying only on local in-memory cleanup.</li>
+</ul>
+<p>The reference hello examples are intentionally small. Before exposing the agent to users, add your actual request timeout, model-call retry policy, concurrency limiter and authentication boundary. Do not mistake a POC script for a production multi-tenant service.</p>
+<h2 id="19-cost-controls">19. Cost controls</h2>
+<p>Current published table rates for Code Interpreter are <strong>$0.0895 per vCPU-hour</strong> and <strong>$0.00945 per GB-hour</strong>. Billing uses actual CPU and running peak-memory consumption with a one-second minimum, system overhead and a minimum memory charge. Session lifetime includes boot through termination; idle CPU may be free while memory still incurs charges.<a class="ag-cite" href="#source-6" aria-label="Source 6">[6]</a></p>
+<p>Budget with measured consumption, not just your script's execution duration:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-text">Interpreter cost = metered vCPU-hours * CPU rate
+                 + metered GB-hours * memory rate
+
+Total POC cost = interpreter + model inference + host
+               + optional endpoints/network + storage/telemetry
+</code></pre>
+<p>Do not infer a fixed 2-vCPU/8-GB charge from the maximum hardware limits. Do not quote a monthly total without the actual session/resource measurements and your company's prices.</p>
+<p>PrivateLink adds per-endpoint per-AZ-hour charges even with no active interpreter session, plus data processing. Check the regional quote before adding several endpoints. NAT, if later approved, adds separate costs. S3, KMS, Secrets Manager, CloudWatch and cross-AZ traffic may also contribute when used.<a class="ag-cite" href="#source-35" aria-label="Source 35">[35]</a></p>
+<p>Set an owner, expiry date, small spend alert and daily review for the POC. Spend alerts are notifications, not a hard execution cap. Explicit session stop, concurrency limits and teardown are the main controls.</p>
+<h2 id="20-troubleshooting-by-layer">20. Troubleshooting by layer</h2>
+<h3 id="terraform-does-not-recognize-the-resource-or-vpc-block">Terraform does not recognize the resource or VPC block</h3>
+<p>Check the selected provider in <code>.terraform.lock.hcl</code> and the initialized provider schema. The reference was validated with AWS 6.68.0. Do not use native block syntax in an AWSCC object attribute or assume an old corporate pin supports the same fields.<a class="ag-cite" href="#source-13" aria-label="Source 13">[13]</a><a class="ag-cite" href="#source-16" aria-label="Source 16">[16]</a></p>
+<h3 id="invalid-name-or-invalid-vpc-parameter">Invalid name or invalid VPC parameter</h3>
+<p>Use <code>agentcore_poc</code>, not a hyphenated tool name. Use <code>vpcConfig</code> in API payloads and <code>vpc_config</code> in native HCL. For VPC mode, verify real subnet/SG IDs, one VPC, supported AZ IDs and available IPs.<a class="ag-cite" href="#source-18" aria-label="Source 18">[18]</a><a class="ag-cite" href="#source-19" aria-label="Source 19">[19]</a><a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a></p>
+<h3 id="accessdenied-with-an-scp-indication">AccessDenied with an SCP indication</h3>
+<p>Return to section 3. An explicit deny requires an approved edit to the blocking policy; a missing allow requires permission at every hierarchy level. Do not retry with increasingly broad IAM policies. After an approved SCP change, test the exact failing action again with the same intended identity, then inspect boundary/session/endpoint policies if another denial appears.<a class="ag-cite" href="#source-50" aria-label="Source 50">[50]</a><a class="ag-cite" href="#source-51" aria-label="Source 51">[51]</a><a class="ag-cite" href="#source-52" aria-label="Source 52">[52]</a></p>
+<h3 id="accessdenied-during-provisioning">AccessDenied during provisioning</h3>
+<p>Check the deployer identity/account/region, SCP and boundary, Create/Get/tag permissions, and PassRole for the exact execution role. VPC first use additionally needs the network service-linked role path. IAM propagation may delay recognition; do not solve it with FullAccess or a wildcard PassRole.<a class="ag-cite" href="#source-14" aria-label="Source 14">[14]</a><a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a><a class="ag-cite" href="#source-30" aria-label="Source 30">[30]</a></p>
+<h3 id="accessdenied-starting-or-invoking-a-session">AccessDenied starting or invoking a session</h3>
+<p>Check caller IAM against the <strong>returned custom ARN</strong>, not a built-in ARN pattern. For PrivateLink, check its endpoint policy as well. A successful GetCodeInterpreter under the deployer does not prove the application caller is authorized.<a class="ag-cite" href="#source-25" aria-label="Source 25">[25]</a><a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a></p>
+<h3 id="connection-timeout-before-the-api-responds">Connection timeout before the API responds</h3>
+<p>Check workstation/runner proxy and CA trust first. On a private path, verify DNS resolves to the intended ENIs, routing and TCP 443 SG/NACL rules. Do not add NAT reflexively. Verify whether the failure is AgentCore, STS credential refresh or the separate model endpoint.</p>
+<h3 id="sdk-works-but-the-agent-fails">SDK works but the agent fails</h3>
+<p>Inspect the actual tool messages, model tool-calling support and inference permissions. Check the sandbox-package source identity, factory argument names and explicit custom ID. Re-run the direct smoke to separate service behavior from the adapter.</p>
+<h3 id="command-fails-but-agent-reports-success">Command fails but agent reports success</h3>
+<p>Inspect the raw stream's <code>isError</code>, exception events and <code>structuredContent.exitCode</code>. Reproduce the known released-adapter fixture. Do not equate a fluent final answer, empty stderr, or HTTP 200 with success.<a class="ag-cite" href="#source-9" aria-label="Source 9">[9]</a><a class="ag-cite" href="#source-38" aria-label="Source 38">[38]</a><a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a></p>
+<h3 id="upload-reports-success-but-file-is-missing">Upload reports success but file is missing</h3>
+<p>Download and compare the bytes. Prepare nested directories. Check path mapping and sandbox cwd. The released adapter's upload failure reporting is a known caveat.<a class="ag-cite" href="#source-44" aria-label="Source 44">[44]</a><a class="ag-cite" href="#source-38" aria-label="Source 38">[38]</a></p>
+<h3 id="session-unexpectedly-expires-or-switches-interpreter">Session unexpectedly expires or switches interpreter</h3>
+<p>TTL is absolute. Never reuse a disposed backend. The SDK can implicitly start the default built-in interpreter after local IDs are cleared; create a new explicitly configured session instead.<a class="ag-cite" href="#source-7" aria-label="Source 7">[7]</a><a class="ag-cite" href="#source-45" aria-label="Source 45">[45]</a></p>
+<h3 id="pip-install-fails-inside-the-sandbox"><code>pip install</code> fails inside the sandbox</h3>
+<p>Check network mode and approved artifact path, not host dependencies. SANDBOX is not general internet mode. Keep the baseline standard-library-only.<a class="ag-cite" href="#source-3" aria-label="Source 3">[3]</a></p>
+<h3 id="cleanup-or-sgsubnet-deletion-fails">Cleanup or SG/subnet deletion fails</h3>
+<p>First list/stop sessions and verify the custom interpreter is deleted. In the VPC extension, shared managed ENIs may remain for up to eight hours. Do not forcibly delete AWS-managed ENIs or shared platform networking.<a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a></p>
+<h2 id="21-teardown-follow-the-resource-owner">21. Teardown: follow the resource owner</h2>
+<ol>
+<li>Download approved results before stopping.</li>
+<li>Stop all POC sessions, including ones left by a crashed process. Use the exact custom interpreter ID.</li>
+<li>Read session state back; if cleanup failed, record the IDs and escalate rather than claiming completion.</li>
+<li>Review and apply a destroy plan in the owning Terraform state.</li>
+<li>Confirm the custom interpreter is no longer addressable by its ID.</li>
+<li>Remove only POC-owned policies/artifacts/endpoints. Review retained logs and storage separately.</li>
+</ol>
+<p>Useful session-management commands:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws bedrock-agentcore list-code-interpreter-sessions \
+  --region us-west-2 \
+  --code-interpreter-identifier &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+
+aws bedrock-agentcore stop-code-interpreter-session \
+  --region us-west-2 \
+  --code-interpreter-identifier &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot; \
+  --session-id 'REPLACE_WITH_EXACT_SESSION_ID'
+
+aws bedrock-agentcore get-code-interpreter-session \
+  --region us-west-2 \
+  --code-interpreter-identifier &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot; \
+  --session-id 'REPLACE_WITH_EXACT_SESSION_ID'
+</code></pre>
+<p>Handle all pages when listing sessions; a first page is not a complete cleanup inventory.</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">terraform -chdir=terraform/interpreter plan -destroy -out=destroy.tfplan
+terraform -chdir=terraform/interpreter show -no-color destroy.tfplan
+terraform -chdir=terraform/interpreter apply destroy.tfplan
+
+aws bedrock-agentcore-control get-code-interpreter \
+  --region us-west-2 \
+  --code-interpreter-id &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+</code></pre>
+<p>The final management lookup should report that the exact resource is not found. Save the ID before destroying outputs. The native provider waits for deletion; its create/delete timeouts default to 30 minutes.<a class="ag-cite" href="#source-13" aria-label="Source 13">[13]</a><a class="ag-cite" href="#source-14" aria-label="Source 14">[14]</a></p>
+<p>If you created dedicated PrivateLink endpoints, destroy them through their own reviewed state only after verifying no other workload uses them. Endpoint billing continues otherwise. Leave shared VPCs, subnets, platform SGs and the shared network service-linked role intact.<a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a><a class="ag-cite" href="#source-30" aria-label="Source 30">[30]</a><a class="ag-cite" href="#source-35" aria-label="Source 35">[35]</a></p>
+<h3 id="manual-resource-cleanup-if-it-was-never-imported">Manual resource cleanup (if it was never imported)</h3>
+<p>After stopping and verifying all sessions, the approved deployer can delete the manually created tool:</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-bash">aws bedrock-agentcore-control delete-code-interpreter \
+  --region us-west-2 \
+  --code-interpreter-id &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+aws bedrock-agentcore-control get-code-interpreter \
+  --region us-west-2 \
+  --code-interpreter-id &quot;$AGENTCORE_CODE_INTERPRETER_ID&quot;
+</code></pre>
+<p>Deletion may be asynchronous. Read back until the exact ID is not found, or escalate a deletion failure. Do not use Terraform destroy to clean up an unimported manual resource, and do not manually delete a Terraform-owned resource behind its state. After teardown, have policy owners remove dedicated IAM access and expire/restore the approved SCP exception through change control. Do not detach shared organization guardrails yourself.</p>
+<h2 id="22-poc-sign-off-checklist">22. POC sign-off checklist</h2>
+<ul>
+<li>[ ] Security approved account, region, SANDBOX mode and public/private API route.</li>
+<li>[ ] Applicable SCP allow/deny path reviewed by the organization owner; no guardrails bypassed.</li>
+<li>[ ] Console/CLI creation read back as READY; caller uses the exact custom ARN.</li>
+<li>[ ] If Terraform adoption was chosen, import/plan reviewed with no unintended replacement.</li>
+<li>[ ] Caller policy uses the returned ARN; execution role has no production-data access.</li>
+<li>[ ] Direct smoke passed binary transfer, computation, failure classification and session isolation.</li>
+<li>[ ] Deep Agents emitted a real sandbox tool call and its output was checked.</li>
+<li>[ ] Optional LangChain toolkit demonstrated the same intended custom interpreter.</li>
+<li>[ ] Chosen adapter release/source passed negative exit/timeout/upload tests; known published defects are not waived silently.</li>
+<li>[ ] Synthetic CSV exercise produced a downloaded artifact verified on the host.</li>
+<li>[ ] No prohibited egress, cross-region inference or external telemetry path was introduced.</li>
+<li>[ ] Stop failures/crash cleanup were tested and sessions read back as terminated.</li>
+<li>[ ] Cost owner and expiry are recorded; final resources/storage/endpoints reconciled.</li>
+</ul>
+<p><strong>Recommendation:</strong> keep the first POC at SANDBOX plus API file transfer. Make the decision about private connectivity with security. Add interpreter VPC mode only after proving a private-resource requirement. Treat adapter failure handling as an acceptance criterion before moving to production.</p>
+<h2 id="appendix-a-reference-bundle-contents">Appendix A. Reference bundle contents</h2>
+<ul>
+<li><code>prepare_poc.py</code>: local JSON generator; no AWS calls or policy attachment.</li>
+<li><code>policy-examples/</code>: illustrative SCP/IAM/request files for review, not applied policies.</li>
+<li><code>local_execute.py</code>: standalone first local-to-AWS script, requiring only boto3.</li>
+<li><code>prerequisites_verify.py</code>: generator, action-catalog, request-schema and local-client tests.</li>
+<li><code>terraform/interpreter/main.tf</code>: account-guarded SANDBOX baseline and conditional VPC mode.</li>
+<li><code>terraform/interpreter/tests/offline.tftest.hcl</code>: four mock-provider tests; Terraform &gt;=1.7.</li>
+<li><code>terraform/interpreter/terraform.tfvars.example</code>: illustrative inputs, not real company identifiers.</li>
+<li><code>terraform/endpoints/main.tf</code>: optional platform-owned data/control PrivateLink endpoints.</li>
+<li><code>execution-role-trust.json.example</code>: trust template for platform review.</li>
+<li><code>requirements-candidate.txt</code>: full dependency snapshot with immutable sandbox source pin.</li>
+<li><code>requirements-release.lock</code>: published-package comparison environment.</li>
+<li><code>direct_smoke.py</code>: explicit opt-in live service tests and cleanup read-back.</li>
+<li><code>agentcore_examples.py</code>: Deep Agents and plain LangChain functions exercised offline.</li>
+<li><code>run_agent.py</code>: explicit opt-in live CLI using the approved Bedrock model.</li>
+<li><code>offline_verify.py</code>: local fake-model/mock-SDK checks; blocks socket connections during tests.</li>
+<li><code>verification.txt</code>: captured local verification output.</li>
+</ul>
+<p>All commands in application sections assume the working directory is <code>reference/</code>. Markdown/PDF and reference files contain no company credentials or account-specific findings. Replace illustrative identifiers only after company approval.</p>
+<h2 id="appendix-b-complete-deep-agents-and-langchain-functions">Appendix B. Complete Deep Agents and LangChain functions</h2>
+<p>The following is the actual tested reference module. Calling these functions without mocked transport makes AWS/model calls.</p>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-python">&quot;&quot;&quot;AWS examples: importing is safe; calling requires AWS and a tool-capable model.&quot;&quot;&quot;
+from bedrock_agentcore.tools.code_interpreter_client import CodeInterpreter
+from langchain_agentcore_codeinterpreter import AgentCoreSandbox
+from deepagents import create_deep_agent
+from langchain.agents import create_agent
+from langchain_aws.tools import create_code_interpreter_toolkit
+
+REGION = &quot;us-west-2&quot;
+
+
+def run_deep(model, interpreter_id: str, boto3_session=None):
+    # interpreter_id must be the pre-provisioned READY custom interpreter ID.
+    interpreter = CodeInterpreter(region=REGION, session=boto3_session)
+    interpreter.start(identifier=interpreter_id, session_timeout_seconds=1800)
+    try:
+        backend = AgentCoreSandbox(interpreter=interpreter)
+        # Relative paths avoid assuming a service-specific sandbox cwd.
+        uploaded = backend.upload_files([(&quot;input.txt&quot;, b&quot;hello\n&quot;)])
+        if uploaded[0].error:
+            raise RuntimeError(uploaded[0].error)
+        # Read-back matters: release 0.0.5 may falsely report an upload success.
+        downloaded = backend.download_files([&quot;input.txt&quot;])[0]
+        if downloaded.error or downloaded.content != b&quot;hello\n&quot;:
+            raise RuntimeError(&quot;Upload read-back failed&quot;)
+        agent = create_deep_agent(
+            model=model, backend=backend,
+            system_prompt=&quot;Run cat input.txt with execute and report its output.&quot;
+        )
+        return agent.invoke({&quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Read input.txt using the shell.&quot;}]})
+    finally:
+        interpreter.stop()
+
+
+async def run_plain(model, interpreter_id: str, thread_id: str):
+    # Native supported LangChain toolkit; no custom tool adapter.
+    toolkit, tools = await create_code_interpreter_toolkit(
+        region=REGION, code_interpreter_identifier=interpreter_id
+    )
+    config = {&quot;configurable&quot;: {&quot;thread_id&quot;: thread_id}}
+    try:
+        by_name = {tool.name: tool for tool in tools}
+        # Creates the session lazily; same config keeps upload and execution together.
+        await by_name[&quot;upload_file&quot;].ainvoke(
+            {&quot;path&quot;: &quot;input.txt&quot;, &quot;content&quot;: &quot;hello\n&quot;}, config=config
+        )
+        agent = create_agent(model=model, tools=tools,
+                             system_prompt=&quot;Run cat input.txt with execute_command and report its output.&quot;)
+        return await agent.ainvoke(
+            {&quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Read input.txt using the shell.&quot;}]},
+            config=config,
+        )
+    finally:
+        # One toolkit per request here; stops every session it created.
+        await toolkit.cleanup()
+
+
+# Explicit opt-in production invocation only (not run during research):
+# import asyncio, os
+# from langchain_aws import ChatBedrockConverse
+# model = ChatBedrockConverse(model_id=os.environ[&quot;BEDROCK_MODEL_ID&quot;], region_name=REGION)
+# result = run_deep(model, os.environ[&quot;AGENTCORE_CODE_INTERPRETER_ID&quot;])
+# result = asyncio.run(run_plain(model, os.environ[&quot;AGENTCORE_CODE_INTERPRETER_ID&quot;], &quot;unique-job-id&quot;))
+</code></pre>
+<h2 id="appendix-c-complete-interpreter-terraform-root">Appendix C. Complete interpreter Terraform root</h2>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-hcl">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;= 6.68.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region              = &quot;us-west-2&quot;
+  allowed_account_ids = [var.account_id]
+  default_tags {
+    tags = {
+      Purpose = &quot;agentcore-code-interpreter-poc&quot;
+      Owner   = var.owner
+    }
+  }
+}
+
+variable &quot;account_id&quot; {
+  type = string
+  validation {
+    condition     = can(regex(&quot;^[0-9]{12}$&quot;, var.account_id))
+    error_message = &quot;Supply the approved company account ID.&quot;
+  }
+}
+variable &quot;owner&quot; { type = string }
+variable &quot;execution_role_arn&quot; { type = string }
+variable &quot;network_mode&quot; {
+  type    = string
+  default = &quot;SANDBOX&quot;
+  validation {
+    condition     = contains([&quot;SANDBOX&quot;, &quot;VPC&quot;], var.network_mode)
+    error_message = &quot;This POC permits SANDBOX or approved VPC mode; PUBLIC is intentionally excluded.&quot;
+  }
+}
+variable &quot;tool_subnet_ids&quot; {
+  type    = set(string)
+  default = []
+}
+variable &quot;tool_security_group_ids&quot; {
+  type    = set(string)
+  default = []
+}
+
+resource &quot;aws_bedrockagentcore_code_interpreter&quot; &quot;poc&quot; {
+  name               = &quot;agentcore_poc&quot;
+  description        = &quot;Deep Agents Code Interpreter POC&quot;
+  execution_role_arn = var.execution_role_arn
+  network_configuration {
+    network_mode = var.network_mode
+    dynamic &quot;vpc_config&quot; {
+      for_each = var.network_mode == &quot;VPC&quot; ? [1] : []
+      content {
+        subnets         = var.tool_subnet_ids
+        security_groups = var.tool_security_group_ids
+      }
+    }
+  }
+  lifecycle {
+    precondition {
+      condition = var.network_mode != &quot;VPC&quot; || (
+        length(var.tool_subnet_ids) &gt;= 2 &amp;&amp; length(var.tool_subnet_ids) &lt;= 16 &amp;&amp;
+        length(var.tool_security_group_ids) &gt;= 1 &amp;&amp; length(var.tool_security_group_ids) &lt;= 16
+      )
+      error_message = &quot;VPC requires 2-16 approved subnets in distinct supported AZs and 1-16 security groups.&quot;
+    }
+  }
+  timeouts {
+    create = &quot;30m&quot;
+    delete = &quot;30m&quot;
+  }
+}
+
+output &quot;code_interpreter_id&quot; {
+  value = aws_bedrockagentcore_code_interpreter.poc.code_interpreter_id
+}
+output &quot;code_interpreter_arn&quot; {
+  value = aws_bedrockagentcore_code_interpreter.poc.code_interpreter_arn
+}
+output &quot;caller_policy_json&quot; {
+  value = jsonencode({
+    Version = &quot;2012-10-17&quot;
+    Statement = [{
+      Effect = &quot;Allow&quot;
+      Action = [
+        &quot;bedrock-agentcore:StartCodeInterpreterSession&quot;,
+        &quot;bedrock-agentcore:InvokeCodeInterpreter&quot;,
+        &quot;bedrock-agentcore:StopCodeInterpreterSession&quot;,
+        &quot;bedrock-agentcore:GetCodeInterpreterSession&quot;,
+        &quot;bedrock-agentcore:ListCodeInterpreterSessions&quot;
+      ]
+      Resource = aws_bedrockagentcore_code_interpreter.poc.code_interpreter_arn
+    }]
+  })
+}
+</code></pre>
+<h2 id="appendix-d-architecture-and-network-decision-reference">Appendix D. Architecture and network decision reference</h2>
+<h3 id="a-where-the-agent-application-runs">A. Where the agent application runs</h3>
+<p>For this POC, run Python on an approved developer workstation or an existing company runner. Deep Agents does not have to run in AgentCore Runtime to use the Code Interpreter sandbox.<a class="ag-cite" href="#source-36" aria-label="Source 36">[36]</a></p>
+<p>The host needs an AWS credential source and permitted HTTPS reachability to AgentCore. The host also needs a separate permitted connection to the selected model provider. Do not place model calls inside the code sandbox merely because it can execute Python.</p>
+<h3 id="b-how-the-host-calls-the-aws-api">B. How the host calls the AWS API</h3>
+<p>Choose one:</p>
+<ul>
+<li><strong>Regional HTTPS service endpoint:</strong> simplest baseline, if company policy permits. Calls remain IAM-authenticated. A publicly reachable service endpoint is not anonymous access.</li>
+<li><strong>PrivateLink:</strong> private API connectivity from a VPC or a privately routed corporate network. Private DNS, routing, endpoint policies, and caller IAM must all work. Code Interpreter supports both data-plane and control-plane endpoints.<a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a></li>
+</ul>
+<p>PrivateLink does not require the interpreter itself to use VPC network mode. It controls the host-to-service path; tool VPC configuration controls a different path.<a class="ag-cite" href="#source-1" aria-label="Source 1">[1]</a><a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a></p>
+<h3 id="c-what-network-access-executed-code-receives">C. What network access executed code receives</h3>
+<ul>
+<li><strong>SANDBOX:</strong> managed isolation with limited supported AWS access, including S3 data operations. No attachment to your customer VPC is needed. Do not describe this mode as an air gap or assume public package installation works.<a class="ag-cite" href="#source-3" aria-label="Source 3">[3]</a></li>
+<li><strong>PUBLIC:</strong> executed code can reach public internet resources. Excluded from the reference Terraform to avoid accidental enablement.<a class="ag-cite" href="#source-13" aria-label="Source 13">[13]</a></li>
+<li><strong>VPC:</strong> executed code can reach resources through approved VPC subnets and security groups. Effective egress depends on routes and controls; VPC mode alone does not prove that internet access is blocked.<a class="ag-cite" href="#source-2" aria-label="Source 2">[2]</a></li>
+</ul>
+<h3 id="baseline-flow">Baseline flow</h3>
+<pre tabindex="0" role="region" aria-label="Code example; scroll horizontally if needed"><code class="language-text">Approved workstation / existing runner
+  Python: Deep Agents + approved model client
+       |                       |
+       | IAM + HTTPS           | separate approved inference path
+       v                       v
+AgentCore data-plane API      Approved model
+       |
+       v
+Custom Code Interpreter: SANDBOX
+  isolated session -&gt; temporary files + code execution
+       |
+       +-- artifacts returned through API to host
+
+Terraform / platform identity
+       |
+       +-- control-plane API -&gt; custom interpreter configuration
+</code></pre>
+<h3 id="when-to-extend-the-baseline">When to extend the baseline</h3>
+<ul>
+<li>Company forbids public AWS API paths: use <strong>SANDBOX + PrivateLink</strong>.</li>
+<li>Code must query a private database/internal API: use <strong>VPC mode</strong>, with PrivateLink independently selected for the host path.</li>
+<li>Company allows regional HTTPS endpoints and the task only processes uploaded files: keep <strong>SANDBOX</strong>, with no VPC extension.</li>
+</ul>
+<p><strong>Stop and ask security if the first condition is unknown.</strong> A company account does not imply a mandatory VPC, but it also does not imply permission to use public endpoints.</p><h2 id="sources">Sources</h2><ol class="ag-sources"><li id="source-1"><span>[1]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html</a></li><li id="source-2"><span>[2]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-vpc.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-vpc.html</a></li><li id="source-3"><span>[3]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-management.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-management.html</a></li><li id="source-4"><span>[4]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-session-characteristics.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-session-characteristics.html</a></li><li id="source-5"><span>[5]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html</a></li><li id="source-6"><span>[6]</span> <a href="https://aws.amazon.com/bedrock/agentcore/pricing">https://aws.amazon.com/bedrock/agentcore/pricing</a></li><li id="source-7"><span>[7]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_StartCodeInterpreterSession.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_StartCodeInterpreterSession.html</a></li><li id="source-8"><span>[8]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-s3-integration.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-s3-integration.html</a></li><li id="source-9"><span>[9]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeCodeInterpreter.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeCodeInterpreter.html</a></li><li id="source-13"><span>[13]</span> <a href="https://raw.githubusercontent.com/hashicorp/terraform-provider-aws/v6.68.0/website/docs/r/bedrockagentcore_code_interpreter.html.markdown">https://raw.githubusercontent.com/hashicorp/terraform-provider-aws/v6.68.0/website/docs/r/bedrockagentcore_code_interpreter.html.markdown</a></li><li id="source-14"><span>[14]</span> <a href="https://raw.githubusercontent.com/hashicorp/terraform-provider-aws/v6.68.0/internal/service/bedrockagentcore/code_interpreter.go">https://raw.githubusercontent.com/hashicorp/terraform-provider-aws/v6.68.0/internal/service/bedrockagentcore/code_interpreter.go</a></li><li id="source-15"><span>[15]</span> <a href="https://raw.githubusercontent.com/hashicorp/terraform-provider-awscc/v1.105.0/docs/resources/bedrockagentcore_code_interpreter_custom.md">https://raw.githubusercontent.com/hashicorp/terraform-provider-awscc/v1.105.0/docs/resources/bedrockagentcore_code_interpreter_custom.md</a></li><li id="source-16"><span>[16]</span> <a href="https://raw.githubusercontent.com/hashicorp/terraform-provider-awscc/v1.105.0/internal/aws/bedrockagentcore/code_interpreter_custom_resource_gen.go">https://raw.githubusercontent.com/hashicorp/terraform-provider-awscc/v1.105.0/internal/aws/bedrockagentcore/code_interpreter_custom_resource_gen.go</a></li><li id="source-17"><span>[17]</span> <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-codeinterpretercustom.html">https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-codeinterpretercustom.html</a></li><li id="source-18"><span>[18]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore-control/latest/APIReference/API_CreateCodeInterpreter.html">https://docs.aws.amazon.com/bedrock-agentcore-control/latest/APIReference/API_CreateCodeInterpreter.html</a></li><li id="source-19"><span>[19]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore-control/latest/APIReference/API_CodeInterpreterNetworkConfiguration.html">https://docs.aws.amazon.com/bedrock-agentcore-control/latest/APIReference/API_CodeInterpreterNetworkConfiguration.html</a></li><li id="source-20"><span>[20]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore-control/latest/APIReference/API_VpcConfig.html">https://docs.aws.amazon.com/bedrock-agentcore-control/latest/APIReference/API_VpcConfig.html</a></li><li id="source-23"><span>[23]</span> <a href="https://docs.aws.amazon.com/vpc/latest/privatelink/create-interface-endpoint.html">https://docs.aws.amazon.com/vpc/latest/privatelink/create-interface-endpoint.html</a></li><li id="source-25"><span>[25]</span> <a href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_bedrock-agentcore.html">https://docs.aws.amazon.com/service-authorization/latest/reference/list_bedrock-agentcore.html</a></li><li id="source-26"><span>[26]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-session-management.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-session-management.html</a></li><li id="source-27"><span>[27]</span> <a href="https://docs.aws.amazon.com/cloudcontrolapi/latest/userguide/security.html">https://docs.aws.amazon.com/cloudcontrolapi/latest/userguide/security.html</a></li><li id="source-28"><span>[28]</span> <a href="https://docs.aws.amazon.com/cloudcontrolapi/latest/userguide/resource-operations.html">https://docs.aws.amazon.com/cloudcontrolapi/latest/userguide/resource-operations.html</a></li><li id="source-29"><span>[29]</span> <a href="https://docs.aws.amazon.com/cloudcontrolapi/latest/userguide/vpc-interface-endpoints.html">https://docs.aws.amazon.com/cloudcontrolapi/latest/userguide/vpc-interface-endpoints.html</a></li><li id="source-30"><span>[30]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/service-linked-roles.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/service-linked-roles.html</a></li><li id="source-35"><span>[35]</span> <a href="https://aws.amazon.com/privatelink/pricing">https://aws.amazon.com/privatelink/pricing</a></li><li id="source-36"><span>[36]</span> <a href="https://docs.langchain.com/oss/python/deepagents/data-analysis">https://docs.langchain.com/oss/python/deepagents/data-analysis</a></li><li id="source-38"><span>[38]</span> <a href="https://files.pythonhosted.org/packages/24/6f/4a5f80869c319eb5a74b98b397a3164879bfa98309fd20804a171ece3501/langchain_agentcore_codeinterpreter-0.0.5-py3-none-any.whl">https://files.pythonhosted.org/packages/24/6f/4a5f80869c319eb5a74b98b397a3164879bfa98309fd20804a171ece3501/langchain_agentcore_codeinterpreter-0.0.5-py3-none-any.whl</a></li><li id="source-39"><span>[39]</span> <a href="https://pypi.org/pypi/bedrock-agentcore/json">https://pypi.org/pypi/bedrock-agentcore/json</a></li><li id="source-40"><span>[40]</span> <a href="https://pypi.org/pypi/deepagents/json">https://pypi.org/pypi/deepagents/json</a></li><li id="source-41"><span>[41]</span> <a href="https://pypi.org/pypi/langchain/json">https://pypi.org/pypi/langchain/json</a></li><li id="source-42"><span>[42]</span> <a href="https://pypi.org/pypi/langchain-aws/json">https://pypi.org/pypi/langchain-aws/json</a></li><li id="source-44"><span>[44]</span> <a href="https://raw.githubusercontent.com/langchain-ai/langchain-aws/a0e80b9febaf21cf1cead8f0dc16b3ffd8633976/libs/agentcore-codeinterpreter/langchain_agentcore_codeinterpreter/sandbox.py">https://raw.githubusercontent.com/langchain-ai/langchain-aws/a0e80b9febaf21cf1cead8f0dc16b3ffd8633976/libs/agentcore-codeinterpreter/langchain_agentcore_codeinterpreter/sandbox.py</a></li><li id="source-45"><span>[45]</span> <a href="https://raw.githubusercontent.com/aws/bedrock-agentcore-sdk-python/45260c882cb6adab7b24446fffb38009f92fae2c/src/bedrock_agentcore/tools/code_interpreter_client.py">https://raw.githubusercontent.com/aws/bedrock-agentcore-sdk-python/45260c882cb6adab7b24446fffb38009f92fae2c/src/bedrock_agentcore/tools/code_interpreter_client.py</a></li><li id="source-47"><span>[47]</span> <a href="https://raw.githubusercontent.com/langchain-ai/langchain-aws/a0e80b9febaf21cf1cead8f0dc16b3ffd8633976/libs/aws/langchain_aws/tools/code_interpreter_toolkit.py">https://raw.githubusercontent.com/langchain-ai/langchain-aws/a0e80b9febaf21cf1cead8f0dc16b3ffd8633976/libs/aws/langchain_aws/tools/code_interpreter_toolkit.py</a></li><li id="source-49"><span>[49]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-filesystem-configurations.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-filesystem-configurations.html</a></li><li id="source-50"><span>[50]</span> <a href="https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html">https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html</a></li><li id="source-51"><span>[51]</span> <a href="https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html">https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html</a></li><li id="source-52"><span>[52]</span> <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_access-denied.html">https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_access-denied.html</a></li><li id="source-53"><span>[53]</span> <a href="https://docs.aws.amazon.com/cli/latest/reference/organizations/list-policies-for-target.html">https://docs.aws.amazon.com/cli/latest/reference/organizations/list-policies-for-target.html</a></li><li id="source-54"><span>[54]</span> <a href="https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/create-code-interpreter.html">https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/create-code-interpreter.html</a></li><li id="source-55"><span>[55]</span> <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-create.html">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-create.html</a></li><li id="source-56"><span>[56]</span> <a href="https://servicereference.us-east-1.amazonaws.com/v1/bedrock-agentcore/bedrock-agentcore.json">https://servicereference.us-east-1.amazonaws.com/v1/bedrock-agentcore/bedrock-agentcore.json</a></li><li id="source-57"><span>[57]</span> <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html">https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html</a></li><li id="source-58"><span>[58]</span> <a href="https://docs.aws.amazon.com/cli/latest/reference/organizations/list-parents.html">https://docs.aws.amazon.com/cli/latest/reference/organizations/list-parents.html</a></li><li id="source-59"><span>[59]</span> <a href="https://docs.aws.amazon.com/cli/latest/reference/iam/put-role-policy.html">https://docs.aws.amazon.com/cli/latest/reference/iam/put-role-policy.html</a></li></ol></div>
+</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · bedrock-agentcore-code-interpreter-poc</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>
