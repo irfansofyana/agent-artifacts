@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "WeKnora company setup: workspaces, RBAC and SSO",
+      "slug": "weknora-company-guide",
+      "description": "A source-audited guide to WeKnora permissions, shared spaces, Google and JumpCloud login, with three interactive diagrams and a rollout checklist.",
+      "createdAt": "2026-10-16",
+      "type": "html",
+      "url": "artifacts/weknora-company-guide/"
+    },
+    {
       "title": "AWS AgentCore Code Interpreter: practical POC runbook",
       "slug": "bedrock-agentcore-code-interpreter-poc",
       "description": "Prerequisites, SCP and IAM approval, console/CLI creation, local Python, Deep Agents/LangChain, and Terraform adoption with downloadable PDF and source files.",
