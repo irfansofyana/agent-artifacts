@@ -24,6 +24,7 @@ artifact from both hosts.
 | WeKnora least-privilege issue map | <https://artifacts.irfansp.dev/weknora-least-privilege/> | `weknora-least-privilege` | `build_weknora_lp_page.py` |
 | Getting started with UAEF | <https://artifacts.irfansp.dev/uaef-getting-started/> | `uaef-getting-started` | `build.py` |
 | Running Hermes and OpenClaw on AWS | <https://artifacts.irfansp.dev/hermes-openclaw-aws/> | `hermes-openclaw-aws` | `gen.py` |
+| Open-source projects that use AI to fix GitLab vulnerabilities | <https://open-source-projects-that-use-ai-to-fix-gitlab-vulnerabilities.irfansp.here.now/> | not mounted (here.now slug `zephyr-flint-3na3`) | `build.py` |
 
 Rebuild and republish (the mount keeps the URL):
 

@@ -111,6 +111,10 @@ figcaption a { color: var(--ink-2); }
 figcaption a:hover { color: var(--ink); }
 img, svg { max-width: 100%; height: auto; }
 
+/* ---- embedded diagram viewer (Archify document; its own colour is media) ---- */
+.viewer { margin: 40px 0 0; }
+.viewer iframe { display: block; width: 100%; height: clamp(620px, 86vh, 1040px); border: 1px solid var(--rule); border-radius: var(--radius); background: var(--canvas); }
+
 /* ---- citations + sources ---- */
 sup.cite { font-size: 13px; line-height: 0; margin-left: 0.15em; }
 sup.cite a { color: var(--ink-2); text-decoration: none; font-size: inherit; padding: 0 0.1em; }

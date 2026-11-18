@@ -34,9 +34,11 @@ REGISTRY = "https://artifacts.irfansp.dev/"
 CSS_FILE = os.path.join(W, "site.css")
 
 # build name -> candidate source names inside CUBE_EKS_DIAGRAM_DIR
+# The Archify exports are the diagram itself, so they keep their own bytes and
+# are published as *.html viewers; the Scandinavian host pages wrap them.
 DIAGRAM_FILES = {
-    "diagram.html": ("diagram.html", "cubesandbox-eks.html"),
-    "diagram-en.html": ("diagram-en.html", "cubesandbox-eks-en.html"),
+    "diagram-view.html": ("diagram.html", "cubesandbox-eks.html"),
+    "diagram-view-en.html": ("diagram-en.html", "cubesandbox-eks-en.html"),
     "diagram-light.png": ("diagram-light.png",),
     "diagram-dark.png": ("diagram-dark.png",),
     "diagram-en-light.png": ("diagram-en-light.png",),
@@ -152,7 +154,29 @@ def render(lang, cfg, blocks, toc, srcs):
             )
         else:
             body.append(b)
-    tochtml = "".join(f'<li><a href="#{s}">{esc(t)}</a></li>' for s, t in toc)
+
+    if cfg.get("viewer"):
+        body = [
+            '<div class="viewer">'
+            f'<iframe src="{cfg["viewer"]}" title="{esc(cfg["viewer_title"])}" loading="lazy"></iframe>'
+            "</div>"
+        ]
+        toc, srcs = [], []
+
+    toc_nav = ""
+    if toc:
+        tochtml = "".join(f'<li><a href="#{s}">{esc(t)}</a></li>' for s, t in toc)
+        toc_nav = (f'  <nav class="toc" aria-label="{esc(cfg["toc_label"])}">\n'
+                   f'    <p>{esc(cfg["toc_label"])}</p>\n'
+                   f"    <ol>{tochtml}</ol>\n"
+                   f"  </nav>\n")
+
+    sources = ""
+    if srcs:
+        sources = (f'<h2 id="sources">{esc(cfg["sources_label"])}</h2>\n'
+                   f'<ol class="sources">\n{"".join(srcs)}\n</ol>\n')
+
+    foot_note = f'<p>{cfg["footer"]}</p>\n    ' if cfg.get("footer") else ""
 
     def link(label, href, cur):
         attr = ' aria-current="page"' if cur else ""
@@ -170,7 +194,7 @@ def render(lang, cfg, blocks, toc, srcs):
 <meta name="description" content="{esc(cfg["description"])}">
 <meta property="og:title" content="{esc(cfg["og_title"])}">
 <meta property="og:description" content="{esc(cfg["description"])}">
-<meta property="og:type" content="article">
+<meta property="og:type" content="{'article' if not cfg.get('viewer') else 'website'}">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="assets/page.css">
 </head>
@@ -193,22 +217,13 @@ def render(lang, cfg, blocks, toc, srcs):
     <h1>{esc(cfg["h1"])}</h1>
     <p class="lede">{cfg["lede"]}</p>
   </header>
-  <nav class="toc" aria-label="{esc(cfg["toc_label"])}">
-    <p>{esc(cfg["toc_label"])}</p>
-    <ol>{tochtml}</ol>
-  </nav>
-  <main id="main">
+{toc_nav}  <main id="main">
 {"".join(body)}
-<h2 id="sources">{esc(cfg["sources_label"])}</h2>
-<ol class="sources">
-{"".join(srcs)}
-</ol>
-  </main>
+{sources}  </main>
 </div>
 <footer class="foot">
   <div class="page">
-    <p>{cfg["footer"]}</p>
-    <p class="footmeta">{esc(SLUG)} &middot; <a href="{REGISTRY}">artifacts.irfansp.dev</a></p>
+    {foot_note}<p class="footmeta">{esc(SLUG)} &middot; <a href="{REGISTRY}">artifacts.irfansp.dev</a></p>
   </div>
 </footer>
 <script>
@@ -312,6 +327,39 @@ PAGES = [
     ("article-options-en.md", "en", EN_OPTIONS),
 ]
 
+# The Archify diagram documents get a Scandinavian host page so the artifact
+# reads as one system; the viewer itself is embedded unchanged (its colour is
+# diagram content, and every viewer control stays reachable).
+DIAGRAM_ID = dict(
+    out="diagram.html",
+    viewer="diagram-view.html",
+    viewer_title="CubeSandbox di Amazon EKS Jakarta (ap-southeast-3) — diagram interaktif",
+    title="CubeSandbox di Amazon EKS Jakarta (ap-southeast-3): diagram",
+    description="Diagram arsitektur CubeSandbox di Amazon EKS Jakarta (ap-southeast-3), dapat di-zoom, dicari, dan diganti tema.",
+    og_title="CubeSandbox di Amazon EKS Jakarta (ap-southeast-3)",
+    h1="CubeSandbox di Amazon EKS Jakarta (ap-southeast-3)",
+    eyebrow="Diagram",
+    lede="Arsitektur CubeSandbox di EKS Jakarta.",
+    docs=[("Riset CubeSandbox", "index.html", False), ("Opsi sandbox", "sandbox-options.html", False)],
+    switch=[("Bahasa Indonesia", "diagram.html", True), ("English", "diagram-en.html", False)],
+    docs_label="Navigasi", lang_label="Bahasa", registry_label="Registry", skip="Lewati ke konten",
+)
+DIAGRAM_EN = dict(
+    out="diagram-en.html",
+    viewer="diagram-view-en.html",
+    viewer_title="CubeSandbox on Amazon EKS Jakarta (ap-southeast-3) — interactive diagram",
+    title="CubeSandbox on Amazon EKS Jakarta (ap-southeast-3): diagram",
+    description="CubeSandbox architecture diagram for Amazon EKS Jakarta (ap-southeast-3), with zoom, search, and themes.",
+    og_title="CubeSandbox on Amazon EKS Jakarta (ap-southeast-3)",
+    h1="CubeSandbox on Amazon EKS Jakarta (ap-southeast-3)",
+    eyebrow="Diagram",
+    lede="CubeSandbox architecture on EKS Jakarta.",
+    docs=[("CubeSandbox research", "index-en.html", False), ("Sandbox options", "sandbox-options-en.html", False)],
+    switch=[("Bahasa Indonesia", "diagram.html", False), ("English", "diagram-en.html", True)],
+    docs_label="Navigation", lang_label="Language", registry_label="Registry", skip="Skip to content",
+)
+VIEWERS = [("id", DIAGRAM_ID), ("en", DIAGRAM_EN)]
+
 
 def stage_shared():
     os.makedirs(os.path.join(ASSETS, "fonts"), exist_ok=True)
@@ -348,6 +396,8 @@ def main():
     for md, lang, cfg in PAGES:
         blocks, toc, srcs = parse(os.path.join(W, md))
         render(lang, cfg, blocks, toc, srcs)
+    for lang, cfg in VIEWERS:
+        render(lang, cfg, [], [], [])
     print(f"build output: {OUT}")
 
 
