@@ -20,10 +20,10 @@ DATE_ID = "18 November 2026"
 # Ranked by GitHub stars, with GitLab fit and licence shown beside each row.
 # Each row: name, url, stars, licence, what it does, gitlab fit, status.
 ROWS = [
-    ("OpenHands", "https://github.com/OpenHands/OpenHands", 93747, "MIT",
+    ("OpenHands", "https://github.com/OpenHands/OpenHands", 93749, "MIT",
      "AI agent platform for software engineering. Fix-and-PR is a use case built on it, not a built-in scanner integration.",
      "None in its README.", "Mature"),
-    ("Strix", "https://github.com/usestrix/strix", 76457, "Apache-2.0",
+    ("Strix", "https://github.com/usestrix/strix", 76460, "Apache-2.0",
      "AI penetration testing that finds and fixes app vulnerabilities.",
      "Lists GitLab among DevSecOps integrations. Fix-PR behaviour on GitLab not verified.", "Active"),
     ("Shannon", "https://github.com/KeygraphHQ/shannon", 52040, "AGPL-3.0",
@@ -40,7 +40,7 @@ ROWS = [
      "None specific to security.", "Active"),
     ("Renovate", "https://github.com/renovatebot/renovate", 23167, "AGPL-3.0",
      "Dependency update bot that opens merge requests for version bumps. Deterministic, not AI.",
-     "GitLab support not checked in this run. Covers dependency CVEs, not code bugs.", "Active"),
+     "Documented GitLab platform: creates merge requests when platform=gitlab. Not an AI fixer. Covers dependency updates, not code bugs.", "Active"),
     ("Semgrep engine", "https://github.com/semgrep/semgrep", 17801, "LGPL-2.1",
      "SAST engine (LGPL-2.1). AI Autofix that opens fix MRs is in the paid platform, not the engine.",
      "First-class GitLab integration; the README names GitLab among its users.", "Active"),
@@ -53,9 +53,9 @@ ROWS = [
     ("Buttercup", "https://github.com/trailofbits/buttercup", 1757, "AGPL-3.0",
      "Trail of Bits' DARPA AIxCC cyber reasoning system: fuzzing plus multi-agent LLM patching, with fixes checked by a test build.",
      "No GitLab integration found in its README. Its fixes are checked against the project's build and tests.", "Active"),
-    ("VulnHunter (Capital One)", "https://github.com/capitalone/vulnhunter", None, "Not verified",
+    ("VulnHunter (Capital One)", "https://github.com/capitalone/vulnhunter", 1181, "Apache-2.0",
      "Claude Code skills: hunts exploitable bugs, writes a failing test, then proposes a fix.",
-     "No GitLab support found in the README.", "Licence not checked"),
+     "No GitLab support found in the README.", "Last push Oct 2026"),
     ("OpenHands vulnerability-fixer", "https://github.com/OpenHands/vulnerability-fixer", 31, "MIT",
      "OpenHands app: Trivy scan, then agents open one PR per selected fix.",
      "GitHub only, per its README.", "Prototype"),
@@ -92,7 +92,7 @@ EN = {
         ("vendor", "Vendor features (not open source)", None),
         ("method", "How this was checked", [
             "Star counts, licences, last push dates and descriptions came from the GitHub REST API on 18 November 2026. READMEs were read from raw.githubusercontent.com. Claims about GitLab support come from README text and GitLab's own docs, not from running the tools.",
-            "Not verified in this run: whether Strix, Shannon or Renovate open fix MRs on GitLab in practice; whether VulnHunter is licensed; the exact GitLab support status of Renovate.",
+            "Not verified by running them: whether Strix or Shannon open fix MRs on GitLab. Renovate's docs say it creates GitLab merge requests; this run did not execute Renovate. VulnHunter's licence is Apache-2.0, read from the repo LICENSE file.",
             "Star counts change daily. Re-check before you decide.",
         ]),
         ("sources", "Sources", None),
@@ -120,7 +120,7 @@ ID = {
         ("vendor", "Fitur vendor (bukan open source)", None),
         ("method", "Cara pengecekannya", [
             "Jumlah bintang, lisensi, tanggal push terakhir, dan deskripsi diambil dari GitHub REST API pada 18 November 2026. README dibaca dari raw.githubusercontent.com. Klaim dukungan GitLab berasal dari teks README dan dokumentasi GitLab, bukan dari menjalankan tool-nya.",
-            "Belum diverifikasi di riset ini: apakah Strix, Shannon, atau Renovate benar-benar membuka MR fix di GitLab; apakah VulnHunter berlisensi; status dukungan GitLab di Renovate secara tepat.",
+            "Belum dijalankan di riset ini: apakah Strix atau Shannon benar-benar membuka MR fix di GitLab. Dokumentasi Renovate bilang dia membuat merge request di GitLab; Renovate tidak dijalankan di sini. Lisensi VulnHunter Apache-2.0, dibaca dari file LICENSE di repo.",
             "Jumlah bintang berubah setiap hari. Cek ulang sebelum memutuskan.",
         ]),
         ("sources", "Sumber", None),
@@ -150,6 +150,8 @@ SOURCES = [
     ("Semgrep: Rule-defined fix", "https://docs.semgrep.dev/writing-rules/rule-defined-fix.md"),
     ("Semgrep: Autofix for Semgrep Code", "https://docs.semgrep.dev/semgrep-code/triage-remediation/autofix"),
     ("GitHub changelog: agentic autofix GA", "https://github.blog/changelog/2026-10-15-agentic-autofix-for-code-scanning-alerts-general-availability/"),
+    ("Renovate docs: GitLab platform", "https://docs.renovatebot.com/modules/platform/gitlab/"),
+    ("VulnHunter LICENSE (Apache-2.0)", "https://raw.githubusercontent.com/capitalone/vulnhunter/main/LICENSE"),
 ]
 
 CSS_HREF = "assets/page.css"
@@ -212,8 +214,7 @@ def render_page(lang):
         sections.append(
             f"<section id=\"{sid}\" class=\"chapter\"><h2>{esc(heading)}</h2>{inner}</section>"
         )
-    other_href, _ = lang["switch"]
-    switch_label = lang["other_lang_label"]
+    switch_label, other_href = lang["switch"]
     return f"""<!doctype html>
 <html lang="{lang['lang']}">
 <head>
