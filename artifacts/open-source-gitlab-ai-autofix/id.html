@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proyek open-source yang pakai AI untuk memperbaiki kerentanan GitLab</title>
+<meta name="description" content="Diurutkan berdasarkan bintang GitHub, dengan kecocokan GitLab dan lisensi. Proyek open-source mana yang memakai AI untuk memperbaiki temuan keamanan dari GitLab, dan mana yang cukup layak dipakai.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/page.css">
+<style id="herenow-theme">
+:root[data-theme="light"] {
+  color-scheme: light;
+  --canvas: #ffffff; --ink: #000000;
+  --ink-2: rgb(0 0 0 / 64%); --ink-3: rgb(0 0 0 / 56%);
+  --rule: rgb(0 0 0 / 10%); --rule-strong: rgb(0 0 0 / 18%);
+  --tint: rgb(0 0 0 / 3%); --hover: rgb(0 0 0 / 5%);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0a0a0a; --ink: #ffffff;
+  --ink-2: rgb(255 255 255 / 56%); --ink-3: rgb(255 255 255 / 46%);
+  --rule: rgb(255 255 255 / 12%); --rule-strong: rgb(255 255 255 / 22%);
+  --tint: rgb(255 255 255 / 5%); --hover: rgb(255 255 255 / 9%);
+}
+.theme-switch { padding-top: 8px; padding-bottom: 8px; }
+.theme-switch button {
+  background: none; border: 0; padding: 8px 0; margin: 0; cursor: pointer;
+  color: var(--ink-2); font: inherit; font-size: 14px;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.theme-switch button:hover { color: var(--ink); }
+.theme-switch button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+</style>
+<script>
+(function(){
+  var t = null;
+  try { t = localStorage.getItem('herenow-theme'); } catch (e) {}
+  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<style id="herenow-registry-link">
+body > .registry-back {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 24px 0;
+  font-size: 14px;
+}
+body > .registry-back a {
+  color: var(--ink-2, var(--text-secondary, CanvasText));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+body > .registry-back a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+</style>
+
+<meta property="og:title" content="Open source projects that use AI to fix GitLab vulnerabilities" />
+<meta property="og:description" content="A research report evaluating open-source AI tools for remediating GitLab security findings, ranked by GitHub stars and platform compatibility." />
+<meta property="og:url" content="https://artifacts.irfansp.dev/open-source-gitlab-ai-autofix/id.html" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" /></head>
+<body>
+<a class="skip" href="#site-main">Skip to content</a>
+<header class="masthead">
+  <div class="page">
+    <p class="wordmark">Research</p>
+    <nav aria-label="Language">
+      <a href="index.html">English</a>
+    </nav>
+  <nav class="registry-back" aria-label="Artifact registry"><a data-registry-link href="https://artifacts.irfansp.dev/">All artifacts</a></nav></div>
+</header><div class="page theme-switch"><button type="button" data-theme-switch>Theme: System</button></div>
+<main id="site-main" class="page">
+  <header class="hero">
+    <p class="eyebrow">Riset · GitLab × AI remediation · 18 November 2026</p>
+    <h1>Proyek open-source yang pakai AI untuk memperbaiki kerentanan GitLab</h1>
+    <p class="lede">Jawaban singkatnya: belum ada proyek open-source yang sekaligus banyak dipakai dan dibangun untuk memperbaiki temuan GitLab pakai AI. Pemberi fix AI dengan bintang terbanyak umumnya generik atau berpusat di GitHub. Yang khusus GitLab masih baru dan adopsinya belum banyak.</p>
+  </header>
+  <section id="s-verdict" class="chapter"><h2>Kesimpulan</h2><p>Kalau butuh alur fix GitLab sekarang, pakai Semgrep untuk temuan dan saran perbaikannya, plus agentic resolution dari GitLab Duo kalau kamu di tier Ultimate. Keduanya dipercaya banyak tim. Tapi dua-duanya bukan pipeline AI fix yang sepenuhnya open.</p><p>Kalau butuh alur AI fix yang open dan self-hosted, belum ada proyek di bawah yang aman dijadikan default. SecureFix paling cocok untuk GitLab, tapi belum punya lisensi dan belum ada adopsinya. OpenHands punya adopsi, tapi vulnerability-fixer-nya prototipe yang hanya untuk GitHub.</p><p>Bintang mengukur perhatian, bukan apakah fix-nya benar. Saya tidak menjalankan satu pun tool ini terhadap proyek GitLab. Anggap ini shortlist untuk diuji, bukan vonis soal kualitas.</p><p>Kalau syaratnya draft MR dari CI, Codex Security yang dokumentasinya menjelaskan job itu. Pixee dan Aikido juga membuka MR GitLab, dari layanan mereka sendiri, bukan dari template yang di-import.</p></section><section id="s-decision" class="chapter"><h2>Keputusan, 19 November 2026</h2><p>Tujuannya fixer yang gampang diadopsi tim lain, berbentuk job CI, dan berhenti di draft merge request.</p><p>Bisa, di job yang kita tulis sendiri. codex-security scan --patch --create-pr bisa scan, patch, lalu buka draft MR. Pipeline GitLab resmi tidak bisa melakukan itu tanpa OpenAI key yang sudah punya akses Codex Security.</p><p>Tanpa program itu, CLI tetap menerima OpenRouter, Fireworks, dan Bedrock. LiteLLM bukan nilai --provider. Arahkan CLI ke sana lewat override Codex, dan alias-nya harus mencantumkan /v1/responses di supported_endpoints. Route yang dijembatani membuang field yang dibutuhkan scan.</p><p>MR hanya terbuka untuk patch yang verified. Push-nya lokal: glab plus project token dengan scope api dan write_repository. CI_JOB_TOKEN tidak bisa membuat MR. Model Daybreak tetap di belakang Trusted Access, jadi sebagian kelas temuan bisa ditolak model di belakang gateway. Kombinasi ini belum dijalankan.</p><p>Tabel open-source tetap tidak punya proyek yang banyak dipakai untuk loop ini. Catatan Codex Security ada di https://artifacts.irfansp.dev/codex-security-gitlab/.</p></section><section id="s-ranking" class="chapter"><h2>Kandidat open-source, diurutkan berdasarkan bintang GitHub</h2><div class="table-wrap" tabindex="0"><table><thead><tr><th scope="col">Proyek</th><th scope="col">Bintang</th><th scope="col">Lisensi</th><th scope="col">Fungsinya</th><th scope="col">Kecocokan GitLab</th><th scope="col">Status</th></tr></thead><tbody><tr><th scope="row"><a href="https://github.com/OpenHands/OpenHands">OpenHands</a></th><td class="num">93,749</td><td>MIT</td><td>AI agent platform for software engineering. Fix-and-PR is a use case built on it, not a built-in scanner integration.</td><td>None in its README.</td><td>Mature</td></tr><tr><th scope="row"><a href="https://github.com/usestrix/strix">Strix</a></th><td class="num">76,460</td><td>Apache-2.0</td><td>AI penetration testing that finds and fixes app vulnerabilities.</td><td>Lists GitLab among DevSecOps integrations. Fix-PR behaviour on GitLab not verified.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/KeygraphHQ/shannon">Shannon</a></th><td class="num">52,040</td><td>AGPL-3.0</td><td>AI pentester for web apps and APIs that checks source code for exploitable issues.</td><td>Official GitLab CI/CD component. Fix generation not verified.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/aider-AI/aider">Aider</a></th><td class="num">50,167</td><td>Apache-2.0</td><td>Terminal AI pair programmer. General-purpose, not a security pipeline.</td><td>None found. You would wire it into a pipeline yourself.</td><td>Last push May 2026</td></tr><tr><th scope="row"><a href="https://github.com/aquasecurity/trivy">Trivy</a></th><td class="num">39,503</td><td>Apache-2.0</td><td>Scanner for containers, IaC, dependencies and secrets. Finds issues, does not fix them.</td><td>Scanner that runs as a CLI, so it can sit in any CI. GitLab not tested here. No AI fix.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/continuedev/continue">Continue</a></th><td class="num">36,510</td><td>Apache-2.0</td><td>Open-source coding agent (from its GitHub description).</td><td>None specific to security.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/renovatebot/renovate">Renovate</a></th><td class="num">23,167</td><td>AGPL-3.0</td><td>Dependency update bot that opens merge requests for version bumps. Deterministic, not AI.</td><td>Documented GitLab platform: creates merge requests when platform=gitlab. Not an AI fixer. Covers dependency updates, not code bugs.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/semgrep/semgrep">Semgrep engine</a></th><td class="num">17,801</td><td>LGPL-2.1</td><td>SAST engine (LGPL-2.1). AI Autofix that opens fix MRs is in the paid platform, not the engine.</td><td>First-class GitLab integration; the README names GitLab among its users.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/github/codeql">CodeQL</a></th><td class="num">10,382</td><td>MIT</td><td>Query libraries and engine behind GitHub code scanning. Scanner, GitHub-centric.</td><td>Not a GitLab-native fixer. Autofix is a GitHub Copilot feature.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/opengrep/opengrep">Opengrep</a></th><td class="num">3,357</td><td>LGPL-2.1</td><td>Open fork of Semgrep CE. Scanner only, no AI fix.</td><td>Scanner that runs as a CLI. GitLab not tested here.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/trailofbits/buttercup">Buttercup</a></th><td class="num">1,757</td><td>AGPL-3.0</td><td>Trail of Bits&#x27; DARPA AIxCC cyber reasoning system: fuzzing plus multi-agent LLM patching, with fixes checked by a test build.</td><td>No GitLab integration found in its README. Its fixes are checked against the project&#x27;s build and tests.</td><td>Active</td></tr><tr><th scope="row"><a href="https://github.com/capitalone/vulnhunter">VulnHunter (Capital One)</a></th><td class="num">1,181</td><td>Apache-2.0</td><td>Claude Code skills: hunts exploitable bugs, writes a failing test, then proposes a fix.</td><td>No GitLab support found in the README.</td><td>Last push Oct 2026</td></tr><tr><th scope="row"><a href="https://github.com/OpenHands/vulnerability-fixer">OpenHands vulnerability-fixer</a></th><td class="num">31</td><td>MIT</td><td>OpenHands app: Trivy scan, then agents open one PR per selected fix.</td><td>GitHub only, per its README.</td><td>Prototype</td></tr><tr><th scope="row"><a href="https://github.com/mkamranr/securefix">SecureFix</a></th><td class="num">0</td><td>None (no LICENSE file)</td><td>GitLab SAST triage and validated fixes, using a self-hosted vLLM model. Air-gap ready.</td><td>Built for GitLab: reads the SAST report, opens fix MRs. Needs GitLab Ultimate.</td><td>New, single author</td></tr></tbody></table></div></section><section id="s-vendor" class="chapter"><h2>Fitur vendor (bukan open source)</h2><ul><li><a href="https://docs.gitlab.com/user/application_security/vulnerabilities/agentic_vulnerability_resolution/">GitLab Duo Agentic SAST Vulnerability Resolution</a>. Generally available since GitLab 18.11. Opens an MR with a fix for High and Critical SAST findings on the default branch. Needs GitLab Ultimate, GitLab Duo Agent Platform, and the flows turned on.</li><li><a href="https://docs.gitlab.com/user/application_security/remediate/duo/">GitLab Duo Vulnerability Resolution (non-agentic)</a>. Creates an MR suggestion comment on a SAST finding. Ultimate tier, default model Anthropic Claude Sonnet 4.6, and the output needs review.</li></ul></section><section id="s-draft_mr" class="chapter"><h2>Membuka merge request</h2><p>Tabel open-source tidak punya tool yang banyak dipakai dan membuka MR fix GitLab dari CI. Component GitLab Shannon yang open-source tidak mencakup remediation. Fix pull request ada di Shannon berbayar, dan dokumentasinya tidak bilang MR-nya mendarat di GitLab.</p><p>Dari tool di bawah, hanya Codex Security yang mendokumentasikan jalurnya sebagai job GitLab CI, dan job itu YAML yang ditempel, bukan CI/CD Catalog component. Pixee dan Aikido membuka MR dari platform mereka. Alur agentic GitLab Duo, di daftar vendor di atas, juga membuka MR di tier Ultimate.</p><ul><li><a href="https://learn.chatgpt.com/docs/security/cli/ci/gitlab">Codex Security</a>. OpenAI, masih research preview. Contoh GitLab CI resminya membuka draft MR kalau CODEX_SECURITY_CREATE_MR true, di branch codex-security/fix-&lt;finding-hash&gt;, dan tidak pernah merge. YAML-nya ditempel, bukan include. Butuh OpenAI key yang punya akses Codex Security. Ingest SARIF butuh GitLab Ultimate 19.2 atau lebih baru. Contohnya mem-pin CLI di 0.8.1.</li><li><a href="https://docs.pixee.ai/integrations/scms/gitlab/">Pixee</a>. Komersial. Membuka merge request GitLab untuk temuan SAST dan dependency lewat token service-account dan webhook. Dokumentasinya bilang .gitlab-ci.yml tidak perlu diubah. Jalan di GitLab.com dan GitLab self-hosted. Bukan template CI yang bisa di-import.</li><li><a href="https://help.aikido.dev/autofix-and-remediation/configure/autofix-pr-configuration">Aikido AutoFix</a>. Komersial. Membuka merge request GitLab, dan ada setting untuk menandainya sebagai draft. Konfigurasinya UI Aikido plus file .aikido opsional, bukan CI include.</li></ul></section><section id="s-method" class="chapter"><h2>Cara pengecekannya</h2><p>Jumlah bintang, lisensi, tanggal push terakhir, dan deskripsi diambil dari GitHub REST API pada 18 November 2026. README dibaca dari raw.githubusercontent.com. Klaim dukungan GitLab berasal dari teks README dan dokumentasi GitLab, bukan dari menjalankan tool-nya.</p><p>Belum dijalankan di riset ini: apakah Strix atau Shannon benar-benar membuka MR fix di GitLab. Dokumentasi Renovate bilang dia membuat merge request di GitLab; Renovate tidak dijalankan di sini. Lisensi VulnHunter Apache-2.0, dibaca dari file LICENSE di repo.</p><p>Jumlah bintang berubah setiap hari. Cek ulang sebelum memutuskan.</p></section><section id="s-sources" class="chapter"><h2>Sumber</h2><ol class="sources"><li><a href="https://docs.gitlab.com/user/application_security/vulnerabilities/agentic_vulnerability_resolution/">GitLab Docs: Agentic SAST Vulnerability Resolution</a></li><li><a href="https://docs.gitlab.com/user/application_security/vulnerabilities/">GitLab Docs: Vulnerability details</a></li><li><a href="https://docs.gitlab.com/user/application_security/remediate/duo/">GitLab Docs: Resolve vulnerabilities with AI</a></li><li><a href="https://docs.gitlab.com/releases/18/gitlab-18-9-released/">GitLab 18.9 release notes</a></li><li><a href="https://about.gitlab.com/blog/gitlab-18-10-brings-ai-native-triage-and-remediation/">GitLab 18.10: AI-native triage and remediation</a></li><li><a href="https://docs.gitlab.com/user/application_security/sast/">GitLab Docs: Static application security testing (SAST)</a></li><li><a href="https://github.com/mkamranr/securefix">SecureFix repository</a></li><li><a href="https://raw.githubusercontent.com/mkamranr/securefix/main/README.md">SecureFix README</a></li><li><a href="https://github.com/OpenHands/vulnerability-fixer">OpenHands vulnerability-fixer repository</a></li><li><a href="https://raw.githubusercontent.com/OpenHands/vulnerability-fixer/main/README.md">OpenHands vulnerability-fixer README</a></li><li><a href="https://www.openhands.dev/blog/20260303-vulnerability-fixer">OpenHands: Vulnerability Fixer announcement</a></li><li><a href="https://github.com/trailofbits/buttercup">Buttercup repository</a></li><li><a href="https://raw.githubusercontent.com/trailofbits/buttercup/main/LICENSE">Buttercup LICENSE (AGPL-3.0)</a></li><li><a href="https://blog.trailofbits.com/2025/08/08/buttercup-is-now-open-source/">Trail of Bits: Buttercup is now open source</a></li><li><a href="https://docs.semgrep.dev/faq/comparisons/opengrep-1">Opengrep vs Semgrep CE comparison</a></li><li><a href="https://docs.semgrep.dev/writing-rules/rule-defined-fix.md">Semgrep: Rule-defined fix</a></li><li><a href="https://docs.semgrep.dev/semgrep-code/triage-remediation/autofix">Semgrep: Autofix for Semgrep Code</a></li><li><a href="https://github.blog/changelog/2026-10-15-agentic-autofix-for-code-scanning-alerts-general-availability/">GitHub changelog: agentic autofix GA</a></li><li><a href="https://docs.renovatebot.com/modules/platform/gitlab/">Renovate docs: GitLab platform</a></li><li><a href="https://raw.githubusercontent.com/capitalone/vulnhunter/main/LICENSE">VulnHunter LICENSE (Apache-2.0)</a></li><li><a href="https://learn.chatgpt.com/docs/security/cli/ci/gitlab">Codex Security: Run in GitLab CI/CD</a></li><li><a href="https://docs.pixee.ai/integrations/scms/gitlab/">Pixee: GitLab integration</a></li><li><a href="https://help.aikido.dev/autofix-and-remediation/configure/autofix-pr-configuration">Aikido: AutoFix PR configuration</a></li><li><a href="https://keygraph.io/open-source">Shannon: open source vs paid remediation</a></li><li><a href="https://learn.chatgpt.com/docs/security/cli/reference">Codex Security CLI reference</a></li><li><a href="https://docs.litellm.ai/docs/response_api_native_passthrough">LiteLLM: native /v1/responses passthrough</a></li><li><a href="https://artifacts.irfansp.dev/codex-security-gitlab/">Codex Security on GitLab, companion page</a></li></ol></section>
+</main>
+<footer class="page foot">
+  <p>Catatan riset, bukan runbook yang sudah teruji. Tidak ada kandidat yang dijalankan terhadap proyek GitLab.</p>
+</footer>
+<script>
+(function(){
+  var b = document.querySelector('[data-theme-switch]');
+  if (!b) return;
+  var order = ['system', 'light', 'dark'];
+  var names = { system: 'System', light: 'Light', dark: 'Dark' };
+  function cur() { return document.documentElement.getAttribute('data-theme') || 'system'; }
+  function show() {
+    var c = cur();
+    b.textContent = 'Theme: ' + names[c];
+    b.setAttribute('aria-label', 'Colour theme: ' + names[c] + '. Activate to change.');
+  }
+  show();
+  b.addEventListener('click', function () {
+    var n = order[(order.indexOf(cur()) + 1) % order.length];
+    if (n === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', n);
+    try {
+      if (n === 'system') localStorage.removeItem('herenow-theme');
+      else localStorage.setItem('herenow-theme', n);
+    } catch (e) {}
+    show();
+  });
+})();
+</script>
+</body>
+</html>

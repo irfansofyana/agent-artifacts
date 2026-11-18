@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light"><meta name="description" content="Research notes on OpenAI&#39;s Codex Security for a GitLab workflow: what is usable today, the facts that decide the design, the limits not to promise, and the assumptions still unverified."><title>Codex Security on GitLab: what actually works, and where it stops · Irfan's AI agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><header class="masthead"><div class="page masthead-inner"><p class="wordmark"><a href="../../">← All artifacts</a></p><nav aria-label="Site navigation"><a href="../../">Registry</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav></div></header><main id="site-main" class="page"><header class="artifact-hero"><p class="eyebrow">18 Nov 2026 · html</p><h1>Codex Security on GitLab: what actually works, and where it stops</h1><p class="lede">Research notes on OpenAI&#39;s Codex Security for a GitLab workflow: what is usable today, the facts that decide the design, the limits not to promise, and the assumptions still unverified.</p></header><div class="article-layout article-layout--plain"><div class="artifact-body"><div data-artifact-content class="legacy-content">
+<p>Other copies of this page: <a href="index-id.html">Bahasa Indonesia</a>.</p>
+<main>
+<header class="hero">
+<p class="eyebrow">Research &middot; Codex Security &times; GitLab &middot; 18 November 2026</p>
+<h1>Codex Security on GitLab: what actually works, and where it stops</h1>
+<p class="lede">Research notes on OpenAI's Codex Security for a GitLab workflow: what is usable today, the facts that decide the design, the limits not to promise, and the assumptions still unverified.</p>
+<nav class="switch" aria-label="Language navigation">
+<a href="index.html" aria-current="page">English</a><span class="sep">&middot;</span><a href="index-id.html">Bahasa Indonesia</a>
+</nav>
+</header>
+<div class="chapters">
+
+<h2>Summary</h2>
+
+<p>Codex Security is OpenAI's application security agent, still in research preview. It ships as a CLI
+(<code>@openai/codex-security</code>, binaries <code>cs</code> and <code>codex-security</code>), a TypeScript SDK, one
+GitHub Action, and a Codex plugin. What separates it from an ordinary scanner: it reasons over source rather than
+matching signatures, so on internal platform code it produces far less noise.</p>
+
+<p>The genuinely useful part today is narrower than that. <code>validate</code>, <code>patch</code> and
+<code>verify-fix</code> accept a finding as literal text or a file path, so a GitLab SAST or DAST finding can be handed
+to the agent without running Codex Security's own scanner at all. That is what flips the order of work: the backlog
+GitLab already produced is the immediate problem, while scanning for unreported vulnerabilities can wait until the fix
+loop is trusted.</p>
+
+<div class="note">
+<p>Fix-first. Take findings that were already reported, assess them, then patch. Scanning for vulnerabilities nobody
+has reported still matters, but it depends on two things that are not proven yet: a Responses-native gateway alias and
+a model behind it that can honour a schema. Both have to close first.</p>
+</div>
+
+<h2>Decision, 19 November 2026</h2>
+
+<p>Rechecked against the current CLI docs. Not from running the job.</p>
+
+<ul>
+<li>The official GitLab pipeline cannot be used without Codex Security access. A job you write can still call the CLI.</li>
+<li><code>scan --patch --create-pr</code> is the loop that ends in a draft MR. That flag is not locked to the official YAML. LiteLLM is not a <code>--provider</code> value. Reach it with <code>--codex</code> overrides and <code>wire_api = "responses"</code>. The alias must serve <code>/v1/responses</code> natively.</li>
+<li>The MR appears only when the patch is verified. Without Trusted Access, Daybreak models are unavailable, and some finding classes can be refused. Not run on a real runner.</li>
+<li>The open-source comparison is on the <a href="https://artifacts.irfansp.dev/open-source-gitlab-ai-autofix/">companion page</a>.</li>
+</ul>
+
+<h2>Two jobs that are easy to confuse</h2>
+
+<p>Mixing these two up costs weeks of work in the wrong direction: one job scans a repository for vulnerabilities
+nobody has reported, the other assesses and fixes a finding somebody already reported. The second one does not need the
+first one to run.</p>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table: the two jobs">
+<table>
+<thead><tr>
+<th style="width:22%">Job</th>
+<th>What it does</th>
+</tr></thead><tbody>
+<tr>
+<td>Scan</td>
+<td>Hunts for vulnerabilities nobody has reported yet. Needs a repo-specific threat model, analysis, then sandboxed validation.</td>
+</tr>
+<tr>
+<td>Assess &amp; fix</td>
+<td>Assesses and fixes a finding another scanner already reported. It does not need its own scanner to run: the finding arrives as literal text or a file path.</td>
+</tr>
+</tbody></table></div>
+
+<h2>CLI capability map</h2>
+
+<p>7 commands matter here. The top four carry the fix-first flow; the rest are workbench operations on
+saved results.</p>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table: CLI capability map">
+<table>
+<thead><tr>
+<th style="width:24%">Command</th>
+<th>Purpose</th>
+</tr></thead><tbody>
+<tr>
+<td><code>scan</code></td>
+<td>Scans the repository, selected paths, or a diff. Modes <code>standard</code> and <code>deep</code>.</td>
+</tr>
+<tr>
+<td><code>validate</code></td>
+<td>Assesses one candidate finding against source, in a read-only sandbox.</td>
+</tr>
+<tr>
+<td><code>patch</code></td>
+<td>Generates and verifies a fix, optionally opening a draft PR or MR.</td>
+</tr>
+<tr>
+<td><code>verify-fix</code></td>
+<td>Independent check of whether an issue is actually fixed.</td>
+</tr>
+<tr>
+<td><code>scan import</code></td>
+<td>Loads findings already in the Codex Security schema, as CSV or JSON.</td>
+</tr>
+<tr>
+<td><code>publish findings</code></td>
+<td>Imports an external scanner report into the workbench.</td>
+</tr>
+<tr>
+<td><code>findings, scans, export,<br>dedupe, classify-severity,<br>suggest-owners</code></td>
+<td>Workbench operations on saved results.</td>
+</tr>
+</tbody></table></div>
+
+<h2>The fix-first flow</h2>
+
+<ol>
+<li>Take the finding from any source. GitLab SAST/DAST, the vulnerability report, GitHub code scanning, Sonar, Snyk,
+Semgrep, all of them work.</li>
+<li>Write one statement per finding naming the rule, the location and the observation, for example
+<code>[sast 101, severity high] SQL injection in report filter at src/reports/query.py:42</code>.</li>
+<li><code>validate</code> first. Read-only: it does not build, run tests, execute the application, or contact
+services. Gate the next step on its verdict.</li>
+<li><code>patch --create-pr --assess-patch-risk</code> only for the findings that validated.</li>
+<li><code>verify-fix</code> when a fix already landed and you want an independent read.</li>
+</ol>
+
+<p>Keep assess and patch as two reviewable stages. Validation costs model calls and nothing else; patching touches a
+branch. A person still decides what gets patched.</p>
+
+<figure class="figure"><div class="flow"><div class="box"><b>GitLab findings</b>SAST/DAST artifacts, or the project vulnerability report.</div><div class="arrow" aria-hidden="true">&#8594;</div><div class="box"><b>One statement per finding</b>Names the rule, file and line. The ones without a location go to triage.</div><div class="arrow" aria-hidden="true">&#8594;</div><div class="box"><b>validate</b>Read-only assessment through the gateway. Confirms or rejects.</div><div class="arrow" aria-hidden="true">&#8594;</div><div class="box"><b>patch</b>Fix verified, committed to a branch, opened as a draft MR.</div></div><figcaption>The fix-first flow: only findings <code>validate</code> confirmed reach the patch stage.</figcaption></figure>
+
+<h2>Facts that decide the design</h2>
+
+<ul>
+<li><code>validate</code> has no <code>--json</code>. To gate it mechanically, force structure with
+<code>--output-schema</code> and a small JSON Schema. If the model's output does not match the schema the command exits
+2 and writes nothing. Without this a pipeline can only guess.</li>
+<li><code>patch</code> returns <code>verified</code>, <code>no_change</code>, <code>blocked</code> or
+<code>failed</code>. Only <code>verified</code> results are committed. <code>SANDBOX_UNAVAILABLE</code> and
+<code>NO_PATCH_APPLIED</code> are operational outcomes, not security judgements, and file changes alone are not proof
+of a fix.</li>
+<li>Patching a supplied finding requires a clean tree. Work in a temp directory outside the checkout and copy artifacts
+out only after patching finishes. If a selected file already has local edits, the CLI leaves the patch in the working
+tree for review instead of publishing it.</li>
+<li><code>--create-pr</code> opens a draft PR or MR through <code>gh</code> or <code>glab</code> and never merges. A
+failed push prints a <code>patch --resume-pr BRANCH</code> command to rerun from the same checkout.</li>
+<li>Exit codes: <code>0</code> pass, <code>1</code> findings, <code>2</code> error, <code>130 / 143</code> interrupted. A gate that treats every non-zero as a finding misreports errors as
+vulnerabilities.</li>
+</ul>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table: exit code meanings">
+<table>
+<thead><tr>
+<th style="width:18%">Exit code</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td class="num"><code>0</code></td>
+<td>Pass, no findings at or above the threshold.</td>
+</tr>
+<tr>
+<td class="num"><code>1</code></td>
+<td>Findings at or above the threshold.</td>
+</tr>
+<tr>
+<td class="num"><code>2</code></td>
+<td>Input, runtime, or result-integrity error.</td>
+</tr>
+<tr>
+<td class="num"><code>130 / 143</code></td>
+<td>Interrupted.</td>
+</tr>
+</tbody></table></div>
+
+<ul>
+<li><code>--provider</code> is a closed enum (<code>openai</code>, <code>openrouter</code>, <code>fireworks</code>,
+<code>amazon-bedrock</code>, plus one cheaper-inference path). There is no generic OpenAI-compatible option, so a
+self-hosted gateway is reachable only through native Codex config overrides.</li>
+<li>Routing inference through your own gateway does not confer entitlement. Runs that use OpenAI inference still need
+Codex Security access on the account behind the key.</li>
+<li>Supplied-issue patching needs a clean tree, while GitLab artifacts have to live inside the project directory. Those
+two constraints collide, so the order is: work outside the checkout, patch first, copy artifacts in afterwards.</li>
+</ul>
+
+<h2>Limits not to promise</h2>
+
+<ul>
+<li>Never promise DAST auto-fix. <code>validate</code> reasons over source evidence and does not run the application,
+so a runtime finding with no source location cannot be assessed until somebody maps the endpoint to its handler.
+Dynamic validation exists through <code>--validation-prompt-file</code>, with setup, authorized targets, expected
+results and cleanup, but treat that as its own project.</li>
+<li><code>--max-cost</code> is an estimated guardrail, not a billing cap. In-flight requests can exceed it.</li>
+<li><code>--external-sandbox</code> disables the agent's own filesystem and network enforcement. Only use it inside a
+container that provides that isolation, never as a workaround for a runner that cannot sandbox.</li>
+<li>Some vulnerability classes and protected findings need Trusted Access for Cyber. Check before promising coverage,
+not after.</li>
+<li>Research preview: pin the CLI version deliberately instead of tracking latest, and retest authentication,
+artifacts and report ingestion on every bump. The published version moves faster than the vendor's own examples.</li>
+<li>A 200 on <code>/responses</code> proves nothing about a gateway route. A bridged LiteLLM deployment answers that
+path and drops Responses-only fields, including tool declarations, which surfaces as an unexplained failure mid-run.</li>
+<li>Read coverage and exclusions before calling anything clean. Completion is not certification, and a diff scan says
+nothing about the rest of the repository.</li>
+</ul>
+
+<h2>Reaching a self-hosted gateway</h2>
+
+<p>The agent runs from an isolated Codex home, so a custom provider has to be defined inside it. Put the settings in a
+profile file named after the profile, then select it with <code>--codex "profile='&lt;profile&gt;'"</code>.</p>
+
+<pre><code># $CODEX_HOME/&lt;profile&gt;.config.toml
+model = "&lt;alias the gateway exposes&gt;"
+model_reasoning_effort = "high"
+model_provider = "&lt;provider-id&gt;"
+
+[model_providers.&lt;provider-id&gt;]
+name = "&lt;display name&gt;"
+base_url = "https://&lt;gateway&gt;/v1"
+wire_api = "responses"           # required; the agent speaks the Responses API
+env_key = "&lt;ENV_VAR_HOLDING_THE_KEY&gt;"
+requires_openai_auth = false     # never attempt ChatGPT or OpenAI account auth</code></pre>
+
+<p>The route must be Responses-native. A deployment with no native Responses configuration bridges
+<code>/v1/responses</code> through <code>/v1/chat/completions</code>, converting the request and approximating or
+dropping Responses-only fields. Verify the deployment, not the route:</p>
+
+<pre><code>curl -s "$BASE/model/info" -H "Authorization: Bearer $ADMIN_KEY" \
+| jq '.data[] | {name: .model_name, model: .litellm_params.model,
+                 endpoints: .model_info.supported_endpoints}'</code></pre>
+
+<p><code>/v1/responses</code> must appear in <code>model_info.supported_endpoints</code>. That opt-in is read per
+deployment, is independent of the provider prefix, and applies to new requests without a restart. For a custom native
+provider, <code>--auth auto</code> and <code>--auth api-key</code> use the environment variable named by
+<code>model_providers.&lt;id&gt;.env_key</code>, while <code>--auth chatgpt</code> selects stored account auth and omits
+the provider key, so a provider that needs its own key cannot use it.</p>
+
+<h2>Wiring into GitLab CI</h2>
+
+<p>Split credentials so that no job can read another job's secret. Three secrets, three scopes:</p>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table: credential split">
+<table>
+<thead><tr>
+<th style="width:20%">Credential</th>
+<th>Scope</th>
+<th>Used by</th>
+</tr></thead><tbody>
+<tr>
+<td><code>Model key</code></td>
+<td>Gateway virtual key</td>
+<td>Both stages, through the provider profile.</td>
+</tr>
+<tr>
+<td><code>Read token</code></td>
+<td><code>read_api</code></td>
+<td>The validate stage only, to pull the findings list.</td>
+</tr>
+<tr>
+<td><code>Write token</code></td>
+<td><code>api</code>, <code>write_repository</code></td>
+<td>The publish stage only, to push a branch and open a draft MR.</td>
+</tr>
+</tbody></table></div>
+
+<ul>
+<li>Copy each secret into a shell variable, <code>unset</code> the original, and launch the agent with
+<code>env -i</code> plus an explicit minimal environment (<code>PATH</code>, <code>HOME</code>, <code>LANG</code>,
+<code>CI</code>, <code>CI_PROJECT_DIR</code>, <code>CODEX_HOME</code>, <code>CODEX_SECURITY_STATE_DIR</code>, and the
+provider key). The agent runs repository-controlled commands and must not inherit the job environment.</li>
+<li>Keep the whole run outside the checkout (<code>WORK_DIR=/tmp/...</code>) and copy results into the project
+directory at the end. Work files under <code>$CI_PROJECT_DIR</code> dirty the tree and make <code>patch</code> refuse
+to run.</li>
+<li>The job needs <code>git</code>, <code>python3</code>, <code>ripgrep</code>, <code>util-linux</code> for the sandbox
+check, <code>curl</code>, and <code>glab</code> for <code>--create-pr</code>. Bake them into a pinned runner image
+instead of installing at job time.</li>
+<li>Fail early and loudly: <code>unshare -Ur true</code> (the agent sandboxes itself with user namespaces), then
+<code>--version</code>, then a <code>--dry-run --verbose</code> pass that prints the resolved provider, model and
+effort without starting a paid run.</li>
+<li><code>--setup-git-credential-helper</code> on <code>glab auth login</code> lets the branch push reuse the same
+token. <code>CI_JOB_TOKEN</code> cannot create a merge request, so the write path needs its own project access
+token.</li>
+<li>GitLab's findings API needs <code>scope=all</code>, because it defaults to dismissed findings only. The
+vulnerabilities and vulnerability-findings endpoints are marked deprecated in favour of GraphQL, and responses are
+paginated (20 by default), so a large backlog needs its own paging.</li>
+</ul>
+
+<h2>Running it under a CI time budget</h2>
+
+<p>A GitLab job cannot run forever, and a timeout is a hard kill rather than a pause
+button. Nothing in the agent resumes a batch, so the design has to make the kill
+both unnecessary and cheap: keep the work unit small, let the loop own its own
+clock, and publish every finding the moment it verifies.</p>
+
+<p>The inversion that makes this work is boring and easy to get wrong: <strong>the
+script's budget has to expire before the job timeout, which has to expire before
+the project maximum.</strong> A 45 minute budget inside a 50 minute job inside a
+60 minute project ceiling means the pipeline stops itself at a point it chose,
+prints what it did, and leaves the rest for the next run. GitLab never gets to
+kill a push that is in flight.</p>
+
+<p>Every iteration starts from a clean clone at the base commit, because the patch
+command refuses to run against a dirty tree. One finding, one call, one
+decision:</p>
+
+<pre><code>while IFS=$&#x27;\t&#x27; read -r id statement; do
+  remaining=$(( BUDGET - ( $(date +%s) - started ) ))
+  [ &quot;$remaining&quot; -lt &quot;$P90&quot; ] &amp;&amp; { echo &quot;budget stop: $remaining left&quot;; break; }
+
+  git -C &quot;$WORK&quot; checkout -f -q &quot;$BASE_SHA&quot;      # patch refuses a dirty tree
+  git -C &quot;$WORK&quot; reset --hard -q &quot;$BASE_SHA&quot;
+  git -C &quot;$WORK&quot; clean -qfd
+
+  ( cd &quot;$WORK&quot; &amp;&amp; env -i PATH=&quot;$PATH&quot; HOME=&quot;$AGENT_HOME&quot; CI=true \
+      LITELLM_API_KEY=&quot;$key&quot; \
+      timeout &quot;$CALL_TIMEOUT&quot; codex-security patch &quot;$statement&quot; \
+      --assess-patch-risk --json &gt; &quot;$OUT/patch-$id.json&quot; 2&gt; &quot;$OUT/patch-$id.err&quot; )
+  rc=$?
+
+  case &quot;$(classify &quot;$id&quot; &quot;$rc&quot;)&quot; in
+    verified)                          publish_patch.sh &quot;$id&quot; &quot;$files&quot; ;;
+    timeout|error|sandbox_unavailable) retry_once &quot;$id&quot; ;;
+    *)                                 record_terminal &quot;$id&quot; ;;   # a judgement
+  esac
+done &lt; &quot;$WORKLIST&quot;
+</code></pre>
+
+<p>Every outcome is classified, because an exit code is not a security judgement.
+Exit 124 is our own ceiling firing, exit 2 is a runtime error, and a clean exit
+with <code>no_change</code> is a decision the agent made. Only
+<code>verified</code> is published, and only the infrastructure classes are
+retried. 7 statuses, three different responses:</p>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table: outcome classification">
+<table>
+<thead><tr>
+<th style="width:24%">Outcome</th>
+<th>What it means</th>
+<th>What the pipeline does</th>
+</tr></thead><tbody>
+<tr>
+<td><code>verified</code></td>
+<td>A fix was produced and the agent's own verification passed.</td>
+<td>The only class that gets committed and opened as a draft MR.</td>
+</tr>
+<tr>
+<td><code>no_change</code></td>
+<td>The agent judged that nothing needs changing.</td>
+<td>Recorded. Never retried: it is a judgement, not a failure.</td>
+</tr>
+<tr>
+<td><code>blocked</code></td>
+<td>The agent needs a decision it is not allowed to make.</td>
+<td>Recorded. A human decides; the loop does not guess.</td>
+</tr>
+<tr>
+<td><code>failed</code></td>
+<td>A fix was produced but did not verify.</td>
+<td>Recorded. Read the reasoning rather than rerunning it unchanged.</td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td>Our own per-call ceiling fired (exit 124).</td>
+<td>Infrastructure. One retry if the budget still allows it.</td>
+</tr>
+<tr>
+<td><code>sandbox_unavailable, error, interrupted</code></td>
+<td>Operational failure, not a security judgement.</td>
+<td>One retry, capped by the attempt limit; then it stays recorded.</td>
+</tr>
+<tr>
+<td><code>no_patch_applied</code></td>
+<td>The statement was too vague for the agent to act on.</td>
+<td>Recorded. Sharpen the statement; a rerun changes nothing.</td>
+</tr>
+</tbody></table></div>
+
+<h3>Who holds the credential</h3>
+
+<p>The agent is the least trustworthy process in the pipeline, because it runs
+repository-controlled commands. So it gets no repository credential at all: it is
+launched with <code>env -i</code>, a HOME that holds no glab or git configuration,
+and exactly one secret, the model key. A separate publisher step holds the only
+<code>write_repository</code> token, stages exactly the files the CLI reported as
+changed, commits, pushes a branch named after the finding, and opens a draft
+MR.</p>
+
+<p>That split pays for itself twice. The agent cannot leak a credential it never
+had, and because the branch name comes from the finding id, the remote becomes a
+second idempotency source: a run that lost its progress file still refuses to
+publish a finding that already has a branch. It is also why this pipeline does not
+use <code>patch --create-pr</code>, even though the command supports it: that flag
+puts the write credential inside the agent's own process, which is the one place it
+should never be.</p>
+
+<h3>Two traps worth knowing before you start</h3>
+
+<p>A loop that always starts from the same ordered list starves its own tail. If
+the budget runs out at finding seven of thirty, the next run has to continue at
+eight. That comes free from a stable ordering plus a recorded marker, but only if
+the marker is consulted before the agent is called.</p>
+
+<p>The other trap is social. One change per merge request is excellent for review,
+while thirty draft merge requests are thirty notifications. Run the first week
+without publishing, read the diffs as artifacts, and let the team agree the volume
+is worth the review time before the notifications start.</p>
+
+<h2>Proof of concept</h2>
+
+<p>Four steps, each with an exit criterion that has to hold before the next one
+starts. The order matters: sizing a budget before measuring anything is how a
+pilot turns into a story about timeouts.</p>
+
+<section class="step"><h3>Step 1, half a day: measure instead of guessing</h3><p>Run validate over five hand-picked findings in a clone, one call at a time, with a 600s ceiling. Log wall time, cost, and whether schema-constrained JSON comes back at all.</p><p class="exit"><strong>Exit criteria.</strong> A p50 and p90 seconds per finding, and a yes or no on the gateway schema question. Without those numbers any budget you set is a guess.</p></section>
+<section class="step"><h3>Step 2, week 1: patch without publishing</h3><p>Same five findings, patch with assess-patch-risk and JSON, publishing off. Results stay artifacts and a reviewer reads the diffs.</p><p class="exit"><strong>Exit criteria.</strong> A security reviewer agrees the fixes are worth review time, and you have a patch p90 to put in CS_PER_FINDING_P90.</p></section>
+<section class="step"><h3>Step 3, week 2: publish a small seed</h3><p>Turn on branch, push and draft MR for eight to ten confirmed findings, with a 45 minute budget inside a 50 minute job ceiling.</p><p class="exit"><strong>Exit criteria.</strong> The number of merge requests equals the number of verified results, no secret appears in the job log, and a rejected fix produces no branch.</p></section>
+<section class="step"><h3>Step 4, week 3 and after: put it on a schedule</h3><p>Nightly validate, then the budgeted patch loop, then the report job that reads the merge requests back from the API.</p><p class="exit"><strong>Exit criteria.</strong> Two consecutive runs work on disjoint sets of findings, and a run that hits the budget loses nothing.</p></section>
+
+<p>Deliberately out of scope for the pilot:</p>
+
+<ul>
+<li>A deep scan of the whole repository inside the pilot budget.</li>
+<li>Auto-fixing DAST findings. They have no source location to reason about.</li>
+<li>One job for the entire backlog. Its blast radius is the whole backlog.</li>
+<li>Disabling the sandbox to make a runner work. Fix the runner instead.</li>
+</ul>
+
+<h2>Where findings come from in GitLab</h2>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table: GitLab finding sources">
+<table>
+<thead><tr>
+<th style="width:20%">Source</th>
+<th>How to get it</th>
+<th>Best for</th>
+</tr></thead><tbody>
+<tr>
+<td>Vulnerability report</td>
+<td><code>GET /projects/:id/vulnerability_findings</code> with a read token.</td>
+<td>The backlog view: what is open right now, after human triage.</td>
+</tr>
+<tr>
+<td>SAST artifact</td>
+<td>The <code>gl-sast-report.json</code> artifact from the scanner job.</td>
+<td>The whole raw output, including findings GitLab did not promote to records.</td>
+</tr>
+<tr>
+<td>DAST artifact</td>
+<td>The report artifact from the DAST job.</td>
+<td>Runtime findings. Most of them need triage before anything can be patched.</td>
+</tr>
+</tbody></table></div>
+
+<p>The scanner's own payload arrives as a JSON <em>string</em> in <code>finding.raw_metadata</code>. For SAST the
+location lives there as <code>location.file</code> and <code>location.start_line</code>. DAST locations describe a
+request (<code>hostname</code>, <code>path</code>, <code>method</code>, <code>param</code>), which is why a DAST
+finding cannot go straight into <code>validate</code>: there is no source line to reason about.</p>
+
+<h2>Open risks</h2>
+
+<p>Everything below comes from OpenAI's, LiteLLM's and GitLab's published documentation rather than from execution.
+None of it has run on a real runner yet. There are 8 items to close before this is taken seriously, and
+the first one is deliberately at the top because it is the most likely place the design has to change.</p>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table: open risks">
+<table>
+<thead><tr>
+<th style="width:42%">Assumption</th>
+<th>How to close it</th>
+</tr></thead><tbody>
+<tr>
+<td><code>--auth api-key</code> accepts the custom provider's environment key.</td>
+<td>The preflight run. This is the most likely place the design needs a change.</td>
+</tr>
+<tr>
+<td>The gateway alias is Responses-native, not bridged.</td>
+<td>Check <code>model_info.supported_endpoints</code>. If it is bridged, that becomes a gateway ticket before anything starts.</td>
+</tr>
+<tr>
+<td>The model behind the alias can produce schema-constrained JSON.</td>
+<td>Run <code>validate</code> on a single finding and inspect the output. Without it, the confirm-then-patch gate needs another mechanism.</td>
+</tr>
+<tr>
+<td>Supplied-issue patching can run unattended in a CI checkout, and the files the CLI reports are the files that changed.</td>
+<td>One real run, then <code>git status</code> and <code>git diff --stat</code> in the clone. The branch is cut from exactly those reported paths.</td>
+</tr>
+<tr>
+<td>Field paths in the vulnerability response match what the mapping script expects.</td>
+<td>Dump one real response and compare. The endpoints are marked deprecated in favour of GraphQL.</td>
+</tr>
+<tr>
+<td>Findings with no source location can be mapped reliably.</td>
+<td>For DAST, assume they cannot in the first iteration and plan triage as its own step.</td>
+</tr>
+<tr>
+<td>Entitlement semantics hold when inference is routed through the gateway.</td>
+<td>Confirm with the account owner whether Codex Security access follows the key that reaches the model.</td>
+</tr>
+<tr>
+<td>Fix quality holds on whatever model sits behind the alias.</td>
+<td>Compare a few agent-authored fixes against a hosted frontier model. If the gateway fronts a smaller model, expect validated-fix behaviour to degrade.</td>
+</tr>
+</tbody></table></div>
+
+<h2>Verification status</h2>
+
+<p>What was actually exercised on this machine:</p>
+
+<ul>
+<li>The CI pipeline parses as YAML, and every shell block inside it passes <code>bash -n</code>.</li>
+<li>The three helper scripts ran against synthetic GitLab payloads: a SAST finding with a location in
+<code>raw_metadata</code> became a statement, a DAST finding without one went to the triage list, a finding with broken
+metadata was handled without crashing, a <code>confirmed</code> verdict produced a patch candidate, and
+<code>not_applicable</code> did not.</li>
+<li>The time-budgeted loops ran end to end against stub binaries and a real local git remote, 36 checks: a budget stop
+before any call, a killed call classified as <code>timeout</code>, one retry for infrastructure only, branch-based
+idempotency proven with the progress file deleted, and the write token proven absent from the agent's environment.</li>
+<li>Every shell block in the pipeline passes <code>bash -n</code>, the include parses as YAML, and the report script
+exits 2 when a published finding carries no merge request link.</li>
+</ul>
+
+<p>What has not happened, and this matters: the pipeline has never run on anyone's GitLab runner, has never touched a
+real gateway alias, and its fix quality has never been compared against human-authored fixes. The timings in the budget
+variables are placeholders, not measurements. Treat the gateway, CI and budget sections as a harness-tested design, not
+a proven recipe.</p>
+
+<h2>Sources</h2>
+
+<ul>
+<li><a href="https://help.openai.com/en/articles/20001107-codex-security">Codex Security overview (OpenAI Help Center)</a><br><span class="muted">https://help.openai.com/en/articles/20001107-codex-security</span></li>
+<li><a href="https://github.com/openai/codex-security">Codex Security repository, CLI and SDK</a><br><span class="muted">https://github.com/openai/codex-security</span></li>
+<li><a href="https://learn.chatgpt.com/docs/security/cli/reference">CLI reference: scan, validate, patch, verify-fix</a><br><span class="muted">https://learn.chatgpt.com/docs/security/cli/reference</span></li>
+<li><a href="https://github.com/openai/codex-security/blob/main/docs/scanner-imports/README.md">Scanner import guides</a><br><span class="muted">https://github.com/openai/codex-security/blob/main/docs/scanner-imports/README.md</span></li>
+<li><a href="https://learn.chatgpt.com/docs/security/cli/ci/gitlab">Run Codex Security in GitLab CI/CD</a><br><span class="muted">https://learn.chatgpt.com/docs/security/cli/ci/gitlab</span></li>
+<li><a href="https://developers.openai.com/codex/config-advanced">Codex advanced configuration, custom model providers</a><br><span class="muted">https://developers.openai.com/codex/config-advanced</span></li>
+<li><a href="https://docs.litellm.ai/docs/response_api_native_passthrough">LiteLLM native /v1/responses passthrough</a><br><span class="muted">https://docs.litellm.ai/docs/response_api_native_passthrough</span></li>
+<li><a href="https://docs.gitlab.com/api/vulnerability_findings/">GitLab vulnerability findings API</a><br><span class="muted">https://docs.gitlab.com/api/vulnerability_findings/</span></li>
+<li><a href="https://docs.gitlab.com/user/application_security/sast/">GitLab SAST report format and artifact name</a><br><span class="muted">https://docs.gitlab.com/user/application_security/sast/</span></li>
+<li><a href="https://docs.gitlab.com/cli/authentication/">glab authentication in CI</a><br><span class="muted">https://docs.gitlab.com/cli/authentication/</span></li>
+</ul>
+
+</div>
+</main>
+</div>
+</div></div></main><footer class="foot"><div class="page foot-inner"><p>Irfan's AI agents · codex-security-gitlab</p><nav aria-label="Sources"><a href="../../">All artifacts</a><a href="https://irfansp.dev/">irfansp.dev</a></nav></div></footer><script src="../../assets/site.js" defer></script></body></html>

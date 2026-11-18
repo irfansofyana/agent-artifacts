@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cstyle%3Erect{fill:%23000}@media (prefers-color-scheme:dark){rect{fill:%23fff}}%3C/style%3E%3Crect width='32' height='32' rx='7'/%3E%3C/svg%3E">
+<title>WeKnora least-privilege issue map for a single workspace</title>
+<meta name="description" content="Every issue in the Tencent/WeKnora repository that matters if we want least privilege inside a single workspace: what others already reported, where each one stands, and ">
+<link rel="stylesheet" href="assets/style.css">
+<style id="herenow-theme">
+:root[data-theme="light"] {
+  color-scheme: light;
+  --canvas: #ffffff; --ink: #000000;
+  --ink-2: rgb(0 0 0 / 64%); --ink-3: rgb(0 0 0 / 56%);
+  --rule: rgb(0 0 0 / 10%); --rule-strong: rgb(0 0 0 / 18%);
+  --tint: rgb(0 0 0 / 3%); --hover: rgb(0 0 0 / 5%);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0a0a0a; --ink: #ffffff;
+  --ink-2: rgb(255 255 255 / 56%); --ink-3: rgb(255 255 255 / 46%);
+  --rule: rgb(255 255 255 / 12%); --rule-strong: rgb(255 255 255 / 22%);
+  --tint: rgb(255 255 255 / 5%); --hover: rgb(255 255 255 / 9%);
+}
+.theme-switch { padding-top: 8px; padding-bottom: 8px; }
+.theme-switch button {
+  background: none; border: 0; padding: 8px 0; margin: 0; cursor: pointer;
+  color: var(--ink-2); font: inherit; font-size: 14px;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.theme-switch button:hover { color: var(--ink); }
+.theme-switch button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+</style>
+<script>
+(function(){
+  var t = null;
+  try { t = localStorage.getItem('herenow-theme'); } catch (e) {}
+  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<meta property="og:title" content="Peta issue least privilege WeKnora" />
+<meta property="og:description" content="Analisis komprehensif mengenai status implementasi least privilege pada repositori Tencent WeKnora yang mencakup identitas, akses knowledge base, dokumen, hingga integrasi MCP." />
+<meta property="og:url" content="https://artifacts.irfansp.dev/weknora-least-privilege/index-en.html" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://here.now/og/fancy-fable-3f9j.jpg" />
+<meta property="og:image:width" content="1280" />
+<meta property="og:image:height" content="720" />
+<meta name="twitter:image" content="https://here.now/og/fancy-fable-3f9j.jpg" />
+<meta name="twitter:card" content="summary_large_image" /></head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="masthead">
+<div class="page masthead-inner">
+<p class="wordmark">Irfan's AI agents</p>
+<nav aria-label="Registry"><a href="https://artifacts.irfansp.dev/">All artifacts</a></nav>
+</div>
+</header><div class="page theme-switch"><button type="button" data-theme-switch>Theme: System</button></div>
+<main id="main" class="page">
+<header class="hero">
+<p class="eyebrow">Riset · Tencent/WeKnora · 17 November 2026</p>
+<h1>WeKnora least-privilege issue map for a single workspace</h1>
+<p class="lede">Every issue in the <code>Tencent/WeKnora</code> repository that matters if we want least privilege inside a single workspace: what others already reported, where each one stands, and what has no issue at all yet.</p>
+<nav class="lang" aria-label="Document and language navigation">
+<a href="index.html">Bahasa Indonesia</a><span class="sep">·</span><a href="index-en.html" aria-current="page">English</a>
+</nav>
+</header>
+<h2>Summary</h2>
+
+<p>The core problem is one thing: <strong>WeKnora has no per-resource ACL inside a single workspace</strong>. What exists
+is a workspace-level role and a cross-workspace share mechanism. Every issue below is a fragment of that problem,
+spread across 42 items: 27 still open, 10 closed, 5 resolved through a PR.</p>
+<p>Read the map layer by layer, because each layer owns a different slice of the problem. Layers 0 and 1 get most of
+the discussion, but the most concrete hole today sits in <a href="https://github.com/Tencent/WeKnora/issues/5284">#5284</a>: anyone holding a shared team
+MCP token can write to knowledge bases beyond their role, and the audit trail cannot be traced back to a person.</p>
+<div class="note">
+<p>We opened <a href="https://github.com/Tencent/WeKnora/issues/5618">#5618</a> ourselves, about platform-level default MCP services for all workspaces.
+It exists precisely because there is no ACL inside one workspace, which pushed the design toward multi-workspace.</p>
+</div>
+
+<h2>How this research was done</h2>
+
+<p>The sweep ran against the GitHub API on 17 November 2026: 34 keyword queries (English and Chinese) over issue
+titles and bodies in <code>Tencent/WeKnora</code>, 412 unique issues caught, about 30 read in full.</p>
+
+<h2>Layer map</h2>
+<section class="layer"><h3>Layer 0 · Identity &amp; membership</h3><ul>
+<li><a href="https://github.com/Tencent/WeKnora/issues/674">#674</a> <span class="badge open">Open</span> Separation of duties (system admin / auditor / operator), registration control, LDAP / AD / SSO integration.<br><span class="muted">Opened Feb 2026, no maintainer response yet.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/1037">#1037</a> <span class="badge open">Open</span> Admin user panel: list all users, assign roles, disable/delete accounts.<br><span class="muted">No maintainer response. Today it needs raw SQL.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4873">#4873</a> <span class="badge open">Open</span> Organization member management: batch add, name-based search, SystemAdmin override.<br><span class="muted">Labeled <code>needs-triage</code>. A contributor offered a PR for the name-search part.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5092">#5092</a> <span class="badge open">Open</span> Provisioning without SMTP: admin-created accounts, one-time login links, hard delete.<br><span class="muted">Aimed at on-prem deployments with no mail server.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5001">#5001</a> <span class="badge open">Open</span> Promote the first system admin at sign-up instead of the next app restart.<br><span class="muted">Small, but a fresh deployment can't be administered without a restart.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4200">#4200</a> <span class="badge open">Open</span> Exempt system admins from the self-service creation limit, plus a config entry for <code>can_access_all_tenants</code>.<br><span class="muted">Bug: the code only reads <code>can_access_all_tenants</code>, never <code>is_system_admin</code>.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/1303">#1303</a> <span class="badge closed">Closed</span> Multi-tenancy with RBAC: per-user roles inside one tenant.<br><span class="muted">Closed without implementation. #5295 is the follow-up, narrowed to per-KB ACL.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2033">#2033</a> <span class="badge pr">Merged PR</span> Ordinary users don't get their own workspace automatically, only via invite.<br><span class="muted">Shipped in PR #2037: <code>WEKNORA_AUTH_DEFAULT_TENANT_MODE=tenantless</code> plus the self-service flag.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2386">#2386</a> <span class="badge closed">Closed</span> Suggestions to consolidate the permission system and restrict registration.<br><span class="muted">Maintainer: registration modes, system admin, and OIDC SSO already exist.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4201">#4201</a> <span class="badge pr">Merged PR</span> Owner can't demote themselves on the members page (ownership transfer).<br><span class="muted">Fixed in PR #4213.</span></li>
+</ul></section>
+<section class="layer"><h3>Layer 1 · Knowledge-base level ACL</h3><ul>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5295">#5295</a> <span class="badge open">Open</span> Per-KB access control inside a single workspace: <code>workspace</code> / <code>restricted</code> / <code>private</code> visibility, per-user/role grant table, filtered listing, 404 instead of 403.<br><span class="muted">No maintainer response yet. Design-wise this is the most complete one, and the closest to what we need.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4216">#4216</a> <span class="badge open">Open</span> Custom roles plus knowledge-base-granular authorization inside the workspace.<br><span class="muted">Labeled <code>needs-triage</code>. Notes that roles are 4 hardcoded values, a viewer reads every KB, and tags are not an authorization boundary.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3626">#3626</a> <span class="badge open">Open</span> Proposes “Section”: inside one shared space, a KB can be limited to a chosen set of members.<br><span class="muted">Labeled <code>needs-triage</code>. Another user backed it and asked for user-level sections (not just space-level) plus a hierarchy.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4878">#4878</a> <span class="badge open">Open</span> KB sharing: batch, delegated share permission, and space-side management.<br><span class="muted">Labeled <code>needs-triage</code>. Today sharing only works from the owning workspace with a full-access key, so platform admins can't manage it.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4338">#4338</a> <span class="badge open">Open</span> A workspace editor can't edit KBs created by others, while the same role can via a shared space.<br><span class="muted">Labeled <code>needs-triage</code>. Pinged the maintainer, no answer yet.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4511">#4511</a> <span class="badge closed">Closed</span> Inconsistent scope semantics: one key can search a shared KB (200) but not list it (403).<br><span class="muted">Closed. Still relevant if we use scoped keys.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2709">#2709</a> <span class="badge closed">Closed</span> A user granted admin through an organization share gets no Settings button in the UI.<br><span class="muted">Frontend only. Per the thread, the fix never landed upstream.</span></li>
+</ul></section>
+<section class="layer"><h3>Layer 2 · Document &amp; chunk</h3><ul>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2024">#2024</a> <span class="badge open">Open</span> Document-level ACL plus retrieval filtering (enforced at chunk retrieval, not hidden in the UI).<br><span class="muted">Maintainer folded #2809 into this one. Latest comment (9 Nov) argues the visible set must be pushed into the query before top-k.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2090">#2090</a> <span class="badge open">Open</span> KB/file metadata, a <code>metadata_filter</code> parameter on <code>knowledge_search</code> / <code>grep_chunks</code>, plus file-level search.<br><span class="muted">The foundation for the ACL filtering in #2024. Also what makes the “invisible KB, still the grounding source” case expressible.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2809">#2809</a> <span class="badge closed">Closed</span> Per-document permissions: who may edit, delete, and who may RAG that document.<br><span class="muted">Closed as duplicate, pointed at #2024.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2266">#2266</a> <span class="badge pr">Merged PR</span> Guests / read-only members had no restriction on document operations (download, delete, rebuild).<br><span class="muted">Partly shipped: download needs Editor+, other operations are hidden in the UI (PR #2250).</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4779">#4779</a> <span class="badge open">Open</span> No retriever backend stores a tenant dimension; isolation lives entirely in the application layer.<br><span class="muted">A question, unanswered. Matters if we want fail-closed enforcement.</span></li>
+</ul></section>
+<section class="layer"><h3>Layer 3 · Consumption through agents &amp; MCP</h3><ul>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5420">#5420</a> <span class="badge open">Open</span> Usage-level permissions for agents, skills, and MCP inside one tenant, plus who may attach an MCP server to an agent.<br><span class="muted">Labeled <code>needs-triage</code>. Without it, a private KB bound to an agent still leaks through answers and citations.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5284">#5284</a> <span class="badge open">Open</span> Personal MCP endpoints that act as their owner, instead of one static team token.<br><span class="muted">The most concrete hole: a Viewer can write to a KB through MCP, the “only the creator or an admin may change documents” rule isn't applied on MCP writes, and audit lands on a synthetic <code>mcp-&lt;endpoint_id&gt;</code> user.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5157">#5157</a> <span class="badge open">Open</span> Per-IM-session MCP tool whitelist (tool-level, subtractive only).<br><span class="muted">Today tool policy is global per <code>(tenant, service, tool)</code>, so once a tool is enabled, every entry point can call it.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3598">#3598</a> <span class="badge open">Open</span> MCP dynamic headers from the current user's context.<br><span class="muted">Labeled <code>needs-triage</code>. The counterpart to #2951: per-user identity instead of a shared header.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3479">#3479</a> <span class="badge open">Open</span> Agent-native integration patterns: read-only access mode for consuming agents, audit trail, stale detection.<br><span class="muted">No maintainer response yet.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5079">#5079</a> <span class="badge open">Open</span> Asks to let IM expose the agent's wiki-update capability, with admin control.<br><span class="muted">Labeled <code>needs-triage</code>. It points the other way from least privilege, but it's where the wiki-write path is discussed.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2951">#2951</a> <span class="badge open">Open</span> An MCP service with static-header auth on a shared agent shouldn't use the sharer's header.<br><span class="muted">If the MCP server derives authorization from that header, every user of the shared agent inherits the owner's rights.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5193">#5193</a> <span class="badge closed">Closed</span> Read-only mode: enforcement is correct, the assistant's explanation to the user was wrong.<br><span class="muted">Closed. Evidence that read-only enforcement does work for write operations.</span></li>
+</ul></section>
+<section class="layer"><h3>Layer 4 · Machine credentials</h3><ul>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3276">#3276</a> <span class="badge open">Open</span> Per-KB API key permissions: retrieve / ingest / manage_kbs, plus a <code>permission</code> field in list responses.<br><span class="muted">Proposed to be enforced in <code>RequireKBAccess</code>, so even an Admin of the KB can't bypass the key's limit.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5561">#5561</a> <span class="badge open">Open</span> A KB-scoped API key gets 403 when selecting explicit documents (<code>knowledge_ids</code>) in agent-chat.<br><span class="muted">Labeled <code>needs-triage</code>. The scoping path isn't consistent yet.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3572">#3572</a> <span class="badge open">Open</span> Move end-user identity config from the workspace level down to each API key.<br><span class="muted">Labeled <code>needs-triage</code>. Still a discussion about boundaries.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3351">#3351</a> <span class="badge pr">Merged PR</span> An MCP server with multiple API keys, each scoped to different KBs.<br><span class="muted">Resolved by PR #3371: a Go built-in MCP server where each workspace creates endpoints with its own token and allowed-KB list. The Python MCP server is deprecated.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2413">#2413</a> <span class="badge pr">Merged PR</span> Per-request API keys for multi-tenant isolation on the MCP server.<br><span class="muted">Same resolution, via PR #3371.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/2603">#2603</a> <span class="badge closed">Closed</span> An endpoint to update the KB allow-list of an existing scoped API key.<br><span class="muted">Closed (owner-only). We don't need a new key every time a KB is added.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3402">#3402</a> <span class="badge closed">Closed</span> Audit couldn't tell which API key triggered an action.<br><span class="muted">Closed.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4228">#4228</a> <span class="badge closed">Closed</span> OAuth MCP can't serve users of an application sitting in front of WeKnora: no browser, no pre-registered clients.<br><span class="muted">Closed, PR #4229. Only relevant if we put WeKnora behind another application.</span></li>
+</ul></section>
+<section class="layer"><h3>Layer 5 · Cross-cutting</h3><ul>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3747">#3747</a> <span class="badge open">Open</span> Masking at every stage (ingest, retrieval, output), document classification labels, copy/download/export restrictions, audit, lifecycle, and a rule library.<br><span class="muted">Labeled <code>needs-triage</code>. Broadest and costliest. Makes sense only after the ACL layer exists.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3317">#3317</a> <span class="badge open">Open</span> Long-term memory has no operator surface, yet it's built for principals without an account (IM users, embed visitors, API users).<br><span class="muted">Phase 1 merged (PR #4954); the follow-up was claimed by a contributor.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/4958">#4958</a> <span class="badge open">Open</span> A pluggable deny-only policy extension point for KB access: it can only veto, never grant.<br><span class="muted">Proposed with a ready patch. Doesn't close the ACL gap, but works as a safety net outside it.</span></li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/3426">#3426</a> <span class="badge closed">Closed</span> Security audit write-up: 76 findings plus 11 functional defects.<br><span class="muted">PR #3425 was closed unmerged; the maintainer asked for the remaining findings to be split into separate issues. No evidence of that happening.</span></li>
+</ul></section>
+<h2>Every issue in one table</h2>
+
+<p class="hint" id="tbl-hint">This table scrolls sideways.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-labelledby="tbl-hint">
+<table>
+<thead><tr><th>Issue</th><th>Layer</th><th>Status</th><th>Scope</th></tr></thead>
+<tbody><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/674">#674</a></td><td>Layer 0: Identity &amp; membership</td><td>Open</td><td>Separation of duties (system admin / auditor / operator), registration control, LDAP / AD / SSO integration.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/1037">#1037</a></td><td>Layer 0: Identity &amp; membership</td><td>Open</td><td>Admin user panel: list all users, assign roles, disable/delete accounts.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/1303">#1303</a></td><td>Layer 0: Identity &amp; membership</td><td>Closed</td><td>Multi-tenancy with RBAC: per-user roles inside one tenant.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2033">#2033</a></td><td>Layer 0: Identity &amp; membership</td><td>Merged PR</td><td>Ordinary users don't get their own workspace automatically, only via invite.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2386">#2386</a></td><td>Layer 0: Identity &amp; membership</td><td>Closed</td><td>Suggestions to consolidate the permission system and restrict registration.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4200">#4200</a></td><td>Layer 0: Identity &amp; membership</td><td>Open</td><td>Exempt system admins from the self-service creation limit, plus a config entry for <code>can_access_all_tenants</code>.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4201">#4201</a></td><td>Layer 0: Identity &amp; membership</td><td>Merged PR</td><td>Owner can't demote themselves on the members page (ownership transfer).</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4873">#4873</a></td><td>Layer 0: Identity &amp; membership</td><td>Open</td><td>Organization member management: batch add, name-based search, SystemAdmin override.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5001">#5001</a></td><td>Layer 0: Identity &amp; membership</td><td>Open</td><td>Promote the first system admin at sign-up instead of the next app restart.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5092">#5092</a></td><td>Layer 0: Identity &amp; membership</td><td>Open</td><td>Provisioning without SMTP: admin-created accounts, one-time login links, hard delete.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2709">#2709</a></td><td>Layer 1: Knowledge-base level ACL</td><td>Closed</td><td>A user granted admin through an organization share gets no Settings button in the UI.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3626">#3626</a></td><td>Layer 1: Knowledge-base level ACL</td><td>Open</td><td>Proposes “Section”: inside one shared space, a KB can be limited to a chosen set of members.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4216">#4216</a></td><td>Layer 1: Knowledge-base level ACL</td><td>Open</td><td>Custom roles plus knowledge-base-granular authorization inside the workspace.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4338">#4338</a></td><td>Layer 1: Knowledge-base level ACL</td><td>Open</td><td>A workspace editor can't edit KBs created by others, while the same role can via a shared space.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4511">#4511</a></td><td>Layer 1: Knowledge-base level ACL</td><td>Closed</td><td>Inconsistent scope semantics: one key can search a shared KB (200) but not list it (403).</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4878">#4878</a></td><td>Layer 1: Knowledge-base level ACL</td><td>Open</td><td>KB sharing: batch, delegated share permission, and space-side management.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5295">#5295</a></td><td>Layer 1: Knowledge-base level ACL</td><td>Open</td><td>Per-KB access control inside a single workspace: <code>workspace</code> / <code>restricted</code> / <code>private</code> visibility, per-user/role grant table, filtered listing, 404 instead of 403.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2024">#2024</a></td><td>Layer 2: Document &amp; chunk</td><td>Open</td><td>Document-level ACL plus retrieval filtering (enforced at chunk retrieval, not hidden in the UI).</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2090">#2090</a></td><td>Layer 2: Document &amp; chunk</td><td>Open</td><td>KB/file metadata, a <code>metadata_filter</code> parameter on <code>knowledge_search</code> / <code>grep_chunks</code>, plus file-level search.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2266">#2266</a></td><td>Layer 2: Document &amp; chunk</td><td>Merged PR</td><td>Guests / read-only members had no restriction on document operations (download, delete, rebuild).</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2809">#2809</a></td><td>Layer 2: Document &amp; chunk</td><td>Closed</td><td>Per-document permissions: who may edit, delete, and who may RAG that document.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4779">#4779</a></td><td>Layer 2: Document &amp; chunk</td><td>Open</td><td>No retriever backend stores a tenant dimension; isolation lives entirely in the application layer.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2951">#2951</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Open</td><td>An MCP service with static-header auth on a shared agent shouldn't use the sharer's header.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3479">#3479</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Open</td><td>Agent-native integration patterns: read-only access mode for consuming agents, audit trail, stale detection.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3598">#3598</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Open</td><td>MCP dynamic headers from the current user's context.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5079">#5079</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Open</td><td>Asks to let IM expose the agent's wiki-update capability, with admin control.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5157">#5157</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Open</td><td>Per-IM-session MCP tool whitelist (tool-level, subtractive only).</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5193">#5193</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Closed</td><td>Read-only mode: enforcement is correct, the assistant's explanation to the user was wrong.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5284">#5284</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Open</td><td>Personal MCP endpoints that act as their owner, instead of one static team token.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5420">#5420</a></td><td>Layer 3: Consumption through agents &amp; MCP</td><td>Open</td><td>Usage-level permissions for agents, skills, and MCP inside one tenant, plus who may attach an MCP server to an agent.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2413">#2413</a></td><td>Layer 4: Machine credentials</td><td>Merged PR</td><td>Per-request API keys for multi-tenant isolation on the MCP server.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/2603">#2603</a></td><td>Layer 4: Machine credentials</td><td>Closed</td><td>An endpoint to update the KB allow-list of an existing scoped API key.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3276">#3276</a></td><td>Layer 4: Machine credentials</td><td>Open</td><td>Per-KB API key permissions: retrieve / ingest / manage_kbs, plus a <code>permission</code> field in list responses.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3351">#3351</a></td><td>Layer 4: Machine credentials</td><td>Merged PR</td><td>An MCP server with multiple API keys, each scoped to different KBs.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3402">#3402</a></td><td>Layer 4: Machine credentials</td><td>Closed</td><td>Audit couldn't tell which API key triggered an action.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3572">#3572</a></td><td>Layer 4: Machine credentials</td><td>Open</td><td>Move end-user identity config from the workspace level down to each API key.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4228">#4228</a></td><td>Layer 4: Machine credentials</td><td>Closed</td><td>OAuth MCP can't serve users of an application sitting in front of WeKnora: no browser, no pre-registered clients.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/5561">#5561</a></td><td>Layer 4: Machine credentials</td><td>Open</td><td>A KB-scoped API key gets 403 when selecting explicit documents (<code>knowledge_ids</code>) in agent-chat.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3317">#3317</a></td><td>Layer 5: Cross-cutting</td><td>Open</td><td>Long-term memory has no operator surface, yet it's built for principals without an account (IM users, embed visitors, API users).</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3426">#3426</a></td><td>Layer 5: Cross-cutting</td><td>Closed</td><td>Security audit write-up: 76 findings plus 11 functional defects.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/3747">#3747</a></td><td>Layer 5: Cross-cutting</td><td>Open</td><td>Masking at every stage (ingest, retrieval, output), document classification labels, copy/download/export restrictions, audit, lifecycle, and a rule library.</td></tr><tr><td class="num"><a href="https://github.com/Tencent/WeKnora/issues/4958">#4958</a></td><td>Layer 5: Cross-cutting</td><td>Open</td><td>A pluggable deny-only policy extension point for KB access: it can only veto, never grant.</td></tr></tbody>
+</table>
+</div>
+
+<h2>Workarounds that work today</h2>
+<p>While per-resource ACL doesn't exist, what you can use today is moving granularity to the workspace level and leaning on the scopes the platform already provides. Everything below comes from the upstream CHANGELOG and issue text, and hasn't been exercised at runtime in our deployment. Some rows reference items outside the 42 issues above; those are cited as evidence of a capability, not as part of the map.</p><section class="work"><h3>Separating who can see which knowledge base</h3><p><strong>What works today:</strong> Split KBs across workspaces: a workspace acts like a folder, and a KB living in another workspace never shows up in your list. To grant access without moving people, share the KB into a shared space (organization) with <code>viewer</code> or <code>editor</code> permission, and hand out the <code>Viewer</code> role in the target workspace to those who only need to ask.</p><p><strong>What still leaks:</strong> Granularity becomes per workspace, not per person per KB. One share covers every member of the space, and anyone who needs access has to switch workspaces. The audit trail splits per workspace too.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/5295">#5295</a> <a href="https://github.com/Tencent/WeKnora/issues/4216">#4216</a> <a href="https://github.com/Tencent/WeKnora/issues/3626">#3626</a></p></section><section class="work"><h3>Consumable through an agent, but not visible</h3><p><strong>What works today:</strong> Share the agent only, and keep the KB in the owning workspace. The recipient can only query through that agent, and the KB never appears in their workspace.</p><p><strong>What still leaks:</strong> This is an interface boundary, not a security boundary. KB content can still be teased out through answers, citations, and file previews, and nothing yet restricts who may run that agent.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/5420">#5420</a> <a href="https://github.com/Tencent/WeKnora/issues/5284">#5284</a></p></section><section class="work"><h3>Machine credentials with the narrowest scope</h3><p><strong>What works today:</strong> Tenant API keys are now capability-scoped and can be restricted to a specific list of KBs, with route-level guards (<code>DenyAPIKeyPrincipal</code>, <code>api_key_gate</code>). Cleaner still: use the built-in per-workspace MCP endpoints, where each endpoint has its own token, its own KB scope, its own rate limit, and write tools off by default. Tokens are rotatable.</p><p><strong>What still leaks:</strong> Capabilities are still global per key, so “KB A read-only, KB B writable” with one key isn't expressible. On the <code>knowledge_ids</code> path a KB-scoped key is still rejected with 403. And an endpoint token identifies the endpoint, not a person: whoever holds it gets everything the endpoint allows.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/3276">#3276</a> <a href="https://github.com/Tencent/WeKnora/issues/5561">#5561</a> <a href="https://github.com/Tencent/WeKnora/issues/5284">#5284</a></p></section><section class="work"><h3>Limiting what an agent is allowed to write</h3><p><strong>What works today:</strong> Agents have <code>read-only</code>, <code>confirm-before-change</code>, and <code>automatic-write</code> access levels, plus HITL approval, suspended runs, and scoped grants (PR #4250, #4490). On MCP endpoints the write tool group is off by default, and IM already strips write tools.</p><p><strong>What still leaks:</strong> Those levels belong to a chat session, not to an organization-wide grant, so they can't serve as standing policy. And the wiki-write path through local agent tools still doesn't check who owns the KB.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/5420">#5420</a> <a href="https://github.com/Tencent/WeKnora/issues/5079">#5079</a></p></section><section class="work"><h3>Knowing who changed what</h3><p><strong>What works today:</strong> Wiki page revisions and chunk revisions store <code>last_edit_source</code> (pipeline, agent, user, or revert) and <code>last_editor_id</code>. There is a per-KB activity trail, a per-tenant audit log, and a platform audit log.</p><p><strong>What still leaks:</strong> Actions an agent runs inside one workspace can't be attributed to a specific member. Through an MCP endpoint the audit records a synthetic user, so tracing stops at the endpoint.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/5284">#5284</a></p></section><section class="work"><h3>Controlled onboarding and registration</h3><p><strong>What works today:</strong> Registration modes are selectable (<code>invite_only</code>, <code>invite_register</code>, <code>DISABLE_REGISTRATION</code>), there is tenantless provisioning with a gated self-service workspace flag, OIDC SSO, admin-created accounts, and password reset with session revocation.</p><p><strong>What still leaks:</strong> Batch invites and a user-management panel don't exist yet, so bulk provisioning stays manual or scripted against the API. The first system admin still needs an app restart.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/1037">#1037</a> <a href="https://github.com/Tencent/WeKnora/issues/4873">#4873</a> <a href="https://github.com/Tencent/WeKnora/issues/5001">#5001</a> <a href="https://github.com/Tencent/WeKnora/issues/5092">#5092</a></p></section><section class="work"><h3>Enforcing your own policy (compliance, deny rules)</h3><p><strong>What works today:</strong> There is a deny-only policy extension point with a ready patch that registers into the existing authorization choke points (16 files, +506/−3). A blunter option: run RBAC in audit-only mode with <code>tenant.enable_rbac=false</code> during a migration.</p><p><strong>What still leaks:</strong> Deny-only: it can veto but never grant, and it isn't upstream, so it has to live in a fork. Audit-only mode is not enforcement.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/4958">#4958</a> <a href="https://github.com/Tencent/WeKnora/issues/4216">#4216</a></p></section><section class="work"><h3>One MCP OAuth server shared across workspaces</h3><p><strong>What works today:</strong> Insert one <code>mcp_services</code> row with <code>is_builtin=true</code> directly in the database. It shows up in every workspace, and OAuth tokens are stored per <code>(tenant, principal, service)</code>, so every user keeps their own token in their own workspace.</p><p><strong>What still leaks:</strong> There is no supported way to provision it (config, env, or SystemAdmin API), secret rotation needs raw SQL, the Authorize button never appears for a builtin row, and new agents attach no MCP by default.</p><p class="muted">Related issues: <a href="https://github.com/Tencent/WeKnora/issues/5618">#5618</a></p></section><div class="note"><p>The multi-workspace pattern moves granularity from the resource to the workspace: admin cost rises and the audit trail fragments. That's the same objection the author of #5420 raised against splitting workspaces, so treat these workarounds as a stopgap, not a target design.</p></div>
+<h2>Gaps with no issue yet</h2>
+<ul>
+<li><strong>The wiki-write path through local agents isn't ownership-checked.</strong> The agent's wiki tools don't validate KB ownership before writing. No issue tracks this, and #5079 asks for the opposite direction by opening write access in IM.</li>
+<li><strong>End-to-end enforcement of “consumable through an agent, not listable” is incomplete.</strong> The listing and 404 side exists in the #5295 proposal, but leakage through answers, citations, file previews, and a shared agent's KB scope has no dedicated issue.</li>
+<li><strong>Audit attribution for actions run by an agent.</strong> Per-API-key audit was closed in #3402 and #5284 mentions the synthetic MCP user, but nothing proposes per-member audit for agent runs inside a single workspace.</li>
+<li><strong>There is no single authorization choke point.</strong> #4958 comes closest, but it's a per-deployment veto. Every path (list, IM, MCP, agent, wiki) still decides on its own, so each new feature can open a new leak.</li>
+</ul>
+<h2>Recommended contribution order</h2>
+<ol>
+<li><strong>#5295 — the per-KB ACL foundation.</strong> The design is the most complete and closest to what we need. If maintainers stay silent, decide whether to send a patch there or maintain a fork, accepting drift risk in access, session, IM, and MCP.</li>
+<li><strong>#3276 and #5284 — machine-access holes.</strong> Both are small and self-contained. #3276 aligns API-key scope with per-KB permissions, #5284 closes MCP writes and their audit attribution.</li>
+<li><strong>#5420, then #2024 + #2090 — usage and document level.</strong> Order matters: KB ACL first, then agent/MCP usage permissions, then document-level filtering, which needs metadata.</li>
+</ol>
+<h2>Limitations</h2>
+
+<ul>
+<li>Issue states come straight from the GitHub API on 17 November 2026 (WIB), not from memory or a summary.</li>
+<li>This is a read-only pass over the tracker and the code. Nothing was exercised at runtime, so behavioural claims
+(for example, that a Viewer can write through MCP) are inferred from code and issue text, not reproduced.</li>
+<li>The keyword sweep is broad but not guaranteed exhaustive. Issues filed after that date are not included.</li>
+<li>Effort estimates, where present, are guesses from reading code, not measurements.</li>
+<li>The workaround section is assembled from the upstream CHANGELOG and issue text. Nothing was run end to end against
+our own WeKnora deployment, so treat those as direction rather than tested instructions.</li>
+</ul>
+
+<h2>Sources</h2>
+
+<ul>
+<li><a href="https://github.com/Tencent/WeKnora">github.com/Tencent/WeKnora</a>; every issue links straight to its number.</li>
+<li><a href="https://github.com/Tencent/WeKnora/issues/5618">https://github.com/Tencent/WeKnora/issues/5618</a> — the issue we opened, used as context on this page.</li>
+<li>Code references quoted in the issues point at commit <code>7d064bc3</code> / <code>main</code> as of November 2026.</li>
+</ul>
+
+</main>
+<footer class="foot">
+<div class="page foot-inner">
+<p>This page summarises public issue state as of 17 November 2026. Written from the tracker and the code, without running WeKnora.</p>
+<nav aria-label="Registry">
+<span class="slug">fancy-fable-3f9j</span>
+<a href="https://artifacts.irfansp.dev/">All artifacts</a>
+</nav>
+</div>
+</footer>
+<script>
+(function(){
+  var h=document.getElementById('tbl-hint');
+  if(!h) return;
+  var w=h.nextElementSibling;
+  var check=function(){ h.hidden = w.scrollWidth <= w.clientWidth; };
+  check(); addEventListener('resize',check);
+})();
+</script>
+<script>
+(function(){
+  var b = document.querySelector('[data-theme-switch]');
+  if (!b) return;
+  var order = ['system', 'light', 'dark'];
+  var names = { system: 'System', light: 'Light', dark: 'Dark' };
+  function cur() { return document.documentElement.getAttribute('data-theme') || 'system'; }
+  function show() {
+    var c = cur();
+    b.textContent = 'Theme: ' + names[c];
+    b.setAttribute('aria-label', 'Colour theme: ' + names[c] + '. Activate to change.');
+  }
+  show();
+  b.addEventListener('click', function () {
+    var n = order[(order.indexOf(cur()) + 1) % order.length];
+    if (n === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', n);
+    try {
+      if (n === 'system') localStorage.removeItem('herenow-theme');
+      else localStorage.setItem('herenow-theme', n);
+    } catch (e) {}
+    show();
+  });
+})();
+</script>
+</body>
+</html>

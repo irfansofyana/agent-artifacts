@@ -1,6 +1,54 @@
 {
   "artifacts": [
     {
+      "title": "Open-source projects that use AI to fix GitLab vulnerabilities",
+      "slug": "open-source-gitlab-ai-autofix",
+      "description": "Ranked by GitHub stars, with GitLab fit and licence. Which open-source projects use AI to fix security findings from GitLab, and which are trustworthy enough to use.",
+      "createdAt": "2026-11-18",
+      "type": "html",
+      "url": "artifacts/open-source-gitlab-ai-autofix/"
+    },
+    {
+      "title": "Running Hermes and OpenClaw on AWS",
+      "slug": "hermes-openclaw-aws",
+      "description": "AWS now ships first-party material for both agents: a campaign page, a Lightsail quick start, one-click CloudFormation samples, Marketplace listings and four Builder Center write-ups. The community layer is thin, and only one Terraform module looks maintained.",
+      "createdAt": "2026-11-18",
+      "type": "html",
+      "url": "artifacts/hermes-openclaw-aws/"
+    },
+    {
+      "title": "Universal Agent Evaluation Framework (UAEF)",
+      "slug": "uaef-getting-started",
+      "description": "A hands-on guide to the Universal Agent Evaluation Framework: install it, score an agent on deterministic metrics without an AWS account, and gate releases on regressions.",
+      "createdAt": "2026-11-18",
+      "type": "html",
+      "url": "artifacts/uaef-getting-started/"
+    },
+    {
+      "title": "Peta issue least-privilege WeKnora di dalam satu workspace",
+      "slug": "weknora-least-privilege",
+      "description": "Semua issue di repo Tencent/WeKnora yang relevan kalau kita mau menerapkan least privilege di dalam satu workspace: apa yang sudah dilaporkan orang lain, statusnya sekara",
+      "createdAt": "2026-11-17",
+      "type": "html",
+      "url": "artifacts/weknora-least-privilege/"
+    },
+    {
+      "title": "Codex Security on GitLab: what actually works, and where it stops",
+      "slug": "codex-security-gitlab",
+      "description": "Research notes on OpenAI's Codex Security for a GitLab workflow: what is usable today, the facts that decide the design, the limits not to promise, and the assumptions still unverified.",
+      "createdAt": "2026-11-18",
+      "type": "html",
+      "url": "artifacts/codex-security-gitlab/"
+    },
+    {
+      "title": "CubeSandbox di EKS Jakarta",
+      "slug": "cubesandbox-eks-jakarta",
+      "description": "Riset arsitektur dan dependency CubeSandbox untuk deployment di Amazon EKS Jakarta: bare metal vs PVM, ketersediaan komponen di ap-southeast-3, biaya, dan catatan risiko.",
+      "createdAt": "2026-11-17",
+      "type": "html",
+      "url": "artifacts/cubesandbox-eks-jakarta/"
+    },
+    {
       "title": "Hermes and OpenClaw on AWS: the open-source ecosystem map",
       "slug": "hermes-openclaw-aws-ecosystem",
       "description": "AWS first-party samples, Lightsail and EC2 paths, EKS and AgentCore options, native Bedrock providers, and what works in Jakarta.",

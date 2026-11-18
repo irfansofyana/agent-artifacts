@@ -1,0 +1,231 @@
+<div data-artifact-content class="legacy-content">
+<main>
+<p>UAEF is AWS Labs' open-source, framework-agnostic evaluation system for AI agents. It takes the agent you already have, normalizes one run into a single canonical trace, and scores that trace with 36 built-in metrics spread across 7 quality dimensions.<sup class="cites"><a class="cite" href="#src-1" title="Source 1">1</a><a class="cite" href="#src-14" title="Source 14">14</a></sup> Every metric returns a number between 0 and 1, so a tool-calling regression and a safety regression can be read on the same scale.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<p>Results can be persisted, so a new agent version is compared against a stored baseline instead of against your memory of last week's numbers.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a><a class="cite" href="#src-9" title="Source 9">9</a></sup> Reports and regression detection close the loop: evaluate, learn what moved, change the prompt or the tools, evaluate again.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<p class="eyebrow">At a glance</p>
+<ul class="facts"><li>License: Apache 2.0, source at <code>awslabs/uaef</code>.<sup class="cites"><a class="cite" href="#src-1" title="Source 1">1</a><a class="cite" href="#src-14" title="Source 14">14</a></sup></li><li>Version: 0.2.0 (verified from a local install of the repository).</li><li>Requirements: Python 3.10+ and the <code>uv</code> package manager; Python 3.11+ for the deployable service.<sup class="cites"><a class="cite" href="#src-3" title="Source 3">3</a><a class="cite" href="#src-15" title="Source 15">15</a></sup></li><li>Metrics registry: 54 entries out of the box, 56 after you opt into the contact-center metrics (verified by listing the registry in a local 0.2.0 install).<sup class="cites"><a class="cite" href="#src-6" title="Source 6">6</a></sup></li><li>LLM judge: an Amazon Bedrock model, <code>us.anthropic.claude-sonnet-4-6</code> by default.<sup class="cites"><a class="cite" href="#src-9" title="Source 9">9</a></sup></li><li>AWS credentials are only needed for the LLM-judged metrics and for persistence. Deterministic metrics run with no cloud account at all.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup></li></ul>
+<h2 id="why-this-exists">Why this exists</h2>
+<p>Teams use different agent frameworks, and each one records execution its own way, so the shape of messages, tool calls, and handoffs differs from one to the next.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> Evaluation tooling tends to follow the same boundaries: metrics, scoring logic, and result storage get written against a single framework's trace format, and then have to be rebuilt when the team switches frameworks or runs agents on more than one.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<p>That coupling makes a basic question hard to answer: did the change I just made to the prompt, model, or tools actually improve the agent?<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> Answering it needs consistent metrics across versions and a shared record of past results.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> UAEF's answer is to separate the two halves: normalize the trace first, score second, and never let a metric know which framework produced its input.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<h2 id="the-mental-model">The mental model</h2>
+<p>One evaluation follows one path:</p>
+<ol><li>An adapter reads the framework's native record (messages, tool calls, agent-to-agent handoffs) and normalizes it into an <code>AgentTrace</code>.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></li><li>PII screening runs on the trace before anything is stored.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></li><li>The evaluation engine scores it on a selection from the 36 built-in metrics.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></li><li>The result comes back to the caller, and with <code>persist=True</code> it is written to Amazon DynamoDB and Amazon S3.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></li><li>Stored runs are compared against a baseline, and reports and insights explain what changed.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></li></ol>
+<p>Under the hood the architecture is layered: an adapter layer, core data models, a metrics layer, an evaluation engine, experiment management, analysis and insights, and a reporting layer.<sup class="cites"><a class="cite" href="#src-5" title="Source 5">5</a></sup> You only ever touch the first and last of those directly.</p>
+<p>There are also two ways to drive the same engine. The Python library runs in notebooks, scripts, and CI pipelines; the deployable AWS service exposes a low-code web interface over the identical engine and the same stores, so a score never depends on which path produced it.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<h2 id="install">Install</h2>
+<p>The repository is the recommended install path, and <code>pyproject.toml</code> plus <code>uv.lock</code> are the source of truth for dependencies.<sup class="cites"><a class="cite" href="#src-3" title="Source 3">3</a></sup></p>
+<div class="code"><div class="code-head"><span class="code-lang">Shell</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>git clone https://github.com/awslabs/uaef.git
+cd uaef
+uv sync                 # everything needed to run every metric and every capability</code></pre></div>
+<p><code>uv sync</code> installs all metric backends, every adapter, analysis and reporting, the Bedrock LLM judge, and the remote client SDK.<sup class="cites"><a class="cite" href="#src-3" title="Source 3">3</a></sup> The capability extras (<code>integrations</code>, <code>langgraph</code>, <code>analysis</code>, <code>judge</code>, <code>client</code>, <code>server</code>) are retained as no-op aliases so older install commands keep resolving; they add nothing.<sup class="cites"><a class="cite" href="#src-3" title="Source 3">3</a></sup> A Jupyter kernel is the only genuinely optional add-on.<sup class="cites"><a class="cite" href="#src-3" title="Source 3">3</a></sup></p>
+<blockquote class="callout"><strong>Expect a large environment.</strong> Because the core pulls the RAGAS, DeepEval, LangGraph, and Strands backends, the installed environment is heavy: a local <code>uv sync</code> on this machine produced a virtualenv of roughly 660 MB. Budget disk and CI image size accordingly.</blockquote>
+<p><strong>What actually needs an AWS account.</strong> Bedrock access is required for the LLM-judged metrics, and DynamoDB plus S3 are required only when you persist results.<sup class="cites"><a class="cite" href="#src-3" title="Source 3">3</a><a class="cite" href="#src-9" title="Source 9">9</a></sup> A first evaluation on deterministic metrics needs nothing but the library.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup></p>
+<h2 id="your-first-evaluation">Your first evaluation</h2>
+<p>This is the official quickstart trace, using three metrics that are all deterministic, so the run needs no AWS credentials.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup></p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>from datetime import datetime
+from uuid import uuid4
+
+from uaef.api import evaluate
+from uaef.models import AgentTrace, Message, MessageRole, ToolCall, GroundTruth
+
+now = datetime.now()
+
+trace = AgentTrace(
+    trace_id=uuid4(),
+    framework=&quot;langgraph&quot;,          # or &quot;bedrock&quot;, &quot;langchain&quot;, &quot;strands&quot;, ...
+    messages=[
+        Message(role=MessageRole.USER, content=&quot;What&#x27;s the weather in Paris?&quot;, timestamp=now),
+        Message(role=MessageRole.ASSISTANT, content=&quot;I&#x27;ll check the weather for you.&quot;, timestamp=now),
+        Message(role=MessageRole.ASSISTANT, content=&quot;The weather in Paris is sunny with 22C.&quot;, timestamp=now),
+    ],
+    tool_calls=[
+        ToolCall(
+            name=&quot;get_weather&quot;,
+            arguments={&quot;city&quot;: &quot;Paris&quot;, &quot;units&quot;: &quot;celsius&quot;},
+            result={&quot;temperature&quot;: 22, &quot;condition&quot;: &quot;sunny&quot;},
+            timestamp=now,
+        )
+    ],
+    input_tokens=150,
+    output_tokens=75,
+    latency=1.5,
+)
+
+ground_truth = GroundTruth(
+    expected_output=&quot;The weather in Paris is sunny with 22C.&quot;,
+    expected_tool_calls=[
+        ToolCall(name=&quot;get_weather&quot;, arguments={&quot;city&quot;: &quot;Paris&quot;, &quot;units&quot;: &quot;celsius&quot;}, timestamp=now)
+    ],
+)
+
+result = evaluate(
+    trace=trace,
+    ground_truth=ground_truth,
+    metrics=[&quot;tool_selection_accuracy&quot;, &quot;mcp_compliance&quot;, &quot;latency_score&quot;],
+    context=[&quot;Paris is the capital of France.&quot;],
+)
+
+print(f&quot;Overall Score: {result.overall_score:.2f}&quot;)
+print(f&quot;Passed: {result.passed}&quot;)
+for dimension in result.dimension_results:
+    print(f&quot;\n{dimension.dimension_name}: {dimension.aggregate_score:.2f}&quot;)
+    for metric in dimension.metric_scores:
+        value = &quot;n/a&quot; if metric.score is None else f&quot;{metric.score:.2f}&quot;
+        print(f&quot;  - {metric.metric_name}: {value}&quot;)</code></pre></div>
+<p>Running that on version 0.2.0 prints this, verbatim:</p>
+<div class="code"><div class="code-head"><span class="code-lang">Output</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>Overall Score: 1.00
+Passed: True
+
+Tool Calling: 1.00
+  - mcp_compliance: n/a
+  - tool_selection_accuracy: 1.00
+
+Performance: 1.00
+  - latency_score: 1.00</code></pre></div>
+<p>Three things to notice. <code>tool_selection_accuracy</code> is 1.00 because the agent called exactly the tool the ground truth expected. <code>latency_score</code> is 1.00 because 1.5 seconds is under the 2000 ms default threshold.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup> And <code>mcp_compliance</code> is <code>n/a</code> rather than a number, because that input had nothing for it to judge: every metric returns <code>None</code> plus a warning instead of guessing when its input does not apply.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup></p>
+<p><strong>Now break it.</strong> Give the same ground truth a run that picked the wrong tool and took ten seconds:</p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>result = evaluate(
+    trace=bad_trace,               # called search_recipes instead of get_weather, 10s latency
+    ground_truth=ground_truth,
+    metrics=[&quot;tool_selection_accuracy&quot;, &quot;tool_sequence_correctness&quot;,
+             &quot;parameter_quality&quot;, &quot;latency_score&quot;],
+)</code></pre></div>
+<p>The real output on 0.2.0:</p>
+<div class="code"><div class="code-head"><span class="code-lang">Output</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>Overall Score: 0.06
+Passed: False
+
+Tool Calling: 0.00
+  - tool_selection_accuracy: 0.00
+  - parameter_quality: 0.00
+  - tool_sequence_correctness: 0.00
+
+Performance: 0.20
+  - latency_score: 0.20</code></pre></div>
+<p><code>latency_score</code> is <code>2000/10000</code> = 0.20, exactly the documented threshold formula.<sup class="cites"><a class="cite" href="#src-6" title="Source 6">6</a></sup> The overall score is the weighted aggregate over the dimensions that were actually evaluated (0.25 for Tool Calling, 0.10 for Performance against a full weight of 0.35), which is why it lands at 0.06 rather than at an average of the two dimension scores.<sup class="cites"><a class="cite" href="#src-13" title="Source 13">13</a></sup></p>
+<p><strong>Gate on it.</strong> Thresholds are passed per call and keyed by the exact dimension name, Title Case with spaces.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a><a class="cite" href="#src-13" title="Source 13">13</a></sup></p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>result = evaluate(
+    trace=bad_trace,
+    ground_truth=ground_truth,
+    metrics=[&quot;tool_selection_accuracy&quot;, &quot;latency_score&quot;],
+    thresholds={&quot;Tool Calling&quot;: 0.85, &quot;Performance&quot;: 0.70},
+)
+print(result.passed)     # False
+print(result.failures)</code></pre></div>
+<div class="code"><div class="code-head"><span class="code-lang">Output</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>[&#x27;Tool Calling: score 0.000 below threshold 0.850&#x27;,
+ &#x27;Performance: score 0.200 below threshold 0.700&#x27;]</code></pre></div>
+<p>That list is what you assert on in CI.</p>
+<h2 id="the-canonical-trace-is-the-contract">The canonical trace is the contract</h2>
+<p>Adapters are what make UAEF framework-agnostic: they read a run and produce one canonical <code>AgentTrace</code>, which is the only thing the rest of UAEF scores.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> Three models carry almost everything you will care about.<sup class="cites"><a class="cite" href="#src-5" title="Source 5">5</a></sup></p>
+<div class="table-wrap" role="region" tabindex="0" aria-labelledby="tbl-1-hint"><p class="table-hint" id="tbl-1-hint" hidden>Scroll sideways to see every column.</p><table><thead><tr><th scope="col">Model</th><th scope="col">Fields</th></tr></thead><tbody><tr><td><code>AgentTrace</code></td><td><code>trace_id</code>, <code>messages</code>, <code>tool_calls</code>, <code>metadata</code> (latency, tokens, cost), optional <code>session_id</code></td></tr><tr><td><code>Message</code></td><td><code>role</code> (<code>user</code>, <code>assistant</code>, <code>system</code>, <code>tool</code>), <code>content</code>, associated <code>tool_calls</code></td></tr><tr><td><code>ToolCall</code></td><td><code>name</code>, <code>arguments</code>, <code>result</code>, <code>timestamp</code></td></tr></tbody></table></div>
+<p>Build the trace yourself if you have already captured a run, or let an adapter do it. Either way the metrics downstream see the same shape, which is what lets an agent built on one framework be compared against an agent built on another on a single scale.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<h2 id="wiring-your-own-agent">Wiring your own agent</h2>
+<p>Six adapters ship in the box, plus a generic one for anything else.<sup class="cites"><a class="cite" href="#src-7" title="Source 7">7</a></sup></p>
+<div class="table-wrap" role="region" tabindex="0" aria-labelledby="tbl-2-hint"><p class="table-hint" id="tbl-2-hint" hidden>Scroll sideways to see every column.</p><table><thead><tr><th scope="col">Framework</th><th scope="col">How to get the adapter</th></tr></thead><tbody><tr><td>LangGraph</td><td><code>get_adapter(&quot;langgraph&quot;)</code></td></tr><tr><td>Amazon Bedrock Agents</td><td><code>get_adapter(&quot;bedrock&quot;)</code></td></tr><tr><td>LangChain</td><td><code>get_adapter(&quot;langchain&quot;)</code></td></tr><tr><td>Langfuse (traces already collected)</td><td><code>get_adapter(&quot;langfuse&quot;)</code></td></tr><tr><td>Strands Agents</td><td><code>get_adapter(&quot;strands&quot;)</code></td></tr><tr><td>Amazon Bedrock AgentCore</td><td><code>get_adapter(&quot;agentcore&quot;)</code></td></tr><tr><td>Anything else</td><td><code>GenericJSONAdapter(schema_mapping)</code></td></tr></tbody></table></div>
+<p>The generic adapter maps your own JSON onto the canonical trace with a schema mapping, which is the fastest route for an in-house runtime.<sup class="cites"><a class="cite" href="#src-7" title="Source 7">7</a></sup> This mapping was verified against 0.2.0 and produces a well-formed <code>AgentTrace</code> with messages, tool calls, tokens, latency, and session id all populated:</p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>from uaef.adapters.generic import GenericJSONAdapter
+
+schema_mapping = {
+    &quot;messages&quot;: {
+        &quot;path&quot;: &quot;$.conversation.messages[*]&quot;,
+        &quot;role_field&quot;: &quot;sender&quot;,
+        &quot;content_field&quot;: &quot;text&quot;,
+        &quot;timestamp_field&quot;: &quot;created_at&quot;,
+    },
+    &quot;tool_calls&quot;: {
+        &quot;path&quot;: &quot;$.execution.tools[*]&quot;,
+        &quot;name_field&quot;: &quot;tool_name&quot;,
+        &quot;arguments_field&quot;: &quot;params&quot;,
+        &quot;result_field&quot;: &quot;output&quot;,
+    },
+    &quot;metadata&quot;: {
+        &quot;input_tokens&quot;: &quot;$.usage.input&quot;,
+        &quot;output_tokens&quot;: &quot;$.usage.output&quot;,
+        &quot;latency&quot;: &quot;$.performance.duration&quot;,
+    },
+    &quot;session_id&quot;: &quot;$.session.id&quot;,
+}
+
+adapter = GenericJSONAdapter(schema_mapping)
+trace = adapter.transform_to_canonical(custom_data)</code></pre></div>
+<p>Two other shapes worth knowing. First, UAEF can run the agent for you: given a runtime ARN or an HTTP endpoint it calls the agent on each dataset input, collects the response, and adapts it in one step, which is the "active" mode against the "passive" mode of feeding it a trace you already have.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> Second, for a framework with no adapter at all, subclass <code>BaseAdapter</code>, implement <code>transform_to_canonical</code>, and register it with <code>register_adapter(&quot;my_framework&quot;, MyCustomAdapter)</code>.<sup class="cites"><a class="cite" href="#src-7" title="Source 7">7</a></sup></p>
+<h2 id="choosing-metrics">Choosing metrics</h2>
+<p>The 7 dimensions, and what each one actually covers:<sup class="cites"><a class="cite" href="#src-5" title="Source 5">5</a></sup></p>
+<div class="table-wrap" role="region" tabindex="0" aria-labelledby="tbl-3-hint"><p class="table-hint" id="tbl-3-hint" hidden>Scroll sideways to see every column.</p><table><thead><tr><th scope="col">Dimension</th><th scope="col">What it measures</th></tr></thead><tbody><tr><td>Tool Calling</td><td>Tool selection, sequencing, parameter quality, MCP compliance</td></tr><tr><td>Response Quality</td><td>Relevance, completeness, hallucination, accuracy</td></tr><tr><td>Responsible AI</td><td>Safety, bias, prompt injection, toxicity</td></tr><tr><td>Performance</td><td>Latency, token efficiency, cost efficiency, throughput</td></tr><tr><td>Multi-Turn</td><td>Context retention, coherence, conversation completeness, turn efficiency</td></tr><tr><td>Multi-Agent</td><td>Agent utilization, delegation quality, workflow completion, coordination</td></tr><tr><td>Reasoning</td><td>Chain-of-thought coherence, logical consistency, step correctness, fallacies</td></tr></tbody></table></div>
+<p>Metrics come in three families, and the family decides what you must supply in return.<sup class="cites"><a class="cite" href="#src-6" title="Source 6">6</a></sup></p>
+<ul><li><strong>Deterministic</strong>: rule-based and reproducible, no ground truth needed. Latency, token efficiency, cost efficiency, throughput, MCP compliance, prompt injection detection.<sup class="cites"><a class="cite" href="#src-5" title="Source 5">5</a><a class="cite" href="#src-6" title="Source 6">6</a></sup></li><li><strong>Ground-truth-based</strong>: compares the output against expected results, so it needs labeled test cases with expected outputs and expected tool calls. Tool selection accuracy, tool sequence correctness, parameter quality, accuracy, completeness.<sup class="cites"><a class="cite" href="#src-5" title="Source 5">5</a><a class="cite" href="#src-6" title="Source 6">6</a></sup></li><li><strong>LLM-judged</strong>: an Amazon Bedrock judge scores the subjective qualities and returns its reasoning with the score. Relevance, hallucination, safety, bias, toxicity, coherence, reasoning quality.<sup class="cites"><a class="cite" href="#src-5" title="Source 5">5</a><a class="cite" href="#src-6" title="Source 6">6</a></sup></li></ul>
+<p>Start from your scenario, not from the metric list, because scoring a travel-booking agent and a policy Q&A agent on all 36 metrics wastes time and Bedrock invocations.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> The starting sets below are the ones AWS recommends per scenario.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<div class="table-wrap" role="region" tabindex="0" aria-labelledby="tbl-4-hint"><p class="table-hint" id="tbl-4-hint" hidden>Scroll sideways to see every column.</p><table><thead><tr><th scope="col">Your agent</th><th scope="col">Start with</th></tr></thead><tbody><tr><td>RAG / knowledge Q&A</td><td><code>answer_relevance</code>, <code>accuracy</code>, <code>completeness</code>, plus the RAGAS context metrics</td></tr><tr><td>General Q&A</td><td><code>answer_relevance</code>, <code>hallucination_score</code>, <code>safety_score</code>, <code>latency_score</code></td></tr><tr><td>Tool-using agent</td><td><code>tool_selection_accuracy</code>, <code>tool_sequence_correctness</code>, <code>parameter_quality</code>, <code>mcp_compliance</code></td></tr><tr><td>Multi-turn conversation</td><td><code>context_retention</code>, <code>coherence</code>, <code>conversation_completeness</code>, <code>user_satisfaction</code></td></tr><tr><td>Reasoning-heavy</td><td><code>chain_of_thought_coherence</code>, <code>logical_consistency</code>, <code>reasoning_step_correctness</code>, <code>fallacy_detection</code></td></tr><tr><td>Safety and compliance</td><td><code>prompt_injection_detection</code>, <code>toxicity_score</code>, <code>bias_score</code>, <code>safety_score</code></td></tr><tr><td>Multi-agent</td><td><code>agent_utilization</code>, <code>delegation_quality</code>, <code>workflow_completion</code>, <code>coordination_efficiency</code></td></tr><tr><td>Production monitoring</td><td><code>latency_score</code>, <code>token_efficiency</code>, <code>cost_efficiency</code>, <code>throughput</code></td></tr></tbody></table></div>
+<p>Beyond the built-ins, 21 more metrics come through integrations: 7 prefixed <code>ragas_</code>, 8 prefixed <code>deepeval_</code>, and 6 Stickler metrics that the catalog still marks work in progress.<sup class="cites"><a class="cite" href="#src-6" title="Source 6">6</a></sup> Two contact-center metrics, <code>containment</code> and <code>resolution</code>, exist but are deliberately not registered by default, because they are only meaningful for customer-service agents; opt in with one call.<sup class="cites"><a class="cite" href="#src-6" title="Source 6">6</a></sup> Verified on 0.2.0: the registry lists 54 entries before that call and 56 after, the two additions being <code>containment</code> and <code>resolution</code>.</p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>from uaef.metrics.registry import register_use_case_specific_metrics
+
+register_use_case_specific_metrics()
+result = evaluate(trace, metrics=[&quot;containment&quot;, &quot;resolution&quot;])</code></pre></div>
+<p>Selecting metrics happens per call, not on the evaluator.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup> Pass a flat list with <code>metrics=[...]</code>, or group by dimension with <code>metric_set={&quot;tool_calling&quot;: [...], &quot;response_quality&quot;: [...]}</code> when you want dimension-level control.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup> Add a custom metric by subclassing <code>BaseMetric</code> and calling <code>register_metric</code>.<sup class="cites"><a class="cite" href="#src-6" title="Source 6">6</a></sup></p>
+<h2 id="ground-truth-datasets">Ground truth datasets</h2>
+<p>For the service and the notebook paths, a dataset is one row per test case in CSV or XLSX, and only <code>Question</code> is mandatory.<sup class="cites"><a class="cite" href="#src-10" title="Source 10">10</a></sup></p>
+<div class="table-wrap" role="region" tabindex="0" aria-labelledby="tbl-5-hint"><p class="table-hint" id="tbl-5-hint" hidden>Scroll sideways to see every column.</p><table><thead><tr><th scope="col">Column</th><th scope="col">Required</th><th scope="col">Purpose</th></tr></thead><tbody><tr><td><code>Question</code></td><td>yes</td><td>Input sent to the agent</td></tr><tr><td><code>Answer</code></td><td>no</td><td>Expected response</td></tr><tr><td><code>context</code></td><td>no</td><td>Reference documents for retrieval-style evaluation</td></tr><tr><td><code>expected_tool_calls</code></td><td>no</td><td>Expected tool calls as a JSON array</td></tr><tr><td><code>session_id</code></td><td>multi-turn only</td><td>Groups rows into one conversation</td></tr><tr><td><code>turn_id</code></td><td>multi-turn only</td><td>Orders turns within a conversation, starting at 1</td></tr></tbody></table></div>
+<p>Without <code>Answer</code> you still get safety, performance, and reasoning scores; with it you also get the comparison metrics such as <code>accuracy</code>.<sup class="cites"><a class="cite" href="#src-10" title="Source 10">10</a></sup> <code>Question</code> and <code>Answer</code> accept common aliases and any capitalisation, so existing test files usually work without renaming.<sup class="cites"><a class="cite" href="#src-10" title="Source 10">10</a></sup></p>
+<p>Multi-turn is where the sharp edges are. Rows that share a <code>session_id</code> are driven in order against a single agent session, so a later turn can depend on an earlier one, and that is also what unlocks the Multi-Turn dimension.<sup class="cites"><a class="cite" href="#src-10" title="Source 10">10</a></sup> The agent endpoint has to maintain its own conversation state, because UAEF sends each turn with the session id rather than replaying history.<sup class="cites"><a class="cite" href="#src-10" title="Source 10">10</a></sup> And unlike <code>Question</code> and <code>Answer</code>, the two multi-turn columns are read literally in lowercase: a column called <code>Session_ID</code> is not recognised, the file is quietly evaluated as single-turn, and you get a complete set of plausible scores with nothing to indicate the conversations were never assembled.<sup class="cites"><a class="cite" href="#src-10" title="Source 10">10</a></sup></p>
+<h2 id="experiments-and-regression-detection">Experiments and regression detection</h2>
+<p>Persisting is what makes version comparison possible: only persisted runs can be compared.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>result = evaluate(
+    trace=trace,
+    ground_truth=ground_truth,
+    persist=True,
+    experiment_name=&quot;Customer Support Agent v2&quot;,
+    experiment_objective=&quot;Measure quality after prompt changes&quot;,
+)
+print(result.experiment_id)</code></pre></div>
+<p>With <code>persist=True</code> and no name, UAEF resolves the target experiment in a fixed order: a supplied <code>experiment_id</code> is used directly, else a supplied <code>experiment_name</code> is found or created, else an experiment named <code>default</code> is used or created.<sup class="cites"><a class="cite" href="#src-9" title="Source 9">9</a></sup> Each experiment is a self-contained evaluation, so a run with different settings belongs in a new experiment rather than appended to an old one.<sup class="cites"><a class="cite" href="#src-9" title="Source 9">9</a></sup></p>
+<p>Storage splits by job: DynamoDB holds one row per experiment with the metadata used for listing and comparison (evaluation count, per-metric averages, overall average), and S3 holds the full results JSON including per-metric scores and the judge's reasoning.<sup class="cites"><a class="cite" href="#src-9" title="Source 9">9</a><a class="cite" href="#src-14" title="Source 14">14</a></sup> Averages in DynamoDB are recomputed on every write, so the row always reflects the current state.<sup class="cites"><a class="cite" href="#src-9" title="Source 9">9</a></sup></p>
+<p>Comparison works on those stored per-metric averages. For each metric two runs share, the engine calculates the absolute and percentage change and classifies it as a regression, an improvement, or unchanged, using a configurable threshold that defaults to 5 percent.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> Regressions also get a severity: minor (5 to 10 percent), moderate (10 to 20), or severe (over 20), grouped by dimension so you can see whether a prompt change hurt tool calling but left response quality alone.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> Several runs can be compared against one baseline in a single call.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>from uaef.experiments import ComparisonEngine
+
+engine = ComparisonEngine(regression_threshold=5.0, improvement_threshold=5.0)
+report = engine.compare_runs(baseline_run, improved_run)
+print(report.regressions, report.improvements, report.unchanged)</code></pre></div>
+<p>Keep the test set constant across runs and record which set a run used; run names like <code>baseline-v1.0</code> and <code>improved-added-database-tool-v1.1</code> cost nothing and save an afternoon.<sup class="cites"><a class="cite" href="#src-8" title="Source 8">8</a></sup></p>
+<h2 id="human-in-the-loop">Human in the loop</h2>
+<p>An LLM judge is a model, so its scores are worth calibrating. UAEF ships a calibration workflow that queues low-confidence items for human review, samples a slice of high-confidence ones, computes agreement between humans and the judge, and turns the disagreements into prompt suggestions.<sup class="cites"><a class="cite" href="#src-11" title="Source 11">11</a></sup></p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>from uaef.hitl import AgreementCalculator, JudgeCalibrationWorkflow
+from uaef.llm_judge import LLMJudge
+
+workflow = JudgeCalibrationWorkflow(
+    llm_judge=LLMJudge(),
+    confidence_threshold=0.7,   # queue items the judge scored below this
+    sample_rate=0.1,            # also sample 10% of high-confidence items
+)</code></pre></div>
+<p><code>AgreementCalculator</code> then reports Pearson and Spearman correlation, mean absolute error, and an agreement rate, and <code>identify_disputes</code> pulls out the items where the human and the judge diverge by more than a threshold you set.<sup class="cites"><a class="cite" href="#src-11" title="Source 11">11</a></sup> Reviewed items can be frozen into a versioned benchmark and re-run as a regression test on the judge itself.<sup class="cites"><a class="cite" href="#src-11" title="Source 11">11</a></sup></p>
+<h2 id="running-it-in-production">Running it in production</h2>
+<p>The library path covers notebooks, scripts, and CI.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> A gate looks like this:</p>
+<div class="code"><div class="code-head"><span class="code-lang">Python</span><button class="copy" type="button" data-copy>Copy</button></div><pre><code>results = batch_evaluate(
+    traces=test_traces,
+    ground_truths=test_gts,
+    persist=True,
+    experiment_name=f&quot;ci-build-{build_number}&quot;,
+)
+
+avg = sum(r.overall_score for r in results) / len(results)
+assert avg &gt;= 0.8, f&quot;Quality regression: {avg:.2f}&quot;</code></pre></div>
+<p><code>batch_evaluate</code> runs traces in parallel through <code>OfflineEvaluator</code>, and you control the pool with <code>max_workers</code>.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup> For live traffic, evaluate each response and persist every request into a single named experiment: that keeps a running average of production quality you can alert on.<sup class="cites"><a class="cite" href="#src-12" title="Source 12">12</a></sup></p>
+<p>The service path deploys the same engine behind a web interface.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> You upload a dataset, pick a framework and metrics, run the evaluation, and read the scores; both paths write to the same stores, so a score never depends on which one produced it.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<p>Two operational notes for that path:</p>
+<ul><li>It is a CDK deployment, so it needs <code>cdk bootstrap</code> run once per account and region, plus Bedrock model access.<sup class="cites"><a class="cite" href="#src-15" title="Source 15">15</a></sup></li><li>A React and FastAPI demo app in the repository runs the same flow locally against your ambient AWS credentials, and the demo backend fails closed with a 503 unless you configure an API key or explicitly opt out for local development.<sup class="cites"><a class="cite" href="#src-15" title="Source 15">15</a></sup></li></ul>
+<p>Deploy one stack per tenant: a single deployment has one Cognito pool, one experiment table, and one results bucket shared by every authenticated caller.<sup class="cites"><a class="cite" href="#src-15" title="Source 15">15</a></sup></p>
+<h2 id="pitfalls-that-actually-bite">Pitfalls that actually bite</h2>
+<p><strong>A green run does not mean the judge ran.</strong> Metrics whose input is unusable return <code>None</code> with a warning instead of a score, and <code>None</code> scores are excluded from the dimension average rather than counted as zero.<sup class="cites"><a class="cite" href="#src-6" title="Source 6">6</a></sup> Verified on 0.2.0 with no AWS credentials configured: requesting <code>answer_relevance</code> and <code>safety_score</code> alongside <code>latency_score</code> produced <code>answer_relevance: None (api_error)</code>, <code>safety_score: None (api_error)</code>, and still printed <code>overall: 1.00, passed: True</code>. Read the per-metric scores, or assert that the judge metrics are non-null, before you trust a passing build.</p>
+<p><strong>Metrics that need ground truth disappear when you forget it.</strong> Verified on 0.2.0: with no <code>ground_truth</code> passed, <code>tool_selection_accuracy</code> is skipped rather than returned as <code>None</code>, so it is simply absent from <code>dimension_results</code>, and the result carries the warning <code>Ground truth not provided, some metrics may be skipped</code>. A dashboard that counts metrics will not tell you it lost one.</p>
+<p><strong>Threshold keys are dimension names, not metric names.</strong> They are matched against the dimension name, Title Case with spaces: <code>&quot;Tool Calling&quot;</code>, <code>&quot;Response Quality&quot;</code>, <code>&quot;Responsible AI&quot;</code>, <code>&quot;Performance&quot;</code>, <code>&quot;Multi-Turn&quot;</code>, <code>&quot;Multi-Agent&quot;</code>, <code>&quot;Reasoning&quot;</code>.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a><a class="cite" href="#src-13" title="Source 13">13</a></sup></p>
+<p><strong>Treat agent output as untrusted in the judge.</strong> Judge metrics feed the agent's own output back into a prompt, so an agent that can influence its judge can influence its own scores. UAEF sends the rubric separately from the content, escapes the content so it cannot break out of its delimiter, parses judge responses strictly, and requires each score to cite a verbatim span of the content it scored, rejecting a score whose evidence cannot be found.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> Even so, judge scores are evaluation signal and not a safety decision, and should not gate a security control; for runtime enforcement the guidance is to apply Amazon Bedrock Guardrails in the agent's own invocation path.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<p><strong>Redact PII before you store or share a dataset.</strong> UAEF screens traces for personally identifiable information such as email addresses, phone numbers, and credit card numbers before data is stored, and <code>uaef.security.PIIDetector</code> does the same job on a dataset drawn from real traffic before you share or persist it.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a><a class="cite" href="#src-10" title="Source 10">10</a></sup></p>
+<p><strong>Persisting creates billable cloud resources, and service teardown retains them.</strong> The default stores are a DynamoDB table and an S3 bucket, overridable with environment variables.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup> When you delete the service stack, the DynamoDB tables, S3 buckets, and Cognito user pool are deliberately created with a retain policy, so they and their contents stay behind; the storage keeps costing you until you remove it yourself.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a><a class="cite" href="#src-15" title="Source 15">15</a></sup></p>
+<p><strong>The default judge model pins you to US regions.</strong> <code>us.anthropic.claude-sonnet-4-6</code> is a <code>us.</code> cross-region inference profile, so it works in <code>us-east-1</code>, <code>us-east-2</code>, and <code>us-west-2</code>.<sup class="cites"><a class="cite" href="#src-9" title="Source 9">9</a></sup> Outside those regions, change the model id rather than discovering the failure at scoring time.</p>
+<p><strong>The extras are no-ops, so dependency pinning is all-or-nothing.</strong> <code>integrations</code>, <code>langgraph</code>, <code>analysis</code>, <code>judge</code>, and <code>client</code> add nothing because everything ships in the core, which is also why the service Worker had to be packaged as a container image instead of a zip.<sup class="cites"><a class="cite" href="#src-3" title="Source 3">3</a></sup></p>
+<p><strong>A single run is not a trend.</strong> One trace tells you what happened once; the aggregate over a dataset is what you compare and gate on. Use <code>evaluate()</code> to debug one case and <code>batch_evaluate()</code> to measure a release.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></p>
+<h2 id="a-30-minute-path-from-zero">A 30-minute path from zero</h2>
+<ol><li><code>uv sync</code>, then run the quickstart trace above with three deterministic metrics. No AWS account required, and you will have a number in about five minutes.<sup class="cites"><a class="cite" href="#src-4" title="Source 4">4</a></sup></li><li>Capture ten real runs from your own agent and adapt them with <code>GenericJSONAdapter</code>. This is the step that makes the rest of the exercise about your system rather than about the tutorial.<sup class="cites"><a class="cite" href="#src-7" title="Source 7">7</a></sup></li><li>Pick three metrics that match your scenario from the table above, and add ground truth for critical journeys and known edge cases only.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></li><li>Create an experiment, run <code>batch_evaluate(..., persist=True)</code>, and mark that run as the baseline.<sup class="cites"><a class="cite" href="#src-8" title="Source 8">8</a><a class="cite" href="#src-9" title="Source 9">9</a></sup></li><li>Turn on Bedrock access, add one or two judge metrics to the same call, and re-run. Compare against the baseline and read which dimensions moved.<sup class="cites"><a class="cite" href="#src-14" title="Source 14">14</a></sup></li><li>Put step 4 in CI with an aggregate assertion, so the next regression is caught by the build instead of by a customer.<sup class="cites"><a class="cite" href="#src-12" title="Source 12">12</a></sup></li></ol>
+<p>For the reference material behind all of this, the documentation site carries the full API reference, a metrics catalog with worked good, partial, and bad examples for every metric, and runnable notebooks for each supported framework.<sup class="cites"><a class="cite" href="#src-2" title="Source 2">2</a><a class="cite" href="#src-6" title="Source 6">6</a></sup></p>
+<h2 id="sources">Sources</h2>
+<ol class="source-list"><li id="src-1"><span class="src-num">1</span><a href="https://github.com/awslabs/uaef">https://github.com/awslabs/uaef</a></li><li id="src-2"><span class="src-num">2</span><a href="https://awslabs.github.io/uaef">https://awslabs.github.io/uaef</a></li><li id="src-3"><span class="src-num">3</span><a href="https://awslabs.github.io/uaef/Getting-Started/installation">https://awslabs.github.io/uaef/Getting-Started/installation</a></li><li id="src-4"><span class="src-num">4</span><a href="https://awslabs.github.io/uaef/Getting-Started/quickstart">https://awslabs.github.io/uaef/Getting-Started/quickstart</a></li><li id="src-5"><span class="src-num">5</span><a href="https://awslabs.github.io/uaef/Getting-Started/core-concepts">https://awslabs.github.io/uaef/Getting-Started/core-concepts</a></li><li id="src-6"><span class="src-num">6</span><a href="https://awslabs.github.io/uaef/Guides/metrics-catalog">https://awslabs.github.io/uaef/Guides/metrics-catalog</a></li><li id="src-7"><span class="src-num">7</span><a href="https://awslabs.github.io/uaef/Guides/adapters">https://awslabs.github.io/uaef/Guides/adapters</a></li><li id="src-8"><span class="src-num">8</span><a href="https://awslabs.github.io/uaef/Guides/experiments">https://awslabs.github.io/uaef/Guides/experiments</a></li><li id="src-9"><span class="src-num">9</span><a href="https://awslabs.github.io/uaef/Guides/persistence-and-configuration">https://awslabs.github.io/uaef/Guides/persistence-and-configuration</a></li><li id="src-10"><span class="src-num">10</span><a href="https://awslabs.github.io/uaef/Guides/ground-truth-datasets">https://awslabs.github.io/uaef/Guides/ground-truth-datasets</a></li><li id="src-11"><span class="src-num">11</span><a href="https://awslabs.github.io/uaef/Guides/hitl">https://awslabs.github.io/uaef/Guides/hitl</a></li><li id="src-12"><span class="src-num">12</span><a href="https://awslabs.github.io/uaef/Guides/use-cases">https://awslabs.github.io/uaef/Guides/use-cases</a></li><li id="src-13"><span class="src-num">13</span><a href="https://awslabs.github.io/uaef/Advanced/multi-turn-evaluation-workflow">https://awslabs.github.io/uaef/Advanced/multi-turn-evaluation-workflow</a></li><li id="src-14"><span class="src-num">14</span><a href="https://aws.amazon.com/blogs/machine-learning/uaef-a-framework-agnostic-system-for-closed-loop-evaluation-of-ai-agents">https://aws.amazon.com/blogs/machine-learning/uaef-a-framework-agnostic-system-for-closed-loop-evaluation-of-ai-agents</a></li><li id="src-15"><span class="src-num">15</span><a href="https://github.com/awslabs/uaef/blob/main/uaef-service/README.md">https://github.com/awslabs/uaef/blob/main/uaef-service/README.md</a></li></ol>
+</main>
+</div>
