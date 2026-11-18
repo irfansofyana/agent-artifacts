@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111613"><meta name="description" content="A source-backed, interactive guide to prompting GPT-5.6, Claude Opus 5, Grok 4.6, GLM-5.3, Qwen3.8-Max, Kimi K3, and Gemini 3.7 Flash."><title>Prompting the 2026 Frontier — Model Field Guide · Irfan's AI Agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script><link rel="stylesheet" href="../../src/artifacts/frontier-llm-prompt-field-guide-2026/module.css"></head>
-<body><a class="skip-link" href="#site-main">Skip to content</a><div class="terminal-window"><header class="window-chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="window-path">irfan@irfansp.dev:~/artifacts/frontier-llm-prompt-field-guide-2026</span></header><div class="window-scroll"><div class="page-inner"><nav class="page-toolbar" aria-label="Site navigation"><a href="../../">← All artifacts</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav><main id="site-main"><header class="artifact-hero"><p class="eyebrow">▸ html / PUBLISHED OUTPUT</p><h1>Prompting the 2026 Frontier — Model Field Guide</h1><p class="lede">A source-backed, interactive guide to prompting GPT-5.6, Claude Opus 5, Grok 4.6, GLM-5.3, Qwen3.8-Max, Kimi K3, and Gemini 3.7 Flash.</p><div class="artifact-meta"><span>2026-08-30</span><span>html</span></div></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#principle">Write a task contract, then tune the dialect.</a><a href="#choose">Choose for the job, not the leaderboard.</a><a href="#models">Change the pressure point.</a><a href="#evidence">Benchmarks choose a harness too.</a><a href="#builder">Write once. Compile for the model.</a><a href="#failures">Six ways to waste a frontier model.</a><a href="#sources">Primary guidance first. Evaluations second.</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#principle">Write a task contract, then tune the dialect.</a><a href="#choose">Choose for the job, not the leaderboard.</a><a href="#models">Change the pressure point.</a><a href="#evidence">Benchmarks choose a harness too.</a><a href="#builder">Write once. Compile for the model.</a><a href="#failures">Six ways to waste a frontier model.</a><a href="#sources">Primary guidance first. Evaluations second.</a></details>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light"><meta name="description" content="A source-backed, interactive guide to prompting GPT-5.6, Claude Opus 5, Grok 4.6, GLM-5.3, Qwen3.8-Max, Kimi K3, and Gemini 3.7 Flash."><title>Prompting the 2026 Frontier — Model Field Guide · Irfan's AI agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script><link rel="stylesheet" href="../../src/artifacts/frontier-llm-prompt-field-guide-2026/module.css"></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><header class="masthead"><div class="page masthead-inner"><p class="wordmark"><a href="../../">← All artifacts</a></p><nav aria-label="Site navigation"><a href="../../">Registry</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav></div></header><main id="site-main" class="page"><header class="artifact-hero"><p class="eyebrow">30 Aug 2026 · html</p><h1>Prompting the 2026 Frontier — Model Field Guide</h1><p class="lede">A source-backed, interactive guide to prompting GPT-5.6, Claude Opus 5, Grok 4.6, GLM-5.3, Qwen3.8-Max, Kimi K3, and Gemini 3.7 Flash.</p></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#principle">Write a task contract, then tune the dialect.</a><a href="#choose">Choose for the job, not the leaderboard.</a><a href="#models">Change the pressure point.</a><a href="#evidence">Benchmarks choose a harness too.</a><a href="#builder">Write once. Compile for the model.</a><a href="#failures">Six ways to waste a frontier model.</a><a href="#sources">Primary guidance first. Evaluations second.</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#principle">Write a task contract, then tune the dialect.</a><a href="#choose">Choose for the job, not the leaderboard.</a><a href="#models">Change the pressure point.</a><a href="#evidence">Benchmarks choose a harness too.</a><a href="#builder">Write once. Compile for the model.</a><a href="#failures">Six ways to waste a frontier model.</a><a href="#sources">Primary guidance first. Evaluations second.</a></details>
 <div class="legacy-content" data-artifact-content>
 
   <header class="topbar">
@@ -19,19 +19,19 @@
       <p class="dek">Frontier models share the same grammar: objective, context, constraints, output contract. Each model places a different tax on vague scope, excessive scaffolding, weak evidence rules, or the wrong reasoning effort. This guide shows where to tune.</p>
       <div class="hero-meta"><span class="pill">7 current models</span><span class="pill">20 first-party and evaluation sources</span><span class="pill">Interactive prompt compiler</span><span class="pill">Prompt POV only</span></div>
       <div class="hero-map" aria-label="Model behavior summary">
-        <div class="map-cell" style="--accent:#5b58df"><div class="map-signal"></div><strong>GPT‑5.6 Sol</strong><span>Lean brief. Sharp success criteria.</span></div>
-        <div class="map-cell" style="--accent:#ce5b78"><div class="map-signal"></div><strong>Claude Opus 5</strong><span>Scope fence. Explain the intent.</span></div>
-        <div class="map-cell" style="--accent:#171a2b"><div class="map-signal"></div><strong>Grok 4.6</strong><span>Explicit contract. Control verbosity.</span></div>
-        <div class="map-cell" style="--accent:#24aeb3"><div class="map-signal"></div><strong>GLM‑5.3</strong><span>End state. Tests. Max for code.</span></div>
-        <div class="map-cell" style="--accent:#d98b22"><div class="map-signal"></div><strong>Qwen3.8‑Max</strong><span>Structured units. Evidence boundary.</span></div>
-        <div class="map-cell" style="--accent:#2d8b65"><div class="map-signal"></div><strong>Kimi K3</strong><span>Permission boundary. Full task arc.</span></div>
-        <div class="map-cell" style="--accent:#2875d7"><div class="map-signal"></div><strong>Gemini 3.7</strong><span>Context first. Question last.</span></div>
+        <div class="map-cell" style="--accent:var(--text-secondary)"><div class="map-signal"></div><strong>GPT‑5.6 Sol</strong><span>Lean brief. Sharp success criteria.</span></div>
+        <div class="map-cell" style="--accent:var(--text-secondary)"><div class="map-signal"></div><strong>Claude Opus 5</strong><span>Scope fence. Explain the intent.</span></div>
+        <div class="map-cell" style="--accent:var(--text-secondary)"><div class="map-signal"></div><strong>Grok 4.6</strong><span>Explicit contract. Control verbosity.</span></div>
+        <div class="map-cell" style="--accent:var(--text-secondary)"><div class="map-signal"></div><strong>GLM‑5.3</strong><span>End state. Tests. Max for code.</span></div>
+        <div class="map-cell" style="--accent:var(--text-secondary)"><div class="map-signal"></div><strong>Qwen3.8‑Max</strong><span>Structured units. Evidence boundary.</span></div>
+        <div class="map-cell" style="--accent:var(--text-secondary)"><div class="map-signal"></div><strong>Kimi K3</strong><span>Permission boundary. Full task arc.</span></div>
+        <div class="map-cell" style="--accent:var(--text-secondary)"><div class="map-signal"></div><strong>Gemini 3.7</strong><span>Context first. Question last.</span></div>
       </div>
     </div>
 
     <section id="principle">
       <div class="shell principle">
-        <div><div class="eyebrow" style="color:#9d9bff">The operating rule</div><h2>Write a task contract, then tune the dialect.</h2></div>
+        <div><div class="eyebrow">The operating rule</div><h2>Write a task contract, then tune the dialect.</h2></div>
         <div class="principle-copy">
           <p>Model-specific tricks cannot rescue a fuzzy request. Give the model enough information to make the same trade-offs you would make, and tell it how you will judge the result.</p>
           <div class="contract-grid">
@@ -162,7 +162,7 @@
   <script>
     const models = {
       gpt: {
-        short: 'GPT‑5.6', name: 'GPT‑5.6 Sol', code: 'OAI', accent: '#5b58df', score: 61, context: '1M',
+        short: 'GPT‑5.6', name: 'GPT‑5.6 Sol', code: 'OAI', accent: 'var(--text-secondary)', score: 61, context: '1M',
         line: 'The cleanest fit for a lean, outcome-first task contract.',
         best: ['Complex production work', 'Design and frontend judgment', 'Research with clear evidence rules'],
         tune: ['State the goal, hard constraints, approval boundary, and success criteria once.', 'Tell it which ambiguity should trigger a question. Let it make routine judgment calls.', 'Remove old few-shot examples and repeated rules unless they fix a measured failure.'],
@@ -171,7 +171,7 @@
         source: '<a href="https://developers.openai.com/api/docs/guides/latest-model">OpenAI model guidance</a> says GPT‑5.6 benefits from leaner prompts, explicit constraints, success criteria, and deliberate verbosity/effort settings.'
       },
       opus: {
-        short: 'Opus 5', name: 'Claude Opus 5', code: 'ANT', accent: '#ce5b78', score: 63, context: '1M',
+        short: 'Opus 5', name: 'Claude Opus 5', code: 'ANT', accent: 'var(--text-secondary)', score: 63, context: '1M',
         line: 'A strong long-horizon collaborator that needs a firm scope edge.',
         best: ['Long-running coding and analysis', 'Documents, interfaces, and professional artifacts', 'Tasks where intent guides judgment'],
         tune: ['Explain why the result is needed. Claude uses intent to resolve trade-offs.', 'Define the intended scope and name actions that sit beyond it.', 'Use positive examples for voice or format. Ask for explicit self-checks only when the task lacks objective verification.'],
@@ -180,7 +180,7 @@
         source: '<a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5">Anthropic’s Opus 5 guide</a> recommends removing forced verification and adding scope control; its general guide recommends clear instructions, context, and examples.'
       },
       grok: {
-        short: 'Grok 4.6', name: 'Grok 4.6', code: 'XAI', accent: '#171a2b', score: 61, context: '500K',
+        short: 'Grok 4.6', name: 'Grok 4.6', code: 'XAI', accent: 'var(--text-secondary)', score: 61, context: '500K',
         line: 'Strong frontier value when the answer contract stays explicit.',
         best: ['Coding and agentic tasks', 'Current research with web or X search enabled', 'Analytical work with a strict output shape'],
         tune: ['Name the desired answer length, structure, and decision at the end.', 'Request web or X search for current claims. The base model has a knowledge cutoff.', 'Use low for simple tools, medium for analysis, high for hard logic, and xhigh for rare quality-first work.'],
@@ -189,7 +189,7 @@
         source: '<a href="https://docs.x.ai/developers/grok-4-6">SpaceXAI’s model page</a> defines tools and context; <a href="https://docs.x.ai/developers/model-capabilities/text/reasoning">reasoning guidance</a> maps low through xhigh to task difficulty.'
       },
       glm: {
-        short: 'GLM‑5.3', name: 'GLM‑5.3', code: 'GLM', accent: '#24aeb3', score: 60, context: '1M',
+        short: 'GLM‑5.3', name: 'GLM‑5.3', code: 'GLM', accent: 'var(--text-secondary)', score: 60, context: '1M',
         line: 'An open-weight coding specialist trained for long task arcs.',
         best: ['Repository-scale implementation', 'Long-horizon coding agents', 'Open-weight deployment with frontier performance'],
         tune: ['Describe the final system state, not a loose list of edits.', 'Provide repository facts, owned scope, executable tests, and finish-report requirements.', 'Use max for coding. GLM‑5.3 keeps thinking enabled, so do not spend prompt text asking it to think.'],
@@ -198,7 +198,7 @@
         source: '<a href="https://z.ai/blog/glm-5.3">Z.ai’s GLM‑5.3 release</a> recommends max effort for coding and reports long-horizon evaluations in executable agent harnesses.'
       },
       qwen: {
-        short: 'Qwen3.8', name: 'Qwen3.8‑Max', code: 'QWN', accent: '#d98b22', score: 58, context: '1M',
+        short: 'Qwen3.8', name: 'Qwen3.8‑Max', code: 'QWN', accent: 'var(--text-secondary)', score: 58, context: '1M',
         line: 'A capable multilingual model that responds well to visible prompt structure.',
         best: ['Multilingual work', 'Coding and cowork tasks', 'Large multimodal inputs'],
         tune: ['Separate instruction, context, constraints, and output with clear labels or delimiters.', 'Give one compact example when exact format matters.', 'For grounded answers, tell it to use only the supplied material and mark missing evidence. Cap length because current evaluations show high output volume.'],
@@ -207,7 +207,7 @@
         source: '<a href="https://www.alibabacloud.com/help/en/model-studio/prompt-engineering-guide">Alibaba Cloud’s prompt guide</a> recommends clear goals, separators, roles, examples, and constraints. <a href="https://chat.qwen.ai/legal-agreement/models">Qwen’s current model registry</a> identifies 3.8‑Max as the flagship.'
       },
       kimi: {
-        short: 'Kimi K3', name: 'Kimi K3', code: 'KMI', accent: '#2d8b65', score: 60, context: '1M',
+        short: 'Kimi K3', name: 'Kimi K3', code: 'KMI', accent: 'var(--text-secondary)', score: 60, context: '1M',
         line: 'A proactive long-context agent that performs best with explicit authority.',
         best: ['Massive repositories and documents', 'Long engineering sessions', 'Open-weight agentic workflows'],
         tune: ['State what it may change and which actions require approval.', 'Give the full task arc and completion definition. K3 is proactive and can widen scope.', 'Use low for interaction, high for balanced work, and max for hard agentic tasks. Keep the full conversation state in multi-turn API use.'],
@@ -216,7 +216,7 @@
         source: '<a href="https://github.com/MoonshotAI/Kimi-K3/blob/main/README.md">Moonshot AI’s K3 model card</a> documents effort levels and preserved thinking. The <a href="https://forum.moonshot.ai/t/kimi-k3-is-here-our-most-capable-model/480">release note</a> calls out K3’s proactive behavior and recommends explicit boundaries.'
       },
       gemini: {
-        short: 'Gemini 3.7', name: 'Gemini 3.7 Flash', code: 'GOO', accent: '#2875d7', score: 56, context: '1M',
+        short: 'Gemini 3.7', name: 'Gemini 3.7 Flash', code: 'GOO', accent: 'var(--text-secondary)', score: 56, context: '1M',
         line: 'The throughput pick for multimodal and long-context work.',
         best: ['Video, audio, PDF, and image analysis', 'High-volume agentic workflows', 'Many-shot in-context learning'],
         tune: ['Put long source material first and the live question at the end.', 'Use labelled prompt units and examples. Gemini handles many-shot patterns well.', 'Keep medium for most work, low for latency, and high for the hardest reasoning.'],
@@ -227,12 +227,12 @@
     };
 
     const recs = {
-      complex: { model: 'Claude Opus 5', accent: '#ce5b78', why: 'Use Opus when the task needs sustained judgment, careful trade-offs, and a polished professional artifact. Its current aggregate evaluation leads this set, but a narrow scope fence prevents useful initiative from turning into scope drift.', prompt: 'Explain the purpose, define the intended scope, and remove redundant verification instructions.', second: 'GPT‑5.6 Sol when concision, design judgment, or lower output volume matters more.' },
-      coding: { model: 'GPT‑5.6 Sol', accent: '#5b58df', why: 'Use GPT‑5.6 Sol for difficult end-to-end engineering where planning, implementation, and verification all matter. GLM‑5.3 and Kimi K3 become compelling when open weights or cost control changes the decision.', prompt: 'Describe the end state, repository constraints, acceptance checks, and approval boundaries.', second: 'GLM‑5.3 for open-weight coding; Kimi K3 for very long sessions.' },
-      research: { model: 'Grok 4.6', accent: '#171a2b', why: 'Use Grok when live web and X search form part of the research surface and you can define a strict evidence contract. Use GPT‑5.6 Sol when you need a more concise synthesis across supplied sources.', prompt: 'Name the evidence mode, require citations per claim, cap the report, and separate fact from inference.', second: 'GPT‑5.6 Sol for synthesis; Opus 5 for a polished long-form brief.' },
-      multimodal: { model: 'Gemini 3.7 Flash', accent: '#2875d7', why: 'Use Gemini for mixed video, audio, PDF, image, and text inputs at high throughput. Its long-context guidance also gives a concrete prompt rule: put the corpus first and the live question at the end.', prompt: 'Label each source, place the question last, and ask for evidence pointers into the supplied material.', second: 'Qwen3.8‑Max for multilingual visual work; GPT‑5.6 Sol for visual design judgment.' },
-      volume: { model: 'Gemini 3.7 Flash', accent: '#2875d7', why: 'Gemini 3.7 Flash has the clearest speed advantage in the current independent measurements. Low or medium thinking keeps routine transformations fast without rewriting the prompt for a smaller model.', prompt: 'Give a compact example, a strict schema, and a failure value for missing information.', second: 'GPT‑5.6 Luna or Terra when your stack already uses OpenAI.' },
-      open: { model: 'GLM‑5.3', accent: '#24aeb3', why: 'GLM‑5.3 is the best fit for open-weight, long-horizon coding. Kimi K3 is close on aggregate intelligence and carries more context, but it needs firmer permission boundaries and often produces more output.', prompt: 'Use max for coding; provide the complete environment, end state, tests, and finish report.', second: 'Kimi K3 for massive context; Qwen3.8 open variants for smaller deployments.' }
+      complex: { model: 'Claude Opus 5', accent: 'var(--text-secondary)', why: 'Use Opus when the task needs sustained judgment, careful trade-offs, and a polished professional artifact. Its current aggregate evaluation leads this set, but a narrow scope fence prevents useful initiative from turning into scope drift.', prompt: 'Explain the purpose, define the intended scope, and remove redundant verification instructions.', second: 'GPT‑5.6 Sol when concision, design judgment, or lower output volume matters more.' },
+      coding: { model: 'GPT‑5.6 Sol', accent: 'var(--text-secondary)', why: 'Use GPT‑5.6 Sol for difficult end-to-end engineering where planning, implementation, and verification all matter. GLM‑5.3 and Kimi K3 become compelling when open weights or cost control changes the decision.', prompt: 'Describe the end state, repository constraints, acceptance checks, and approval boundaries.', second: 'GLM‑5.3 for open-weight coding; Kimi K3 for very long sessions.' },
+      research: { model: 'Grok 4.6', accent: 'var(--text-secondary)', why: 'Use Grok when live web and X search form part of the research surface and you can define a strict evidence contract. Use GPT‑5.6 Sol when you need a more concise synthesis across supplied sources.', prompt: 'Name the evidence mode, require citations per claim, cap the report, and separate fact from inference.', second: 'GPT‑5.6 Sol for synthesis; Opus 5 for a polished long-form brief.' },
+      multimodal: { model: 'Gemini 3.7 Flash', accent: 'var(--text-secondary)', why: 'Use Gemini for mixed video, audio, PDF, image, and text inputs at high throughput. Its long-context guidance also gives a concrete prompt rule: put the corpus first and the live question at the end.', prompt: 'Label each source, place the question last, and ask for evidence pointers into the supplied material.', second: 'Qwen3.8‑Max for multilingual visual work; GPT‑5.6 Sol for visual design judgment.' },
+      volume: { model: 'Gemini 3.7 Flash', accent: 'var(--text-secondary)', why: 'Gemini 3.7 Flash has the clearest speed advantage in the current independent measurements. Low or medium thinking keeps routine transformations fast without rewriting the prompt for a smaller model.', prompt: 'Give a compact example, a strict schema, and a failure value for missing information.', second: 'GPT‑5.6 Luna or Terra when your stack already uses OpenAI.' },
+      open: { model: 'GLM‑5.3', accent: 'var(--text-secondary)', why: 'GLM‑5.3 is the best fit for open-weight, long-horizon coding. Kimi K3 is close on aggregate intelligence and carries more context, but it needs firmer permission boundaries and often produces more output.', prompt: 'Use max for coding; provide the complete environment, end state, tests, and finish report.', second: 'Kimi K3 for massive context; Qwen3.8 open variants for smaller deployments.' }
     };
 
     function renderRec(key) {
@@ -301,4 +301,4 @@
 
 
 </div>
-</div></div></main></div></div><footer class="statusbar"><span>IRFAN'S AI AGENTS · frontier-llm-prompt-field-guide-2026</span><a href="../../">REGISTRY ↗</a></footer></div><script src="../../assets/site.js" defer></script></body></html>
+</div></div></main><footer class="foot"><div class="page foot-inner"><p>Irfan's AI agents · frontier-llm-prompt-field-guide-2026</p><nav aria-label="Sources"><a href="../../">All artifacts</a><a href="https://irfansp.dev/">irfansp.dev</a></nav></div></footer><script src="../../assets/site.js" defer></script></body></html>

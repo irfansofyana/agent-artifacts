@@ -1,0 +1,226 @@
+# Codex Security on GitLab: validate the findings you already have, then patch
+# what validates, inside a time budget the pipeline owns.
+#
+#   include:
+#     - local: ci/codex-security.gitlab-ci.yml
+#
+# Add these stages to the project's .gitlab-ci.yml, in this order:
+#   security_validate, security_patch, security_report
+#
+# Required CI/CD variables, each masked and protected, each scoped to the
+# environment its job declares:
+#   LITELLM_API_KEY     gateway virtual key
+#   GITLAB_READ_TOKEN   read_api project access token
+#   GITLAB_WRITE_TOKEN  api + write_repository project access token
+#
+# Two things this file deliberately does NOT do: it never lets the agent see a
+# repository write credential, and it never relies on GitLab to stop the work.
+# The scripts own a budget shorter than the job timeout, so they always stop
+# cleanly before the runner kills them.
+
+.cs-base:
+  image: node:26-bookworm-slim
+  variables:
+    GIT_DEPTH: "0"
+    CS_CLI_VERSION: "0.9.1"          # pin deliberately; retest on every bump
+    CS_MODEL: "gpt-5.6-sol"          # alias the gateway exposes
+    CS_MODEL_EFFORT: "high"
+    CS_PROVIDER_ID: "internal-litellm"
+    CS_PROFILE: "internal"
+    CS_GATEWAY_URL: "https://litellm.internal.example/v1"
+    CS_BRANCH_PREFIX: "codex-security"
+    CS_TARGET_BRANCH: "main"
+    CS_MAX_ATTEMPTS: "2"             # infrastructure retries only
+    CS_ARTIFACT_DIR: "codex-security-artifacts"
+  before_script:
+    - |
+      set -eu
+      apt-get update -qq
+      apt-get install -y -qq --no-install-recommends \
+        ca-certificates git python3 ripgrep util-linux jq curl
+      npm install --prefix /tmp/cli --ignore-scripts --no-audit --no-fund \
+        "@openai/codex-security@$CS_CLI_VERSION"
+      export CS_BIN=/tmp/cli/node_modules/.bin/codex-security
+
+      # The agent runs from an isolated Codex home, so the provider is defined
+      # inside it. This file names an environment variable; it never holds a key.
+      export CS_CODEX_HOME=/tmp/cs-codex-home
+      install -d -m 700 "$CS_CODEX_HOME"
+      cat > "$CS_CODEX_HOME/$CS_PROFILE.config.toml" <<EOF
+      model = "$CS_MODEL"
+      model_reasoning_effort = "$CS_MODEL_EFFORT"
+      model_provider = "$CS_PROVIDER_ID"
+
+      [model_providers.$CS_PROVIDER_ID]
+      name = "Internal LiteLLM"
+      base_url = "$CS_GATEWAY_URL"
+      wire_api = "responses"
+      env_key = "LITELLM_API_KEY"
+      requires_openai_auth = false
+      EOF
+      chmod 600 "$CS_CODEX_HOME/$CS_PROFILE.config.toml"
+
+      # Fail here, in seconds, rather than inside a paid run: the agent sandboxes
+      # itself with user namespaces.
+      unshare -Ur true >/dev/null 2>&1 || {
+        echo "The runner must allow user namespaces for the Codex sandbox." >&2
+        exit 2
+      }
+      "$CS_BIN" --version
+
+findings-validate:
+  extends: .cs-base
+  stage: security_validate
+  timeout: 30m                       # internal budget stays below this
+  interruptible: true                # safe: this stage only spends model calls
+  environment:
+    name: codex-security/litellm
+    action: access
+  variables:
+    CS_BUDGET_SECONDS: "900"
+    CS_PER_FINDING_P90: "60"         # replace with a measured p90, not a guess
+    CS_CALL_TIMEOUT: "600"
+    CS_EFFORT: "low"                 # triage cheaply; effort belongs on patches
+    CS_FINDINGS_LIMIT: "20"
+  script:
+    - |
+      set -eu
+      export CS_OUT="$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/validate"
+      install -d -m 700 "$CS_OUT"
+
+      test -n "${LITELLM_API_KEY:-}" || { echo "missing LITELLM_API_KEY" >&2; exit 2; }
+      test -n "${GITLAB_READ_TOKEN:-}" || { echo "missing GITLAB_READ_TOKEN" >&2; exit 2; }
+
+      # scope=all matters: the findings API defaults to dismissed only.
+      curl -sS --fail -H "PRIVATE-TOKEN: $GITLAB_READ_TOKEN" \
+        "https://$CI_SERVER_FQDN/api/v4/projects/$CI_PROJECT_ID/vulnerability_findings?scope=all&report_type=sast,dast&per_page=100" \
+        > "$CS_OUT/findings-raw.json"
+
+      python3 ci/scripts/collect_findings.py \
+        --input "$CS_OUT/findings-raw.json" \
+        --statements "$CS_OUT/statements.json" \
+        --needs-triage "$CS_OUT/needs-triage.json" \
+        --limit "$CS_FINDINGS_LIMIT"
+
+      CS_STATEMENTS="$CS_OUT/statements.json" CS_OUT="$CS_OUT" CS_BIN="$CS_BIN" \
+      CS_CODEX_HOME="$CS_CODEX_HOME" CS_STATE_DIR=/tmp/cs-state \
+      CS_AGENT_HOME=/tmp/cs-agent-home \
+      bash ci/scripts/validate_loop.sh
+  artifacts:
+    when: always
+    access: maintainer
+    expire_in: 14 days
+    paths:
+      - codex-security-artifacts/validate/
+
+findings-patch:
+  extends: .cs-base
+  stage: security_patch
+  timeout: 50m                       # project max 60m; ours stops first
+  interruptible: false               # never cancel halfway through a push
+  resource_group: "$CI_PROJECT_PATH-codex-security"
+  needs:
+    - job: findings-validate
+      artifacts: true
+  environment:
+    name: codex-security/publish
+    action: access
+  variables:
+    CS_BUDGET_SECONDS: "2700"
+    CS_PER_FINDING_P90: "300"        # replace with a measured p90
+    CS_CALL_TIMEOUT: "1800"
+    CS_PUBLISH: "1"
+  script:
+    - |
+      set -eu
+      export CS_OUT="$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/patch"
+      install -d -m 700 "$CS_OUT"
+      export CS_WORK=/tmp/cs-work
+      export CS_AGENT_HOME=/tmp/cs-agent-home
+      export CS_PUB_HOME=/tmp/cs-pub-home
+      export CS_STATE_DIR=/tmp/cs-state
+      install -d -m 700 "$CS_AGENT_HOME" "$CS_PUB_HOME" "$CS_STATE_DIR"
+
+      test -n "${LITELLM_API_KEY:-}" || { echo "missing LITELLM_API_KEY" >&2; exit 2; }
+      test -n "${GITLAB_WRITE_TOKEN:-}" || { echo "missing GITLAB_WRITE_TOKEN" >&2; exit 2; }
+      test -s "$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/validate/confirmed.json" || {
+        echo "no confirmed finding to patch; run the validate stage first" >&2
+        exit 0
+      }
+      export CS_CONFIRMED="$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/validate/confirmed.json"
+
+      # The agent works in its own clone outside the checkout, so the project
+      # directory stays clean while artifacts are written into it. The clone URL
+      # carries no credential: the helper configured below supplies it.
+      HOME="$CS_PUB_HOME" git clone --quiet \
+        "https://$CI_SERVER_FQDN/$CI_PROJECT_PATH.git" "$CS_WORK"
+      git -C "$CS_WORK" checkout --quiet "$CI_COMMIT_SHA"
+      export CS_BASE_SHA="$CI_COMMIT_SHA"
+
+      # The only place a write credential is ever configured, and it lives in a
+      # HOME the agent's sandbox does not read.
+      HOME="$CS_PUB_HOME" glab auth login --hostname "$CI_SERVER_FQDN" \
+        --token "$GITLAB_WRITE_TOKEN" --setup-git-credential-helper >/dev/null
+
+      CS_BIN="$CS_BIN" CS_CODEX_HOME="$CS_CODEX_HOME" \
+      bash ci/scripts/patch_loop.sh
+  after_script:
+    # Runs even when the job is killed by its timeout, so the summary survives.
+    - |
+      if [ -d "$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/patch" ]; then
+        cat "$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/patch/loop.log" 2>/dev/null | tail -30 || true
+      fi
+  artifacts:
+    when: always
+    access: maintainer
+    expire_in: 14 days
+    paths:
+      - codex-security-artifacts/patch/
+
+findings-report:
+  extends: .cs-base
+  stage: security_report
+  timeout: 10m
+  when: always                       # a killed patch job still gets a report
+  needs:
+    - job: findings-patch
+      artifacts: true
+  script:
+    - |
+      set -eu
+      PATCH_DIR="$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/patch"
+      VALIDATE_DIR="$CI_PROJECT_DIR/$CS_ARTIFACT_DIR/validate"
+
+      python3 ci/scripts/report.py \
+        --progress "$PATCH_DIR/progress.json" \
+        --triage "$VALIDATE_DIR/needs-triage.json" \
+        --markdown
+
+      # Read back the external effect: a progress file claiming a merge request
+      # is not the same as a merge request that exists.
+      missing=0
+      for iid in $(python3 - "$PATCH_DIR/progress.json" <<'PY'
+      import json, sys
+      try:
+          data = json.load(open(sys.argv[1]))
+      except Exception:
+          sys.exit(0)
+      for rec in data.values():
+          url = rec.get("mr") or ""
+          if url:
+              print(url.rstrip("/").split("/")[-1])
+      PY
+      ); do
+        if ! GITLAB_TOKEN="$GITLAB_READ_TOKEN" glab api \
+            "projects/$CI_PROJECT_ID/merge_requests/$iid" >/dev/null 2>&1; then
+          echo "merge request $iid is claimed but not reachable" >&2
+          missing=1
+        fi
+      done
+      [ "$missing" -eq 0 ] || exit 1
+      echo "merge requests verified against the API"
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - codex-security-artifacts/

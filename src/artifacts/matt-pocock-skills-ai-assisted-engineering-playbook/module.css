@@ -11,10 +11,10 @@
 .legacy-content ul,.legacy-content  ol { margin:4px 0 12px; padding-left:21px; }
 .legacy-content li { margin:3px 0; }
 .legacy-content pre { background:var(--bg-chrome); color:var(--text-secondary); padding:11px 13px; border-radius:6px; font-size:8.8pt; white-space:pre-wrap; break-inside:avoid; }
-.legacy-content code { font-family:var(--font-mono); background:var(--surface-output); padding:1px 3px; border-radius:3px; font-size:0.92em; }
+.legacy-content code { font-family:var(--font-mono); background:var(--surface-output); padding:1px 3px; border-radius:6px; font-size:0.92em; }
 .legacy-content pre code { background:transparent; padding:0; }
 .legacy-content table { width:100%; border-collapse:collapse; margin:11px 0 16px; font-size:8.8pt; }
-.legacy-content th { background:var(--surface-output); color:var(--text-secondary); text-align:left; font-weight:700; }
+.legacy-content th { background:var(--surface-output); color:var(--text-secondary); text-align:left; font-weight:600; }
 .legacy-content th,.legacy-content  td { border:1px solid var(--line); padding:7px 8px; vertical-align:top; }
 .legacy-content tr:nth-child(even) td { background:var(--surface-output); }
 .legacy-content blockquote { border-left:4px solid var(--blue); color:var(--muted); padding:4px 0 4px 12px; margin:12px 0; }

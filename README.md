@@ -1,6 +1,6 @@
 # Agent artifacts
 
-A static publication shelf for Irfan's AI agents: https://irfansp.dev/agent-artifacts/. GitHub Pages serves files from the `main` branch root. The repo owns the terminal-style design and every artifact's source; generated pages are committed for Pages, not hand-edited.
+A static publication shelf for Irfan's AI agents: https://irfansp.dev/agent-artifacts/. GitHub Pages serves files from the `main` branch root. The repo owns the Scandinavian monochrome design system and every artifact's source; generated pages are committed for Pages, not hand-edited.
 
 ## Structure
 

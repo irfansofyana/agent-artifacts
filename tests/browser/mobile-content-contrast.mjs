@@ -15,16 +15,33 @@ function contrast(a, b) {
   const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (lighter + 0.05) / (darker + 0.05);
 }
+// Ink is alpha over a stack of alpha surfaces, so raw computed colours cannot be
+// compared directly: composite the element's colour over its effective
+// background first, walking ancestors down to the canvas.
+async function effectiveColors(page, selector) {
+  return page.locator(selector).first().evaluate(el => {
+    const parse = value => (value.match(/[\d.]+/g) || []).map(Number);
+    const over = (fg, bg) => { const a = fg.length > 3 ? fg[3] : 1; return [0, 1, 2].map(i => fg[i] * a + bg[i] * (1 - a)); };
+    const chain = [];
+    for (let node = el; node; node = node.parentElement) chain.unshift(node);
+    let bg = [255, 255, 255];
+    for (const node of chain) {
+      const c = parse(getComputedStyle(node).backgroundColor);
+      if (c.length < 3 || (c.length === 4 && c[3] === 0)) continue;
+      bg = over(c, bg);
+    }
+    const fg = over(parse(getComputedStyle(el).color), bg);
+    const rgb = v => `rgb(${v.map(Math.round).join(', ')})`;
+    return { foreground: rgb(fg), background: rgb(bg), raw: { color: getComputedStyle(el).color, background: getComputedStyle(el).backgroundColor } };
+  });
+}
 
 try {
   for (const theme of ['dark', 'paper']) {
     const page = await browser.newPage({viewport: {width: 390, height: 844}});
     await page.goto(new URL('artifacts/company-brain-technical-deep-dive/', base).href);
     if (theme === 'paper') await page.getByRole('button', {name: /switch to paper/i}).click();
-    const colors = await page.locator('.legacy-content pre.flow').evaluate(el => {
-      const style = getComputedStyle(el);
-      return {foreground: style.color, background: style.backgroundColor};
-    });
+    const colors = await effectiveColors(page, '.legacy-content pre.flow');
     assert.ok(contrast(colors.foreground, colors.background) >= 4.5, `${theme} flow text contrast: ${JSON.stringify(colors)}`);
     await page.close();
   }
@@ -33,10 +50,7 @@ try {
     const page = await browser.newPage({viewport: {width: 390, height: 844}});
     await page.goto(new URL('artifacts/deep-agents-typescript-guide/', base).href);
     if (theme === 'paper') await page.getByRole('button', {name: /switch to paper/i}).click();
-    const colors = await page.locator('.legacy-content td code').first().evaluate(el => {
-      const style = getComputedStyle(el);
-      return {foreground: style.color, background: style.backgroundColor};
-    });
+    const colors = await effectiveColors(page, '.legacy-content td code');
     assert.ok(contrast(colors.foreground, colors.background) >= 4.5, `${theme} inline code contrast: ${JSON.stringify(colors)}`);
     await page.close();
   }

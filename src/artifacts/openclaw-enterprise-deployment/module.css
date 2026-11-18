@@ -21,9 +21,9 @@
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
   }
-  .legacy-content h1 { font-size: 1.8rem; margin-bottom: 0.25rem; color: var(--text-secondary); }
-  .legacy-content h2 { font-size: 1.3rem; margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
-  .legacy-content h3 { font-size: 1.05rem; margin: 1.5rem 0 0.6rem; color: var(--text-secondary); }
+  .legacy-content h1 { font-size: 1.8rem; margin-bottom: 0.25rem; color: var(--text-secondary); font-weight: 600; }
+  .legacy-content h2 { font-size: 1.3rem; margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-weight: 600; }
+  .legacy-content h3 { font-size: 1.05rem; margin: 1.5rem 0 0.6rem; color: var(--text-secondary); font-weight: 600; }
   .legacy-content p { margin: 0.75rem 0; }
   .legacy-content a { color: var(--accent); text-decoration: none; }
   .legacy-content a:hover { text-decoration: underline; }
@@ -55,7 +55,7 @@
   .legacy-content .tag {
     display: inline-block;
     padding: 0.15rem 0.5rem;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 0.78rem;
     font-weight: 600;
   }
@@ -74,6 +74,7 @@
   }
   .legacy-content .model-card h4 {
     font-size: 1rem;
+    font-weight: 600;
     margin: 0 0 0.4rem;
     display: flex;
     align-items: center;
