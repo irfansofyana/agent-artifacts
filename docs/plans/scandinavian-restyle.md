@@ -1,6 +1,8 @@
 # Scandinavian restyle of agent-artifacts
 
-Status: in progress (branch `design/scandinavian`, not pushed).
+Status: **done for the repo, awaiting Irfan's go to publish.** Branch
+`design/scandinavian` (commit `a03d7d8`, pushed). Preview:
+<https://irfan-ai-agents.irfansp.here.now/> — the Pages site is untouched until he approves.
 
 ## Why
 
@@ -58,10 +60,17 @@ document-wide horizontal overflow at 390px.
 - Home at 1440px: 45 rows, no overflow, min measured contrast 4.66:1 (muted meta at
   `rgb(255 255 255 / 46%)`), console clean.
 
+## Double publish
+
+Every published artifact now keeps its generator in this repo: Pages artifacts in
+`src/artifacts/<slug>/`, here.now artifacts under `sources/<slug>/` (with the text inputs
+they read), listed in `sources/README.md`. The convention is in `SKILL.md`, and the
+here.now publishing skill's checklist ends with committing the generator.
+
 ## Follow-ups
 
-- The five here.now artifacts (cubesandbox-eks-jakarta, codex-security-gitlab,
-  weknora-least-privilege, uaef-getting-started, hermes-openclaw-aws) still carry
-  their own designs; they live in scratch build directories, not here.
-- Preview before pushing: publish the built site to here.now and let Irfan look at it
-  on his phone, then push to Pages.
+- The five here.now pages still render their own designs — the repo now holds their
+  generators, so restyling them is a generator edit plus a republish to the same slug.
+- Open question for Irfan: keep dark as the default theme, or flip to light?
+- Diagram documents under `artifacts/<slug>/diagrams/` are outside the colour gate
+  (they are separate documents); check them by eye if a page's diagram looks off.
