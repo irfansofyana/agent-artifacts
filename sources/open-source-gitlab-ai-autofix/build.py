@@ -74,6 +74,22 @@ VENDOR = [
      "Creates an MR suggestion comment on a SAST finding. Ultimate tier, default model Anthropic Claude Sonnet 4.6, and the output needs review."),
 ]
 
+# Tools that open a GitLab MR. Blurbs are (en, id). Checked against vendor docs, not by running them.
+DRAFT_MR = [
+    ("Codex Security",
+     "https://learn.chatgpt.com/docs/security/cli/ci/gitlab",
+     "OpenAI, research preview. The official GitLab CI example opens a draft MR when CODEX_SECURITY_CREATE_MR is true, on branch codex-security/fix-<finding-hash>, and never merges. You paste the YAML. It is not an include. Needs an OpenAI key with Codex Security access. SARIF ingestion needs GitLab Ultimate 19.2 or later. The example pins the CLI at 0.8.1.",
+     "OpenAI, masih research preview. Contoh GitLab CI resminya membuka draft MR kalau CODEX_SECURITY_CREATE_MR true, di branch codex-security/fix-<finding-hash>, dan tidak pernah merge. YAML-nya ditempel, bukan include. Butuh OpenAI key yang punya akses Codex Security. Ingest SARIF butuh GitLab Ultimate 19.2 atau lebih baru. Contohnya mem-pin CLI di 0.8.1."),
+    ("Pixee",
+     "https://docs.pixee.ai/integrations/scms/gitlab/",
+     "Commercial. Opens GitLab merge requests for SAST and dependency findings through a service-account token and webhooks. Their docs say no change to .gitlab-ci.yml is required. Works with GitLab.com and self-hosted GitLab. Not an importable CI template.",
+     "Komersial. Membuka merge request GitLab untuk temuan SAST dan dependency lewat token service-account dan webhook. Dokumentasinya bilang .gitlab-ci.yml tidak perlu diubah. Jalan di GitLab.com dan GitLab self-hosted. Bukan template CI yang bisa di-import."),
+    ("Aikido AutoFix",
+     "https://help.aikido.dev/autofix-and-remediation/configure/autofix-pr-configuration",
+     "Commercial. Opens GitLab merge requests, and a setting can mark them draft. Configuration is the Aikido UI plus an optional .aikido file, not a CI include.",
+     "Komersial. Membuka merge request GitLab, dan ada setting untuk menandainya sebagai draft. Konfigurasinya UI Aikido plus file .aikido opsional, bukan CI include."),
+]
+
 EN = {
     "lang": "en",
     "title": "Open-source projects that use AI to fix GitLab vulnerabilities",
@@ -87,9 +103,14 @@ EN = {
             "If you need a GitLab fix loop today, use Semgrep for findings and fix suggestions, and GitLab Duo's agentic resolution if you are on Ultimate. Both are trusted by many teams. Neither is a fully open AI fix pipeline.",
             "If you need an open, self-hosted AI fix loop, none of the projects below is a safe default yet. SecureFix is the closest match for GitLab, but it has no licence and no adoption. OpenHands has the adoption, but its vulnerability-fixer is a GitHub-only prototype.",
             "Stars measure attention, not whether a fix is correct. I ran none of these tools against a GitLab project. Treat this as a shortlist to test, not a verdict on quality.",
+            "If the requirement is a draft MR from CI, Codex Security is the one whose docs describe that job. Pixee and Aikido also open GitLab MRs, from their own service, not from a template you import.",
         ]),
         ("ranking", "Open-source candidates, ranked by GitHub stars", None),
         ("vendor", "Vendor features (not open source)", None),
+        ("draft_mr", "Opening a merge request", [
+            "The open-source table has no widely used tool that opens a GitLab fix MR from CI. Shannon's open-source GitLab component does not include remediation. Fix pull requests are a paid Shannon feature, and those docs do not say the MR lands on GitLab.",
+            "Of the tools below, only Codex Security documents the path as a GitLab CI job, and that job is YAML you paste, not a CI/CD Catalog component. Pixee and Aikido open the MR from their platform. GitLab Duo's agentic flow, in the vendor list above, also opens an MR on Ultimate.",
+        ]),
         ("method", "How this was checked", [
             "Star counts, licences, last push dates and descriptions came from the GitHub REST API on 18 November 2026. READMEs were read from raw.githubusercontent.com. Claims about GitLab support come from README text and GitLab's own docs, not from running the tools.",
             "Not verified by running them: whether Strix or Shannon open fix MRs on GitLab. Renovate's docs say it creates GitLab merge requests; this run did not execute Renovate. VulnHunter's licence is Apache-2.0, read from the repo LICENSE file.",
@@ -115,9 +136,14 @@ ID = {
             "Kalau butuh alur fix GitLab sekarang, pakai Semgrep untuk temuan dan saran perbaikannya, plus agentic resolution dari GitLab Duo kalau kamu di tier Ultimate. Keduanya dipercaya banyak tim. Tapi dua-duanya bukan pipeline AI fix yang sepenuhnya open.",
             "Kalau butuh alur AI fix yang open dan self-hosted, belum ada proyek di bawah yang aman dijadikan default. SecureFix paling cocok untuk GitLab, tapi belum punya lisensi dan belum ada adopsinya. OpenHands punya adopsi, tapi vulnerability-fixer-nya prototipe yang hanya untuk GitHub.",
             "Bintang mengukur perhatian, bukan apakah fix-nya benar. Saya tidak menjalankan satu pun tool ini terhadap proyek GitLab. Anggap ini shortlist untuk diuji, bukan vonis soal kualitas.",
+            "Kalau syaratnya draft MR dari CI, Codex Security yang dokumentasinya menjelaskan job itu. Pixee dan Aikido juga membuka MR GitLab, dari layanan mereka sendiri, bukan dari template yang di-import.",
         ]),
         ("ranking", "Kandidat open-source, diurutkan berdasarkan bintang GitHub", None),
         ("vendor", "Fitur vendor (bukan open source)", None),
+        ("draft_mr", "Membuka merge request", [
+            "Tabel open-source tidak punya tool yang banyak dipakai dan membuka MR fix GitLab dari CI. Component GitLab Shannon yang open-source tidak mencakup remediation. Fix pull request ada di Shannon berbayar, dan dokumentasinya tidak bilang MR-nya mendarat di GitLab.",
+            "Dari tool di bawah, hanya Codex Security yang mendokumentasikan jalurnya sebagai job GitLab CI, dan job itu YAML yang ditempel, bukan CI/CD Catalog component. Pixee dan Aikido membuka MR dari platform mereka. Alur agentic GitLab Duo, di daftar vendor di atas, juga membuka MR di tier Ultimate.",
+        ]),
         ("method", "Cara pengecekannya", [
             "Jumlah bintang, lisensi, tanggal push terakhir, dan deskripsi diambil dari GitHub REST API pada 18 November 2026. README dibaca dari raw.githubusercontent.com. Klaim dukungan GitLab berasal dari teks README dan dokumentasi GitLab, bukan dari menjalankan tool-nya.",
             "Belum dijalankan di riset ini: apakah Strix atau Shannon benar-benar membuka MR fix di GitLab. Dokumentasi Renovate bilang dia membuat merge request di GitLab; Renovate tidak dijalankan di sini. Lisensi VulnHunter Apache-2.0, dibaca dari file LICENSE di repo.",
@@ -152,6 +178,10 @@ SOURCES = [
     ("GitHub changelog: agentic autofix GA", "https://github.blog/changelog/2026-10-15-agentic-autofix-for-code-scanning-alerts-general-availability/"),
     ("Renovate docs: GitLab platform", "https://docs.renovatebot.com/modules/platform/gitlab/"),
     ("VulnHunter LICENSE (Apache-2.0)", "https://raw.githubusercontent.com/capitalone/vulnhunter/main/LICENSE"),
+    ("Codex Security: Run in GitLab CI/CD", "https://learn.chatgpt.com/docs/security/cli/ci/gitlab"),
+    ("Pixee: GitLab integration", "https://docs.pixee.ai/integrations/scms/gitlab/"),
+    ("Aikido: AutoFix PR configuration", "https://help.aikido.dev/autofix-and-remediation/configure/autofix-pr-configuration"),
+    ("Shannon: open source vs paid remediation", "https://keygraph.io/open-source"),
 ]
 
 CSS_HREF = "assets/page.css"
@@ -192,6 +222,15 @@ def render_vendor(lang):
     return f"<ul>{items}</ul>"
 
 
+def render_draft(lang):
+    idx = 2 if lang["lang"] == "en" else 3
+    items = "".join(
+        f"<li><a href=\"{esc(r[1])}\">{esc(r[0])}</a>. {esc(r[idx])}</li>"
+        for r in DRAFT_MR
+    )
+    return f"<ul>{items}</ul>"
+
+
 def render_sources():
     items = "".join(
         f"<li><a href=\"{esc(u)}\">{esc(t)}</a></li>" for t, u in SOURCES
@@ -207,6 +246,8 @@ def render_page(lang):
             inner = render_table(lang)
         elif key == "vendor":
             inner = render_vendor(lang)
+        elif key == "draft_mr":
+            inner = "".join(f"<p>{esc(p)}</p>" for p in paras) + render_draft(lang)
         elif key == "sources":
             inner = render_sources()
         else:
