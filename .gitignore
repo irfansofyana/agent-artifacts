@@ -1,2 +1,5 @@
 node_modules/
 .superpowers/
+
+# here.now page build output is generated, never committed
+sources/*/build/
