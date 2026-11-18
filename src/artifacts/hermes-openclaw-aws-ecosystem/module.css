@@ -1,0 +1,104 @@
+/* Scoped module for the Hermes/OpenClaw on AWS ecosystem map. Tokens only, no global overrides. */
+
+.legacy-content .meta-line {
+  color: var(--text-secondary);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px dashed var(--phosphor-faint);
+  padding-bottom: 10px;
+}
+
+.legacy-content .lede {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.legacy-content .callout {
+  border: 1px solid var(--border-chrome);
+  border-left: 3px solid var(--phosphor);
+  background: var(--surface-output);
+  padding: 12px 16px;
+  margin: 20px 0;
+}
+
+.legacy-content .callout h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.legacy-content .callout--warn {
+  border-left-color: var(--accent-error);
+}
+
+.legacy-content .callout--warn h3 {
+  color: var(--accent-error);
+}
+
+.legacy-content .callout p:last-child {
+  margin-bottom: 0;
+}
+
+.legacy-content .src-card {
+  border: 1px solid var(--border-chrome);
+  border-left: 2px solid var(--accent-cyan);
+  padding: 14px 16px;
+  margin: 14px 0;
+  background: var(--surface-output);
+}
+
+.legacy-content .src-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.legacy-content .src-card p {
+  margin: 0 0 6px;
+}
+
+.legacy-content .src-card ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.legacy-content .src-card li {
+  margin: 2px 0;
+}
+
+.legacy-content .pill {
+  display: inline-block;
+  border: 1px solid var(--phosphor-soft);
+  color: var(--text-secondary);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.legacy-content .pill--live {
+  border-color: var(--phosphor);
+  color: var(--phosphor);
+}
+
+.legacy-content .pill--gap {
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+.legacy-content ol.sources li {
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.legacy-content pre {
+  font-size: 12px;
+}
+
+.legacy-content code {
+  color: var(--accent-cyan);
+}

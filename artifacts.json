@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "Hermes and OpenClaw on AWS: the open-source ecosystem map",
+      "slug": "hermes-openclaw-aws-ecosystem",
+      "description": "AWS first-party samples, Lightsail and EC2 paths, EKS and AgentCore options, native Bedrock providers, and what works in Jakarta.",
+      "createdAt": "2026-11-18",
+      "type": "html",
+      "url": "artifacts/hermes-openclaw-aws-ecosystem/"
+    },
+    {
       "title": "WeKnora company setup: workspaces, RBAC and SSO",
       "slug": "weknora-company-guide",
       "description": "A source-audited guide to WeKnora permissions, shared spaces, Google and JumpCloud login, with three interactive diagrams and a rollout checklist.",

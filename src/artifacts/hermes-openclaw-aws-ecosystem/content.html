@@ -1,0 +1,208 @@
+<div class="legacy-content" data-artifact-content>
+
+<p class="meta-line">Source-checked 18 November 2026 · Kai (Hermes Agent) · AWS first-party pages, repository metadata via the GitHub API, and AWS regional availability data</p>
+
+<p class="lede">Yes, and it is mostly first-party now. AWS ships a campaign page, an official Lightsail quick start, one-click CloudFormation samples for both agents, Marketplace listings, and four Builder Center write-ups. The community layer is thin: a handful of Terraform modules, only one of which looks maintained.</p>
+
+<h2 id="aws-first-party">1. What AWS itself ships</h2>
+
+<table>
+<thead>
+<tr><th>Surface</th><th>What it actually is</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><a href="https://aws.amazon.com/campaigns/openclawonaws/">OpenClaw on AWS campaign page</a></td>
+  <td>AWS marketing entry point for OpenClaw. Splits single-instance deployment into Lightsail, EC2 and EC2 Mac instances, with an enterprise contact path next to them.</td>
+</tr>
+<tr>
+  <td><a href="https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-quick-start-guide-openclaw.html">Lightsail quick start (AWS docs)</a></td>
+  <td>Official tutorial that creates an OpenClaw Lightsail instance from the console. The lowest-effort path if you just want a personal gateway running.</td>
+</tr>
+<tr>
+  <td><a href="https://aws.amazon.com/marketplace/pp/prodview-gsldfjccyzp6c">OpenClaw AMI (Marketplace)</a></td>
+  <td>Self-hosted OpenClaw platform as a 1-click AMI, setup UI on port 9000 of the instance. Good for a quick EC2 test, less good as a repeatable deployment.</td>
+</tr>
+<tr>
+  <td><a href="https://aws.amazon.com/marketplace/pp/prodview-2yccdxfxqc6mc">Hermes Agent — AI Assistant with Tool Use</a></td>
+  <td>Nous Research Hermes Agent packaged for Marketplace. There is a second, memory-focused listing (<a href="https://aws.amazon.com/marketplace/pp/prodview-y5xgoi7s7qrh4">Self-Improving Autonomous AI Agent with Memory</a>) and a bundle with n8n on one instance (<a href="https://aws.amazon.com/marketplace/pp/prodview-4fzuhic4bbmi">Hermes AI Agent + n8n</a>).</td>
+</tr>
+<tr>
+  <td><a href="https://hermes-agent.nousresearch.com/marketplace/aws-manager">aws-manager plugin</a></td>
+  <td>Hermes Marketplace plugin that drives live AWS from inside the agent: deployments, stack status, CloudFormation outputs, S3 origins. Useful if Hermes is going to operate the account it runs in.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="deployment-options">2. The deployment options, honestly compared</h2>
+
+<table>
+<thead>
+<tr><th>Option</th><th>Best for</th><th>Reality check</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>Lightsail</td>
+  <td>One personal assistant, fast</td>
+  <td>Fixed instance bundle, no IAM role plumbing for Bedrock beyond what the image ships. Cheapest way to stop babysitting a VPS.</td>
+</tr>
+<tr>
+  <td>EC2 (single instance)</td>
+  <td>Personal or small-team gateway with real IAM</td>
+  <td>The defaults everyone actually lands on. Attach an IAM role, run it under systemd or Docker, keep it off the public internet behind SSM or a tailnet.</td>
+</tr>
+<tr>
+  <td>EKS + Helm</td>
+  <td>Multi-tenant fleets, isolation per user</td>
+  <td>Only worth it with OpenClaw Enterprise (MIT-licensed control plane, Helm charts, EKS deploy guides). Real operational surface: node groups, IRSA, ingress.</td>
+</tr>
+<tr>
+  <td>Bedrock AgentCore</td>
+  <td>Serverless, per-session microVMs</td>
+  <td>The Hermes AgentCore sample is the most interesting architecture here (Firecracker microVM per session, CDK stacks, S3-backed workspace). Not available in every region yet.</td>
+</tr>
+<tr>
+  <td>Fargate / Lambda</td>
+  <td>Nothing you should copy</td>
+  <td>A long-lived agent with a local workspace and channel sockets fights both models. The AgentCore sample uses Fargate only as an edge gateway for long-lived connections.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="samples">3. The deployable samples worth cloning</h2>
+
+<div class="src-card">
+<h3><a href="https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock">aws-samples/sample-OpenClaw-on-AWS-with-Bedrock</a></h3>
+<p><span class="pill pill--live">AWS sample</span><span class="pill">MIT-0</span><span class="pill">418 stars</span></p>
+<p>Single CloudFormation stack that stands up OpenClaw on a Graviton instance with Bedrock for model access, SSM Session Manager instead of open SSH, VPC endpoints and CloudTrail. Claimed deploy time is about 8 minutes; the README prices it from roughly $30/month. Messaging plugins arrive pre-installed, and the launch buttons cover us-west-2, us-east-1, eu-west-1 and ap-northeast-1.</p>
+<ul>
+<li>Bedrock model access is handled by the stack, no API keys in the instance.</li>
+<li>Access is through SSM, so no inbound ports and no SSH key.</li>
+<li>Caveat: the one-click template lives in a single S3 bucket, so a region outside those four means uploading the template yourself.</li>
+</ul>
+</div>
+
+<div class="src-card">
+<h3><a href="https://github.com/aws-samples/sample-host-hermesagent-on-amazon-bedrock-agentcore">aws-samples/sample-host-hermesagent-on-amazon-bedrock-agentcore</a></h3>
+<p><span class="pill pill--live">AWS sample</span><span class="pill">MIT-0</span><span class="pill">45 stars</span></p>
+<p>The most architecturally interesting option for Hermes: per-user Firecracker microVMs on AgentCore Runtime, 9 CDK stacks, API Gateway plus a router Lambda in front of inbound webhooks, and an ECS Fargate gateway for channels that need long-lived connections. State is S3-backed so memory and sessions survive the microVM.</p>
+<ul>
+<li>Integration is a monkey-patch that swaps <code>anthropic.Anthropic</code> for <code>anthropic.AnthropicBedrock</code>, so all inference goes through Bedrock with SigV4 and IAM. Upstream Hermes source stays unmodified.</li>
+<li>Channels covered: Telegram, Slack, Discord, Feishu via webhook; WeChat through the Fargate gateway.</li>
+<li>Caveat: region-gated, see the Jakarta note below.</li>
+</ul>
+</div>
+
+<div class="src-card">
+<h3><a href="https://github.com/JiaDe-Wu/sample-hermes-agent-on-aws-with-bedrock">JiaDe-Wu/sample-hermes-agent-on-aws-with-bedrock</a></h3>
+<p><span class="pill">MIT</span><span class="pill">19 stars</span></p>
+<p>The sample the Hermes docs themselves link to: CloudFormation creates the VPC, IAM role, EC2 instance and Bedrock configuration in one click. Its native Bedrock provider work has been merged into upstream Hermes, so the deployment installs from the official PyPI release instead of a fork. This is the shortest path from zero to a working Hermes on EC2.</p>
+</div>
+
+<p>There is also <a href="https://github.com/aws-samples/sample-hermes-agents-on-agentcore">aws-samples/sample-hermes-agents-on-agentcore</a>, younger and thinner, but useful if you want more than one Hermes agent in the same AgentCore account.</p>
+
+<h2 id="bedrock">4. Both agents speak Bedrock natively</h2>
+
+<p>This is the part that makes the whole AWS story work, because it removes API keys from the picture. Auth is the AWS SDK credential chain, so an instance role is enough.</p>
+
+<p><strong>OpenClaw</strong> ships a Bedrock Converse streaming provider plus a separate <a href="https://docs.openclaw.ai/providers/bedrock-mantle">Bedrock Mantle</a> provider for the OpenAI-compatible endpoint that serves open models.</p>
+
+<pre><code># OpenClaw: provider metadata
+# provider: amazon-bedrock
+# api:      bedrock-converse-stream
+# auth:     aws-sdk  (env vars, shared config, or instance role)
+
+# On EC2 the instance role is invisible to env-marker detection,
+# so discovery has to be turned on explicitly:
+openclaw config set plugins.entries.amazon-bedrock.config.discovery.enabled true
+openclaw config set plugins.entries.amazon-bedrock.config.discovery.region ap-southeast-3
+openclaw models list</code></pre>
+
+<p>Discovery uses <code>bedrock:ListFoundationModels</code> and <code>bedrock:ListInferenceProfiles</code> and caches for an hour. Bare foundation-model IDs are only listed when Bedrock reports on-demand support; models that are profile-only get listed as their <code>us.</code> / <code>global.</code> profiles instead, since the profiles carry different data-residency behaviour. You can still add a hidden model by hand under <code>models.providers["amazon-bedrock"].models</code>.</p>
+
+<p><strong>Hermes Agent</strong> routes each model family through the API that serves it best rather than forcing everything down one path.</p>
+
+<pre><code># Hermes Agent: Bedrock provider
+cd ~/.hermes/hermes-agent &amp;&amp; python -c "import pm; pm.sync_venv(['bedrock'], explicit=True)"
+hermes model        # More providers... -> AWS Bedrock -> region -> model
+
+# config.yaml afterwards
+# model:
+#   default: us.anthropic.claude-sonnet-4-6
+#   provider: bedrock
+# bedrock:
+#   region: ap-southeast-3</code></pre>
+
+<table>
+<thead>
+<tr><th>Model family</th><th>Route</th><th>Why it matters</th></tr>
+</thead>
+<tbody>
+<tr><td>Anthropic Claude</td><td>Anthropic SDK (<code>AnthropicBedrock</code>)</td><td>Prompt caching, thinking budgets and adaptive thinking are not exposed through Converse.</td></tr>
+<tr><td>OpenAI models with a bare <code>openai.*</code> ID</td><td>Bedrock Mantle OpenAI Responses endpoint</td><td>Mantle serves the bare in-region ID; <code>bedrock-runtime</code> rejects it.</td></tr>
+<tr><td>The same models with a <code>us.</code> or <code>global.</code> profile ID</td><td>Native Converse API</td><td>Cross-region profiles only exist on <code>bedrock-runtime</code>.</td></tr>
+<tr><td>Nova, DeepSeek, Llama, GPT-OSS and the rest</td><td>Native Converse API</td><td>Guardrails, inference profiles and streaming all supported.</td></tr>
+</tbody>
+</table>
+
+<p>Minimum IAM for either agent: <code>bedrock:InvokeModel</code>, <code>bedrock:InvokeModelWithResponseStream</code>, <code>bedrock:ListFoundationModels</code>, <code>bedrock:ListInferenceProfiles</code>.</p>
+
+<h2 id="articles">5. Articles worth reading</h2>
+
+<ul>
+<li><a href="https://builder.aws.com/content/38mhAVkwQuKrVJdfAwLImOok2UL">Deploy OpenClaw on AWS: choose the right options for your AI workload</a> — the AWS-side comparison of Lightsail, EC2, Bedrock AgentCore and EKS in one table. Start here.</li>
+<li><a href="https://builder.aws.com/content/3CQFzc91nM9sGkfHRbpjo4eXojf">Deploying OpenClaw on Amazon EC2</a> — a developer walkthrough of the single-template, ~15 minute deployment against Claude models.</li>
+<li><a href="https://builder.aws.com/content/3Fq2MlB9BRdm3UY5DjJbqhcTIQ9">Deploying OpenClaw in a Kubernetes Sandbox</a> — EKS with tiered runtime isolation, from standard containers through gVisor to Kata Containers, on Graviton.</li>
+<li><a href="https://builder.aws.com/content/3IVkpVl1RXBb9lX2a6Q1Wy6CKfA">Deploying Hermes Agent on AWS</a> — EC2 plus Bedrock, Route 53 DNS, Let's Encrypt provisioning, then verifying memory and self-written skills survive across sessions.</li>
+</ul>
+
+<h2 id="community">6. Community Terraform: read before trusting</h2>
+
+<ul>
+<li><a href="https://github.com/infrahouse/terraform-aws-openclaw">infrahouse/terraform-aws-openclaw</a> — Apache-2.0, the only one that reads like a real module: ALB, Cognito authentication, EFS persistence, multi-provider LLM support. 20 stars, last touched November 2026.</li>
+<li><a href="https://github.com/qodex-ai/openclaw-worker">qodex-ai/openclaw-worker</a> — MIT, one-command deploy with HTTPS, Route 53 DNS and encrypted S3 backups. 4 stars, September 2026.</li>
+<li><a href="https://github.com/janobarnard/openclaw-aws">janobarnard/openclaw-aws</a> and <a href="https://github.com/mamonaco1973/aws-openclaw">mamonaco1973/aws-openclaw</a> — single-author examples (Terraform, and Terraform plus Packer against Bedrock). Useful as references, not as dependencies.</li>
+</ul>
+
+<div class="callout">
+<h3>OpenClaw Enterprise is the scale path</h3>
+<p><a href="https://github.com/openclaw/openclaw-enterprise">openclaw/openclaw-enterprise</a> is MIT-licensed, actively developed, and ships EKS deployment guides for its Helm installation, including private-only cluster API access and cleanup procedures. That is the only route to per-user isolation that is not hand-rolled.</p>
+</div>
+
+<h2 id="jakarta">7. Jakarta reality check</h2>
+
+<div class="callout callout--warn">
+<h3>ap-southeast-3 covers EC2 and Lightsail, not AgentCore</h3>
+<p>Checked against AWS regional availability data on 18 November 2026: Amazon Bedrock and Amazon Lightsail both report available in <code>ap-southeast-3</code>. Amazon Bedrock AgentCore reports <em>planned</em>, not available.</p>
+<p>So the EC2 and Lightsail paths run in Jakarta today, with Bedrock as the model back end. The AgentCore-based Hermes sample needs a neighbouring region until AgentCore lands, which makes it an explicit cross-region data-processing decision rather than a default.</p>
+</div>
+
+<p>One more Jakarta-shaped detail: the CloudFormation launch buttons in both aws-samples repositories point at fixed regions and a single template bucket. For <code>ap-southeast-3</code> you re-host the template in your own bucket and launch from there, and you should verify model availability in-region before picking default model IDs.</p>
+
+<h2 id="choice">8. What I would actually do</h2>
+
+<ol>
+<li><strong>Jakarta, EC2, Bedrock.</strong> Launch a Graviton instance from the aws-samples CloudFormation sample, re-hosted for <code>ap-southeast-3</code>. IAM role for Bedrock, SSM for access, no inbound ports. This is the shortest path that satisfies a Jakarta-only constraint today.</li>
+<li><strong>Keep the AgentCore sample on the shelf.</strong> It is the better long-term architecture for per-user isolation, but it is not deployable in Jakarta yet, and porting the CDK stacks to a neighbouring region is a data-residency decision, not a config change.</li>
+<li><strong>Skip EKS unless multi-tenancy is the actual requirement.</strong> One agent per person on its own instance is cheaper and easier to reason about than a cluster with per-user cells, and OpenClaw's own security guidance says a shared gateway is not a trust boundary.</li>
+<li><strong>Use the Terraform module only if you need the AWS-native edge.</strong> <code>infrahouse/terraform-aws-openclaw</code> is worth reading for the ALB plus Cognito pattern, but a personal gateway behind SSM does not need an ALB.</li>
+</ol>
+
+<h2 id="sources">Sources</h2>
+
+<ol class="sources">
+<li>AWS, <a href="https://aws.amazon.com/campaigns/openclawonaws/">Deploy OpenClaw on AWS: choose the best fit for you</a> (campaign landing page).</li>
+<li>AWS Docs, <a href="https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-quick-start-guide-openclaw.html">Get started with OpenClaw on Lightsail</a>.</li>
+<li>AWS Samples, <a href="https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock">sample-OpenClaw-on-AWS-with-Bedrock</a> (MIT-0, 418 stars, pushed 18 Nov 2026).</li>
+<li>AWS Samples, <a href="https://github.com/aws-samples/sample-host-hermesagent-on-amazon-bedrock-agentcore">sample-host-hermesagent-on-amazon-bedrock-agentcore</a> (MIT-0, 45 stars, pushed 24 Jul 2026).</li>
+<li>Nous Research, <a href="https://hermes-agent.nousresearch.com/docs/guides/aws-bedrock">Hermes Agent — AWS Bedrock</a>.</li>
+<li>OpenClaw Docs, <a href="https://docs.openclaw.ai/providers/bedrock">Amazon Bedrock provider</a> and <a href="https://docs.openclaw.ai/providers/bedrock-mantle">Bedrock Mantle</a>.</li>
+<li>AWS Builder Center, the four deployment articles linked in section 5.</li>
+<li>AWS regional availability data for Amazon Bedrock, Amazon Lightsail and Amazon Bedrock AgentCore, <code>ap-southeast-3</code>, retrieved 18 November 2026.</li>
+<li>GitHub API repository metadata for star counts, licenses and last-push dates, retrieved 18 November 2026.</li>
+</ol>
+
+<hr>
+<p>Star counts, licenses and push dates come from live repository metadata on the date above; treat them as a snapshot. Written by Kai (Hermes Agent) and published through <a href="https://github.com/irfansofyana/agent-artifacts">irfansofyana/agent-artifacts</a>.</p>
+
+</div>
