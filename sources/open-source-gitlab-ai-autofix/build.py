@@ -105,6 +105,13 @@ EN = {
             "Stars measure attention, not whether a fix is correct. I ran none of these tools against a GitLab project. Treat this as a shortlist to test, not a verdict on quality.",
             "If the requirement is a draft MR from CI, Codex Security is the one whose docs describe that job. Pixee and Aikido also open GitLab MRs, from their own service, not from a template you import.",
         ]),
+        ("decision", "Decision, 19 November 2026", [
+            "The goal is a fixer other teams can adopt, as a CI job, that stops at a draft merge request.",
+            "Possible, in a job you write. codex-security scan --patch --create-pr can scan, patch, and open a draft MR. The official GitLab pipeline cannot do that without an OpenAI key that already has Codex Security access.",
+            "Without that program, the CLI still accepts OpenRouter, Fireworks, and Bedrock. LiteLLM is not a --provider value. Point the CLI at it with a Codex override, and the alias must list /v1/responses in supported_endpoints. A bridged route drops the fields the scan needs.",
+            "The MR opens only for a verified patch. The push is local: glab plus a project token with api and write_repository. CI_JOB_TOKEN cannot create the MR. Daybreak models stay behind Trusted Access, so some finding classes can be refused by whatever model sits behind the gateway. This combination has not been run.",
+            "The open-source table still has no widely used project that does this loop. The Codex Security notes are at https://artifacts.irfansp.dev/codex-security-gitlab/.",
+        ]),
         ("ranking", "Open-source candidates, ranked by GitHub stars", None),
         ("vendor", "Vendor features (not open source)", None),
         ("draft_mr", "Opening a merge request", [
@@ -137,6 +144,13 @@ ID = {
             "Kalau butuh alur AI fix yang open dan self-hosted, belum ada proyek di bawah yang aman dijadikan default. SecureFix paling cocok untuk GitLab, tapi belum punya lisensi dan belum ada adopsinya. OpenHands punya adopsi, tapi vulnerability-fixer-nya prototipe yang hanya untuk GitHub.",
             "Bintang mengukur perhatian, bukan apakah fix-nya benar. Saya tidak menjalankan satu pun tool ini terhadap proyek GitLab. Anggap ini shortlist untuk diuji, bukan vonis soal kualitas.",
             "Kalau syaratnya draft MR dari CI, Codex Security yang dokumentasinya menjelaskan job itu. Pixee dan Aikido juga membuka MR GitLab, dari layanan mereka sendiri, bukan dari template yang di-import.",
+        ]),
+        ("decision", "Keputusan, 19 November 2026", [
+            "Tujuannya fixer yang gampang diadopsi tim lain, berbentuk job CI, dan berhenti di draft merge request.",
+            "Bisa, di job yang kita tulis sendiri. codex-security scan --patch --create-pr bisa scan, patch, lalu buka draft MR. Pipeline GitLab resmi tidak bisa melakukan itu tanpa OpenAI key yang sudah punya akses Codex Security.",
+            "Tanpa program itu, CLI tetap menerima OpenRouter, Fireworks, dan Bedrock. LiteLLM bukan nilai --provider. Arahkan CLI ke sana lewat override Codex, dan alias-nya harus mencantumkan /v1/responses di supported_endpoints. Route yang dijembatani membuang field yang dibutuhkan scan.",
+            "MR hanya terbuka untuk patch yang verified. Push-nya lokal: glab plus project token dengan scope api dan write_repository. CI_JOB_TOKEN tidak bisa membuat MR. Model Daybreak tetap di belakang Trusted Access, jadi sebagian kelas temuan bisa ditolak model di belakang gateway. Kombinasi ini belum dijalankan.",
+            "Tabel open-source tetap tidak punya proyek yang banyak dipakai untuk loop ini. Catatan Codex Security ada di https://artifacts.irfansp.dev/codex-security-gitlab/.",
         ]),
         ("ranking", "Kandidat open-source, diurutkan berdasarkan bintang GitHub", None),
         ("vendor", "Fitur vendor (bukan open source)", None),
@@ -182,6 +196,9 @@ SOURCES = [
     ("Pixee: GitLab integration", "https://docs.pixee.ai/integrations/scms/gitlab/"),
     ("Aikido: AutoFix PR configuration", "https://help.aikido.dev/autofix-and-remediation/configure/autofix-pr-configuration"),
     ("Shannon: open source vs paid remediation", "https://keygraph.io/open-source"),
+    ("Codex Security CLI reference", "https://learn.chatgpt.com/docs/security/cli/reference"),
+    ("LiteLLM: native /v1/responses passthrough", "https://docs.litellm.ai/docs/response_api_native_passthrough"),
+    ("Codex Security on GitLab, companion page", "https://artifacts.irfansp.dev/codex-security-gitlab/"),
 ]
 
 CSS_HREF = "assets/page.css"

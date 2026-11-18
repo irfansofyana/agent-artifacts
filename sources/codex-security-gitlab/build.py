@@ -456,9 +456,8 @@ def build(lang):
     for k, v in tokens.items():
         body = body.replace(k, v)
 
-    # English is the root page. Add "id" here to emit the Indonesian page at
-    # index-id.html again and get the language switcher back.
-    PUBLISH_LANGS = ("en",)
+    # English is the root page. Indonesian is index-id.html, linked from the switch.
+    PUBLISH_LANGS = ("en", "id")
     self_file = "index-id.html" if L else "index.html"
     other = "index.html" if L else "index-id.html"
     if len(PUBLISH_LANGS) > 1:
@@ -555,6 +554,17 @@ setelah loop perbaikannya dipercaya.</p>
 pernah dilaporkan siapa pun tetap penting, tapi dia bergantung pada dua hal yang belum terbukti: alias gateway yang
 Responses-native dan model di belakangnya yang sanggup mengikuti schema. Keduanya harus ditutup lebih dulu.</p>
 </div>
+
+<h2>Keputusan, 19 November 2026</h2>
+
+<p>Yang dicek ulang terhadap dokumentasi CLI saat ini, bukan dari menjalankan job-nya.</p>
+
+<ul>
+<li>Pipeline GitLab resmi tidak bisa dipakai tanpa akses Codex Security. Job yang kita tulis sendiri tetap bisa memanggil CLI.</li>
+<li><code>scan --patch --create-pr</code> adalah loop yang berakhir di draft MR. Flag itu tidak terkunci di YAML resmi. LiteLLM bukan nilai <code>--provider</code>. Jangkau lewat override <code>--codex</code> dan <code>wire_api = "responses"</code>. Alias harus melayani <code>/v1/responses</code> secara native.</li>
+<li>MR muncul hanya kalau patch-nya verified. Tanpa Trusted Access, model Daybreak tidak tersedia, dan sebagian kelas temuan bisa ditolak. Belum dijalankan di runner sungguhan.</li>
+<li>Perbandingan dengan proyek open-source ada di <a href="https://artifacts.irfansp.dev/open-source-gitlab-ai-autofix/">halaman pendamping</a>.</li>
+</ul>
 
 <h2>Dua pekerjaan yang berbeda</h2>
 
@@ -763,6 +773,17 @@ loop is trusted.</p>
 has reported still matters, but it depends on two things that are not proven yet: a Responses-native gateway alias and
 a model behind it that can honour a schema. Both have to close first.</p>
 </div>
+
+<h2>Decision, 19 November 2026</h2>
+
+<p>Rechecked against the current CLI docs. Not from running the job.</p>
+
+<ul>
+<li>The official GitLab pipeline cannot be used without Codex Security access. A job you write can still call the CLI.</li>
+<li><code>scan --patch --create-pr</code> is the loop that ends in a draft MR. That flag is not locked to the official YAML. LiteLLM is not a <code>--provider</code> value. Reach it with <code>--codex</code> overrides and <code>wire_api = "responses"</code>. The alias must serve <code>/v1/responses</code> natively.</li>
+<li>The MR appears only when the patch is verified. Without Trusted Access, Daybreak models are unavailable, and some finding classes can be refused. Not run on a real runner.</li>
+<li>The open-source comparison is on the <a href="https://artifacts.irfansp.dev/open-source-gitlab-ai-autofix/">companion page</a>.</li>
+</ul>
 
 <h2>Two jobs that are easy to confuse</h2>
 
@@ -1036,7 +1057,7 @@ def main():
     shutil.copy2(SITE / "assets" / "style.css", assets / "style.css")
     for font in sorted((SITE / "assets" / "fonts").glob("*")):
         shutil.copy2(font, assets / "fonts" / font.name)
-    langs = (("en", "index.html"),)
+    langs = (("en", "index.html"), ("id", "index-id.html"))
     wanted = {name for _, name in langs}
     for p in OUT.glob("index*.html"):
         if p.name not in wanted:
