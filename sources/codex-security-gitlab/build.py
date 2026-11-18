@@ -5,10 +5,19 @@ the data below so the two language pages cannot drift apart.
 """
 
 import html
+import os
 import pathlib
+import shutil
 
 HERE = pathlib.Path(__file__).resolve().parent
-OUT = HERE / "site"
+# Output directory: override with ARTIFACT_OUT, default is repo-relative
+# (sources/codex-security-gitlab/build/). No absolute /Users path lives here.
+OUT = pathlib.Path(os.environ.get("ARTIFACT_OUT") or (HERE / "build"))
+# Source inputs the generator ships verbatim: the stylesheet and the self-hosted
+# variable font, copied into build/assets/ (style.css + fonts/).
+SITE = HERE / "site"
+SLUG = "shiny-waffle-q8ed"
+REGISTRY = "https://artifacts.irfansp.dev/"
 DATE_ID = "18 November 2026"
 DATE_EN = "18 November 2026"
 
@@ -363,13 +372,13 @@ def outcomes_table():
 
 
 def poc_block():
-    cards = []
+    blocks = []
     for title, body, exit_criteria in POC:
-        cards.append(
-            f'<div class="card"><h3>{title}</h3><p>{body}</p>'
-            f'<p class="exit"><strong>Exit criteria.</strong> {exit_criteria}</p></div>'
+        blocks.append(
+            f'<section class="step"><h3>{title}</h3><p>{body}</p>'
+            f'<p class="exit"><strong>Exit criteria.</strong> {exit_criteria}</p></section>'
         )
-    return "\n".join(cards)
+    return "\n".join(blocks)
 
 
 def poc_dont_block():
@@ -468,23 +477,36 @@ def build(lang):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{c['title']}</title>
 <meta name="description" content="{c['description']}">
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body data-scroll-hint="{c['scroll_hint']}">
-<div class="wrap">
-<header class="site">
+<a class="skip" href="#main">Skip to content</a>
+<header class="masthead">
+<div class="page">
+<p class="wordmark">Irfan's AI agents</p>
+<nav aria-label="Registry">
+<a href="{REGISTRY}">All artifacts</a>
+</nav>
+</div>
+</header>
+<main id="main" class="page">
+<header class="hero">
 <p class="eyebrow">{c['eyebrow']}</p>
 <h1>{c['title']}</h1>
 <p class="lede">{c['lede']}</p>
 {nav}
 </header>
-<main>
+<div class="chapters">
 {body}
-</main>
-<footer class="site">
-<p>{c['footer']}</p>
-</footer>
 </div>
+</main>
+<footer class="foot">
+<div class="page">
+<p>{c['footer']}</p>
+<p class="slug"><a href="{REGISTRY}">artifacts.irfansp.dev</a> &middot; here.now &middot; {SLUG}</p>
+</div>
+</footer>
 <script>
 (function () {{
   var label = document.body.getAttribute('data-scroll-hint');
@@ -1006,7 +1028,14 @@ a proven recipe.</p>
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "assets").mkdir(parents=True, exist_ok=True)
+    # Assets are shipped verbatim next to the page: style.css + fonts/.
+    assets = OUT / "assets"
+    if assets.exists():
+        shutil.rmtree(assets)
+    (assets / "fonts").mkdir(parents=True)
+    shutil.copy2(SITE / "assets" / "style.css", assets / "style.css")
+    for font in sorted((SITE / "assets" / "fonts").glob("*")):
+        shutil.copy2(font, assets / "fonts" / font.name)
     langs = (("en", "index.html"),)
     wanted = {name for _, name in langs}
     for p in OUT.glob("index*.html"):
@@ -1016,6 +1045,7 @@ def main():
     for lang, name in langs:
         (OUT / name).write_text(build(lang), encoding="utf-8")
         print("wrote", OUT / name)
+    print("assets", sorted(str(p.relative_to(OUT)) for p in assets.rglob("*") if p.is_file()))
     print("tables rendered from data; risk count", len(RISKS), "command count", len(COMMANDS))
 
 

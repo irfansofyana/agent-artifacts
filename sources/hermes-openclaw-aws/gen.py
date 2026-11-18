@@ -1,9 +1,32 @@
 #!/usr/bin/env python3
-"""Generate the bilingual (EN root, ID secondary) here.now page from one data structure."""
-import html
-import pathlib
+"""Generate the bilingual (EN root, ID secondary) here.now page from one data structure.
 
-OUT = pathlib.Path(__file__).parent
+Writes a self-contained build directory (index.html, index-id.html, assets/).
+Output defaults to <repo>/sources/hermes-openclaw-aws/build so nothing is
+committed; override with the HERMES_OPENCLAW_AWS_OUT environment variable.
+The page ships the Scandinavian monochrome system: see assets/site.css.
+"""
+import html
+import os
+import pathlib
+import shutil
+
+HERE = pathlib.Path(__file__).resolve().parent          # sources/hermes-openclaw-aws
+REPO_ROOT = HERE.parents[1]                             # repository root
+DEFAULT_OUT = REPO_ROOT / "sources" / "hermes-openclaw-aws" / "build"
+OUT = pathlib.Path(os.environ.get("HERMES_OPENCLAW_AWS_OUT", DEFAULT_OUT))
+
+# Inter is self-hosted next to the page. Resolved from the publishing skill's
+# vendored copy (no absolute path in code); override with HERMES_INTER_FONT.
+FONT_SRC = pathlib.Path(os.environ.get(
+    "HERMES_INTER_FONT",
+    os.path.expanduser(
+        "~/.hermes/skills/productivity/herenow-artifact-publisher/"
+        "root-index/assets/inter-latin-wght-normal.woff2"),
+))
+
+SLUG = "cosmic-desert-y4tm"
+REGISTRY = "https://artifacts.irfansp.dev/"
 
 TITLE = {
     "en": "Running Hermes and OpenClaw on AWS",
@@ -14,6 +37,7 @@ LEDE = {
     "id": "AWS sekarang menyediakan materi first-party untuk kedua agent: halaman kampanye, quick start Lightsail, sample CloudFormation sekali klik, listing Marketplace, dan empat artikel Builder Center. Lapisan komunitasnya tipis, dan cuma satu modul Terraform yang kelihatan dirawat.",
 }
 EYEBROW = {"en": "AWS · agents · source-checked 18 Nov 2026", "id": "AWS · agent · dicek 18 Nov 2026"}
+SKIP = {"en": "Skip to content", "id": "Lewati ke konten"}
 
 LABEL = {
     "en": {"lang_name": "English", "other_name": "Indonesian", "other_href": "index-id.html",
@@ -151,16 +175,11 @@ def list_block(entries, lang, ordered=False):
 def build(lang):
     s = []
 
-    s.append("<header class=\"page\">")
+    s.append("<header class=\"hero\">")
     s.append(f"<p class=\"eyebrow\">{esc(EYEBROW[lang])}</p>")
     s.append(f"<h1>{esc(TITLE[lang])}</h1>")
     s.append(f"<p class=\"lede\">{esc(LEDE[lang])}</p>")
-    other = LABEL[lang]
-    s.append("<nav class=\"lang\" aria-label=\"Language\">")
-    s.append(f"<a href=\"{'index.html' if lang == 'en' else 'index-id.html'}\" aria-current=\"page\">{esc(LABEL[lang]['lang_name'])}</a>")
-    s.append(f"<a href=\"{other['other_href']}\">{esc(other['other_name'])}</a>")
-    s.append("</nav></header>")
-    s.append("<main>")
+    s.append("</header>")
 
     # 1. What AWS ships
     t = {"en": "What AWS itself ships", "id": "Yang disediakan AWS sendiri"}
@@ -368,10 +387,36 @@ def build(lang):
          "id": "Metadata repo via GitHub API untuk jumlah bintang, lisensi, dan tanggal push terakhir, diambil 18 November 2026."},
     ]
     s.append(list_block([{**x, "html": True} for x in src], lang, ordered=True))
-    s.append("</main>")
-
-    s.append(f"<footer class=\"page\"><p>{esc(LABEL[lang]['footer'])}</p></footer>")
     return "\n".join(s)
+
+
+def masthead(lang):
+    cur = "index.html" if lang == "en" else "index-id.html"
+    other = LABEL[lang]
+    return (
+        '<header class="masthead">\n'
+        '  <div class="page masthead-inner">\n'
+        '    <p class="wordmark">Irfan\'s AI agents</p>\n'
+        '    <nav aria-label="Registry and language">\n'
+        f'      <a href="{REGISTRY}">Registry</a>\n'
+        f'      <a href="{cur}" aria-current="page">{esc(LABEL[lang]["lang_name"])}</a>\n'
+        f'      <a href="{other["other_href"]}">{esc(other["other_name"])}</a>\n'
+        '    </nav>\n'
+        '  </div>\n'
+        '</header>'
+    )
+
+
+def footer(lang):
+    return (
+        '<footer class="foot">\n'
+        '  <div class="page foot-inner">\n'
+        f'    <p>{esc(LABEL[lang]["footer"])}</p>\n'
+        f'    <p class="foot-meta">here.now slug {SLUG} · '
+        f'<a href="{REGISTRY}">Registry</a></p>\n'
+        '  </div>\n'
+        '</footer>'
+    )
 
 
 def page(lang):
@@ -385,22 +430,37 @@ def page(lang):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <meta name="description" content="{lede}">
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
-<div class="wrap">
+<a class="skip" href="#main">{esc(SKIP[lang])}</a>
+{masthead(lang)}
+<main id="main" class="page">
 {build(lang)}
-</div>
+</main>
+{footer(lang)}
 <script src="assets/site.js"></script>
 </body>
 </html>
 """
 
 
+def write_assets():
+    assets = OUT / "assets"
+    (assets / "fonts").mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(HERE / "assets" / "site.css", assets / "site.css")
+    shutil.copyfile(HERE / "assets" / "site.js", assets / "site.js")
+    shutil.copyfile(FONT_SRC, assets / "fonts" / "InterVariable-latin.woff2")
+
+
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "index.html").write_text(page("en"), encoding="utf-8")
     (OUT / "index-id.html").write_text(page("id"), encoding="utf-8")
-    print(f"wrote index.html and index-id.html ({len(SAMPLES)} samples, {len(ARTICLES)} articles, {len(TERRAFORM)} terraform entries)")
+    write_assets()
+    print(f"wrote {OUT}/index.html, index-id.html and assets/ "
+          f"(site.css, site.js, fonts/InterVariable-latin.woff2)")
 
 
 if __name__ == "__main__":

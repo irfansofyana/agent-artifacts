@@ -1,14 +1,31 @@
 #!/usr/bin/env python3
-"""Build the published single-page site from content.md (single source of truth)."""
+"""Build the published single-page site from content.md (single source of truth).
+
+Output goes to ./build by default (gitignored). Override the source/work dir with
+UAEF_WORK, the output dir with UAEF_OUT, and the Inter font source with UAEF_FONT.
+No absolute local paths live here: every default is derived from this file's own
+repo-relative location.
+"""
 from __future__ import annotations
 
 import html
+import os
 import re
+import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-SRC = ROOT / "content.md"
-OUT = ROOT / "site"
+WORK = Path(os.environ.get("UAEF_WORK", ROOT))
+SRC = WORK / "content.md"
+CSS = WORK / "site" / "assets" / "styles.css"
+JS = WORK / "site" / "assets" / "app.js"
+OUT = Path(os.environ.get("UAEF_OUT", WORK / "build"))
+FONT = Path(
+    os.environ.get(
+        "UAEF_FONT",
+        ROOT.parent.parent / "assets" / "fonts" / "InterVariable-latin.woff2",
+    )
+)
 
 TITLE = "Getting started with UAEF"
 DESC = ("A hands-on guide to the Universal Agent Evaluation Framework: install it, "
@@ -146,7 +163,7 @@ def build_body(md: str) -> tuple[str, str, str, list[tuple[str, str]]]:
                 '<div class="table-wrap" role="region" tabindex="0" '
                 f'aria-labelledby="{hint_id}">'
                 f'<p class="table-hint" id="{hint_id}" hidden>Scroll sideways to see every column.</p>'
-                f'<table><thead><tr>{thead}</tr></thead><tbody>{tbody}</tbody></table></div>'
+                f"<table><thead><tr>{thead}</tr></thead><tbody>{tbody}</tbody></table></div>"
             )
             continue
 
@@ -234,18 +251,24 @@ def main() -> None:
 <meta property="og:description" content="{html.escape(DESC)}">
 <meta property="og:type" content="article">
 <meta name="color-scheme" content="light dark">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233b5bdb'/%3E%3Cpath d='M9 22V10h3.1l3.9 6.4L19.9 10H23v12h-2.6v-7.3L16.8 21h-1.6l-3.6-6.3V22z' fill='white'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000000'/%3E%3Cpath d='M9 22V10h3.1l3.9 6.4L19.9 10H23v12h-2.6v-7.3L16.8 21h-1.6l-3.6-6.3V22z' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip" href="#main">Skip to content</a>
 <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
-<header class="hero">
-  <p class="hero-kicker">AWS Labs · Apache 2.0 · v0.2.0</p>
-  <h1>{html.escape(hero_title)}</h1>
-  <p class="hero-tagline">{inline(tagline)}</p>
+<header class="masthead">
+  <div class="page">
+    <p class="wordmark">Irfan's AI agents</p>
+    <nav aria-label="Artifact registry"><a href="https://artifacts.irfansp.dev/">All artifacts</a></nav>
+  </div>
 </header>
-<div class="layout">
+<header class="hero page">
+  <p class="eyebrow">AWS Labs · Apache 2.0 · v0.2.0</p>
+  <h1>{html.escape(hero_title)}</h1>
+  <p class="lede">{inline(tagline)}</p>
+</header>
+<div class="layout page">
   <nav class="toc" aria-label="On this page">
     <p class="toc-title">On this page</p>
     <ol id="toc">{nav}</ol>
@@ -254,17 +277,25 @@ def main() -> None:
 {body}
   </main>
 </div>
-<footer class="site-footer">
-  <p>Built from the official UAEF documentation, repository source, and the AWS Machine Learning Blog post, with code paths run locally against UAEF 0.2.0.</p>
-  <p class="fine">UAEF is an AWS Labs open-source project. This page is an independent getting-started guide.</p>
+<footer class="foot">
+  <div class="page">
+    <p>Built from the official UAEF documentation, repository source, and the AWS Machine Learning Blog post, with code paths run locally against UAEF 0.2.0.</p>
+    <p>UAEF is an AWS Labs open-source project. This page is an independent getting-started guide.</p>
+    <p>Published on here.now as sunny-rocket-rbm5 · <a href="https://artifacts.irfansp.dev/">All artifacts</a></p>
+  </div>
 </footer>
 <script src="assets/app.js"></script>
 </body>
 </html>
 """
-    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "assets" / "fonts").mkdir(parents=True, exist_ok=True)
     (OUT / "index.html").write_text(page)
-    print(f"wrote {OUT / 'index.html'} ({len(page)} bytes, {len(toc)} sections, {len(body.splitlines())} body lines)")
+    shutil.copyfile(CSS, OUT / "assets" / "styles.css")
+    shutil.copyfile(JS, OUT / "assets" / "app.js")
+    shutil.copyfile(FONT, OUT / "assets" / "fonts" / "InterVariable-latin.woff2")
+    print(f"wrote {OUT / 'index.html'} ({len(page)} bytes, {len(toc)} sections, "
+          f"{len(body.splitlines())} body lines)")
+    print(f"assets: styles.css, app.js, fonts/InterVariable-latin.woff2 ({FONT.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":

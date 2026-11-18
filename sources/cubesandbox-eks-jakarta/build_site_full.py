@@ -1,27 +1,47 @@
 #!/usr/bin/env python3
-"""Build all four pages: research + options, each in Indonesian and English."""
+"""Build every page of the CubeSandbox on EKS Jakarta artifact.
+
+Emits the bilingual pair of documents (research + options, Indonesian and
+English) plus the shared stylesheet and self-hosted font into the build
+directory, and stages the Archify diagram documents and their PNG captures when
+they are present.
+
+Output directory: $CUBE_EKS_WORK/build by default (CUBE_EKS_BUILD overrides it).
+``CUBE_EKS_WORK`` defaults to this file's directory, so no absolute machine path
+is needed. The font is read from the artifact repo's own assets/ (../../assets
+relative to this file, overridable with CUBE_EKS_FONT); the diagrams are read
+from ./diagram (overridable with CUBE_EKS_DIAGRAM_DIR) and are copied verbatim
+because they are Archify output, i.e. the diagram itself, not page chrome.
+"""
 import html
 import os
 import re
+import shutil
 
 W = os.environ.get("CUBE_EKS_WORK", os.path.dirname(os.path.abspath(__file__)))
-SITE = os.path.join(W, "site")
-CSS = open(os.path.join(W, "site.css")).read()
+OUT = os.environ.get("CUBE_EKS_BUILD", os.path.join(W, "build"))
+ASSETS = os.path.join(OUT, "assets")
+FONT_SRC = os.environ.get(
+    "CUBE_EKS_FONT",
+    os.path.normpath(os.path.join(W, os.pardir, os.pardir, "assets", "fonts", "InterVariable-latin.woff2")),
+)
+DIAGRAM_DIR = os.environ.get("CUBE_EKS_DIAGRAM_DIR", os.path.join(W, "diagram"))
 
-TABLE_EXTRA = """
-nav.docsnav{display:flex; flex-wrap:wrap; gap:.6rem 1.2rem; justify-content:space-between; align-items:baseline; font-size:.85rem; color:var(--fg-2); margin-bottom:1.1rem}
-nav.docsnav a{color:var(--accent); text-decoration:none; border-bottom:1px solid transparent}
-nav.docsnav a:hover{border-bottom-color:var(--accent)}
-nav.docsnav a[aria-current="page"]{color:var(--fg); font-weight:600; border-bottom-color:var(--border)}
-.table-wrap{overflow-x:auto; margin:1.2rem 0 1.5rem; border:1px solid var(--border); border-radius:10px; background:var(--surface)}
-table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:660px}
-th,td{text-align:left; padding:.6rem .85rem; border-bottom:1px solid var(--rule); vertical-align:top}
-thead th{background:var(--surface-2); font-weight:650; font-size:.82rem; letter-spacing:.01em; color:var(--fg)}
-tbody tr:last-child td{border-bottom:none}
-td:first-child, th:first-child{font-weight:650}
-.table-wrap td strong, .table-wrap th strong{font-weight:700}
-p.tablehint{margin:-.9rem 0 1.4rem; font-size:.8rem; color:var(--fg-2)}
-"""
+# Only the shell needs these; content stays in the markdown sources.
+SLUG = "frosty-aurora-2jqj"
+REGISTRY = "https://artifacts.irfansp.dev/"
+
+CSS_FILE = os.path.join(W, "site.css")
+
+# build name -> candidate source names inside CUBE_EKS_DIAGRAM_DIR
+DIAGRAM_FILES = {
+    "diagram.html": ("diagram.html", "cubesandbox-eks.html"),
+    "diagram-en.html": ("diagram-en.html", "cubesandbox-eks-en.html"),
+    "diagram-light.png": ("diagram-light.png",),
+    "diagram-dark.png": ("diagram-dark.png",),
+    "diagram-en-light.png": ("diagram-en-light.png",),
+    "diagram-en-dark.png": ("diagram-en-dark.png",),
+}
 
 
 def esc(t):
@@ -49,7 +69,7 @@ def slug(t):
 
 
 def parse(md_path):
-    md = open(md_path).read()
+    md = open(md_path, encoding="utf-8").read()
     body_md, _, src_md = md.partition("\n## Sources\n")
     lines = body_md.split("\n")
     out, toc = [], []
@@ -133,12 +153,14 @@ def render(lang, cfg, blocks, toc, srcs):
         else:
             body.append(b)
     tochtml = "".join(f'<li><a href="#{s}">{esc(t)}</a></li>' for s, t in toc)
+
     def link(label, href, cur):
         attr = ' aria-current="page"' if cur else ""
         return f'<a href="{href}"{attr}>{esc(label)}</a>'
 
-    docs = " &middot; ".join(link(*t) for t in cfg["docs"])
-    langs = " &middot; ".join(link(*t) for t in cfg["switch"])
+    docs = "\n      ".join(link(*t) for t in cfg["docs"]) + "\n      " + link(cfg["registry_label"], REGISTRY, False)
+    langs = "\n      ".join(link(*t) for t in cfg["switch"])
+
     page = f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -149,31 +171,46 @@ def render(lang, cfg, blocks, toc, srcs):
 <meta property="og:title" content="{esc(cfg["og_title"])}">
 <meta property="og:description" content="{esc(cfg["description"])}">
 <meta property="og:type" content="article">
-<style>{CSS}{TABLE_EXTRA}</style>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/page.css">
 </head>
 <body>
-<div class="wrap">
-<header class="page">
-  <nav class="docsnav" aria-label="Navigasi">
-    <span>{docs}</span>
-    <span>{langs}</span>
-  </nav>
-  <h1>{esc(cfg["h1"])}</h1>
-  <p class="lede">{cfg["lede"]}</p>
+<a class="skip" href="#main">{esc(cfg["skip"])}</a>
+<header class="masthead">
+  <div class="page">
+    <p class="wordmark">Irfan's AI agents</p>
+    <nav class="shellnav" aria-label="{esc(cfg["docs_label"])}">
+      {docs}
+    </nav>
+    <nav class="shellnav langnav" aria-label="{esc(cfg["lang_label"])}">
+      {langs}
+    </nav>
+  </div>
 </header>
-<nav class="toc" aria-label="{cfg["toc_label"]}">
-  <p>{cfg["toc_label"]}</p>
-  <ol>{tochtml}</ol>
-</nav>
-<main>
+<div class="page">
+  <header class="hero">
+    <p class="eyebrow">{esc(cfg["eyebrow"])}</p>
+    <h1>{esc(cfg["h1"])}</h1>
+    <p class="lede">{cfg["lede"]}</p>
+  </header>
+  <nav class="toc" aria-label="{esc(cfg["toc_label"])}">
+    <p>{esc(cfg["toc_label"])}</p>
+    <ol>{tochtml}</ol>
+  </nav>
+  <main id="main">
 {"".join(body)}
-<h2 id="sources">{cfg["sources_label"]}</h2>
+<h2 id="sources">{esc(cfg["sources_label"])}</h2>
 <ol class="sources">
 {"".join(srcs)}
 </ol>
-</main>
-<footer class="foot"><p>{cfg["footer"]}</p></footer>
+  </main>
 </div>
+<footer class="foot">
+  <div class="page">
+    <p>{cfg["footer"]}</p>
+    <p class="footmeta">{esc(SLUG)} &middot; <a href="{REGISTRY}">artifacts.irfansp.dev</a></p>
+  </div>
+</footer>
 <script>
 document.querySelectorAll('.table-wrap').forEach(function(w){{
   var hint = w.nextElementSibling;
@@ -184,28 +221,35 @@ document.querySelectorAll('.table-wrap').forEach(function(w){{
 </body>
 </html>
 """
-    path = os.path.join(SITE, cfg["out"])
-    open(path, "w").write(page)
+    path = os.path.join(OUT, cfg["out"])
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(page)
     print(f"{cfg['out']}: {len(page)} B | sections {len(toc)} | sources {len(srcs)}")
 
 
 RESEARCH = dict(
     docs=[("Riset CubeSandbox", "index.html", True), ("Opsi sandbox", "sandbox-options.html", False)],
     switch=[("Bahasa Indonesia", "index.html", True), ("English", "index-en.html", False)],
+    docs_label="Navigasi", lang_label="Bahasa", registry_label="Registry", skip="Lewati ke konten",
 )
 RESEARCH_EN = dict(
     docs=[("CubeSandbox research", "index-en.html", True), ("Sandbox options", "sandbox-options-en.html", False)],
     switch=[("Bahasa Indonesia", "index.html", False), ("English", "index-en.html", True)],
+    docs_label="Navigation", lang_label="Language", registry_label="Registry", skip="Skip to content",
 )
 OPTIONS = dict(
-    diagram_light=None, diagram_dark=None, diagram_page=None, fig_link_text="", fig_link_label="", fig_link_tail="",
+    diagram_light="diagram-light.png", diagram_dark="diagram-dark.png", diagram_page="diagram.html",
+    fig_link_text="", fig_link_label="", fig_link_tail="",
     docs=[("Riset CubeSandbox", "index.html", False), ("Opsi sandbox", "sandbox-options.html", True)],
     switch=[("Bahasa Indonesia", "sandbox-options.html", True), ("English", "sandbox-options-en.html", False)],
+    docs_label="Navigasi", lang_label="Bahasa", registry_label="Registry", skip="Lewati ke konten",
 )
 OPTIONS_EN = dict(
-    diagram_light=None, diagram_dark=None, diagram_page=None, fig_link_text="", fig_link_label="", fig_link_tail="",
+    diagram_light="diagram-en-light.png", diagram_dark="diagram-en-dark.png", diagram_page="diagram-en.html",
+    fig_link_text="", fig_link_label="", fig_link_tail="",
     docs=[("CubeSandbox research", "index-en.html", False), ("Sandbox options", "sandbox-options-en.html", True)],
     switch=[("Bahasa Indonesia", "sandbox-options.html", False), ("English", "sandbox-options-en.html", True)],
+    docs_label="Navigation", lang_label="Language", registry_label="Registry", skip="Skip to content",
 )
 
 ID_RESEARCH = dict(
@@ -214,6 +258,7 @@ ID_RESEARCH = dict(
     description="Riset arsitektur dan dependency CubeSandbox untuk deployment di Amazon EKS Jakarta: bare metal vs PVM, ketersediaan komponen di ap-southeast-3, biaya, dan catatan risiko.",
     og_title="CubeSandbox di EKS Jakarta",
     h1="CubeSandbox di EKS Jakarta",
+    eyebrow="Catatan riset",
     lede='Sandbox microVM buat agent infrastructure. Riset arsitektur, dependency, biaya, dan risiko untuk deployment di <b>Amazon EKS ap-southeast-3</b>. Catatan riset, 17 November 2026.',
     toc_label="Isi", sources_label="Sources",
     diagram_light="diagram-light.png", diagram_dark="diagram-dark.png", diagram_page="diagram.html",
@@ -227,6 +272,7 @@ EN_RESEARCH = dict(
     description="Architecture and dependency research for deploying CubeSandbox on Amazon EKS Jakarta: bare metal vs PVM, component availability in ap-southeast-3, cost, and known risks.",
     og_title="CubeSandbox on EKS Jakarta",
     h1="CubeSandbox on EKS Jakarta",
+    eyebrow="Research note",
     lede='MicroVM sandboxes for agent infrastructure. Architecture, dependencies, cost, and risks for a deployment on <b>Amazon EKS ap-southeast-3</b>. Research note, 17 November 2026.',
     toc_label="Contents", sources_label="Sources",
     diagram_light="diagram-en-light.png", diagram_dark="diagram-en-dark.png", diagram_page="diagram-en.html",
@@ -240,6 +286,7 @@ ID_OPTIONS = dict(
     description="Tiga opsi sandbox untuk WeKnora dan agent lain di AWS Jakarta, lengkap dengan komponen yang dibutuhkan, estimasi biaya bulanan, dan verdict perubahan kode WeKnora.",
     og_title="Opsi sandbox untuk AI agent di AWS Jakarta",
     h1="Sandbox untuk AI agent di AWS Jakarta",
+    eyebrow="Dokumen keputusan",
     lede='Tiga opsi untuk WeKnora dan agent lain: <b>CubeSandbox</b>, <b>E2B Embed</b>, dan <b>AWS Nitro Sandboxes</b>. Komponen yang dibutuhkan, estimasi biaya di region Jakarta, dan mana yang perlu patch kode WeKnora. Dokumen keputusan, 17 November 2026.',
     toc_label="Isi", sources_label="Sources",
     footer="Disusun oleh Kai. Semua komponen berada di region ap-southeast-3 (Jakarta). Angka biaya dari AWS Price List API region tersebut, on-demand, di luar pajak, data transfer keluar, dan biaya LLM.",
@@ -251,17 +298,58 @@ EN_OPTIONS = dict(
     description="Three sandbox options for WeKnora and other agents on AWS Jakarta with the components each needs, monthly cost estimates, and which one requires WeKnora code changes.",
     og_title="Sandbox options for AI agents on AWS Jakarta",
     h1="Sandboxes for AI agents on AWS Jakarta",
+    eyebrow="Decision document",
     lede='Three options for WeKnora and other agents: <b>CubeSandbox</b>, <b>E2B Embed</b>, and <b>AWS Nitro Sandboxes</b>. What each needs, what it costs in the Jakarta Region, and which one requires patching WeKnora. Decision document, 17 November 2026.',
     toc_label="Contents", sources_label="Sources",
     footer="Written by Kai. Every component runs in ap-southeast-3 (Jakarta). Cost figures come from the AWS Price List API for that Region, on-demand, excluding tax, data transfer out, and LLM spend.",
     **OPTIONS_EN,
 )
 
-for md, lang, cfg in [
+PAGES = [
     ("article.md", "id", ID_RESEARCH),
     ("article-en.md", "en", EN_RESEARCH),
     ("article-options.md", "id", ID_OPTIONS),
     ("article-options-en.md", "en", EN_OPTIONS),
-]:
-    blocks, toc, srcs = parse(os.path.join(W, md))
-    render(lang, cfg, blocks, toc, srcs)
+]
+
+
+def stage_shared():
+    os.makedirs(os.path.join(ASSETS, "fonts"), exist_ok=True)
+    with open(CSS_FILE, encoding="utf-8") as fh:
+        css = fh.read()
+    with open(os.path.join(ASSETS, "page.css"), "w", encoding="utf-8") as fh:
+        fh.write(css)
+    if os.path.exists(FONT_SRC):
+        shutil.copyfile(FONT_SRC, os.path.join(ASSETS, "fonts", "InterVariable-latin.woff2"))
+        print(f"assets/page.css + assets/fonts/InterVariable-latin.woff2 ({os.path.getsize(FONT_SRC)} B)")
+    else:
+        print(f"WARNING: font not found at {FONT_SRC}; page.css still references assets/fonts/InterVariable-latin.woff2")
+
+
+def stage_diagrams():
+    if not os.path.isdir(DIAGRAM_DIR):
+        print(f"diagrams: no {DIAGRAM_DIR} directory; skipped (figure links will 404 in the build)")
+        return
+    for dest, candidates in DIAGRAM_FILES.items():
+        for name in candidates:
+            src = os.path.join(DIAGRAM_DIR, name)
+            if os.path.exists(src):
+                shutil.copyfile(src, os.path.join(OUT, dest))
+                print(f"{dest}: {os.path.getsize(src)} B (from {name})")
+                break
+        else:
+            print(f"diagrams: no source for {dest} in {DIAGRAM_DIR}")
+
+
+def main():
+    os.makedirs(OUT, exist_ok=True)
+    stage_shared()
+    stage_diagrams()
+    for md, lang, cfg in PAGES:
+        blocks, toc, srcs = parse(os.path.join(W, md))
+        render(lang, cfg, blocks, toc, srcs)
+    print(f"build output: {OUT}")
+
+
+if __name__ == "__main__":
+    main()

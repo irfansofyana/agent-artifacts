@@ -1,11 +1,26 @@
 #!/usr/bin/env python3
-"""Generate the WeKnora least-privilege issue map page (ID + EN) from one data source."""
-import html, os, json, re
+"""Generate the WeKnora least-privilege issue map page (ID + EN) from one data source.
 
-OUT = os.path.expanduser("~/.hermes/cache/scratch/weknora-least-privilege")
-os.makedirs(os.path.join(OUT, "assets"), exist_ok=True)
+Scandinavian monochrome build. Output goes to ./build next to this file by
+default (repo-relative, machine-independent); override with WEKNORA_LP_BUILD.
+The self-hosted Inter font is copied from the agent-artifacts repo's own
+assets/fonts/InterVariable-latin.woff2 (override with WEKNORA_LP_FONT).
+"""
+import html, os, re, shutil, pathlib
+
+HERE = pathlib.Path(__file__).resolve().parent
+REPO_ROOT = HERE.parent.parent
+OUT = pathlib.Path(os.environ.get("WEKNORA_LP_BUILD", HERE / "build")).expanduser()
+FONT_SRC = pathlib.Path(
+    os.environ.get("WEKNORA_LP_FONT", REPO_ROOT / "assets" / "fonts" / "InterVariable-latin.woff2")
+).expanduser()
+
+(OUT / "assets" / "fonts").mkdir(parents=True, exist_ok=True)
 
 BASE = "https://github.com/Tencent/WeKnora/issues/"
+
+SLUG = "fancy-fable-3f9j"
+REGISTRY = "https://artifacts.irfansp.dev/"
 
 def link(n, label=None):
     return f'<a href="{BASE}{n}">#{n}</a>' + (f" {label}" if label else "")
@@ -338,87 +353,126 @@ ORDER = [
 
 
 # ---------------------------------------------------------------- css
-CSS = """:root{
-  --bg:#faf9f7; --surface:#ffffff; --fg:#191a1d; --muted:#565a61;
-  --border:#ccc6bb; --accent:#1d5c47; --accent-soft:#e8f0ec; --code:#f1efeb;
-  --measure:74ch; --radius:10px;
+# Scandinavian monochrome: alpha ink on a neutral canvas, one sans family,
+# hierarchy from size and space, no hue in chrome, no all-caps, no gradients,
+# glows, shadows or card-grid stacks. Dark comes free from prefers-color-scheme.
+CSS = """@font-face{
+  font-family:'Inter Variable';
+  src:url('fonts/InterVariable-latin.woff2') format('woff2-variations');
+  font-weight:100 900; font-style:normal; font-display:swap;
+}
+:root{
+  color-scheme:light dark;
+  --canvas:#ffffff; --ink:#000000; --ink-2:rgb(0 0 0 / 64%); --ink-3:rgb(0 0 0 / 56%);
+  --rule:rgb(0 0 0 / 10%); --rule-strong:rgb(0 0 0 / 18%);
+  --tint:rgb(0 0 0 / 3%); --hover:rgb(0 0 0 / 5%);
+  --radius:8px; --pad:clamp(24px,4vw,64px); --measure:68ch; --chapter:clamp(56px,7vw,96px);
+  --font:'Inter Variable',ui-sans-serif,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#0f1113; --surface:#17191c; --fg:#e9eaec; --muted:#a6abb2;
-    --border:#383d43; --accent:#78d6b2; --accent-soft:#16241f; --code:#1e2226;
+    --canvas:#0a0a0a; --ink:#ffffff; --ink-2:rgb(255 255 255 / 56%); --ink-3:rgb(255 255 255 / 46%);
+    --rule:rgb(255 255 255 / 12%); --rule-strong:rgb(255 255 255 / 22%);
+    --tint:rgb(255 255 255 / 5%); --hover:rgb(255 255 255 / 9%);
   }
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
-  margin:0; background:var(--bg); color:var(--fg);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  font-size:16.5px; line-height:1.65;
+  margin:0; background:var(--canvas); color:var(--ink-2);
+  font:400 17px/1.6 var(--font); overflow-wrap:break-word;
 }
-.wrap{max-width:calc(var(--measure) + 4rem); margin:0 auto; padding:2.5rem 1.25rem 5rem}
-header.site{border-bottom:1px solid var(--border); padding-bottom:1.5rem; margin-bottom:2.5rem}
-.eyebrow{font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 .6rem}
-h1{font-size:1.95rem; line-height:1.25; margin:0 0 .75rem; letter-spacing:-.01em}
-h2{font-size:1.3rem; margin:3rem 0 .9rem; padding-top:1.4rem; border-top:1px solid var(--border); letter-spacing:-.005em}
-h3{font-size:1.05rem; margin:2rem 0 .5rem}
-p{margin:0 0 1rem}
-.lede{font-size:1.05rem; color:var(--fg)}
-.muted{color:var(--muted)}
-nav.switch{display:flex; flex-wrap:wrap; gap:.5rem 1.25rem; align-items:center; margin:1.25rem 0 0; font-size:.92rem}
-nav.switch a{color:var(--accent); text-decoration:none; border-bottom:1px solid transparent}
-nav.switch a:hover,nav.switch a:focus-visible{border-bottom-color:currentColor}
-nav.switch a[aria-current="page"]{color:var(--fg); font-weight:600}
-nav.switch .sep{color:var(--border)}
-ul,ol{margin:0 0 1.2rem; padding-left:1.35rem}
-li{margin:.45rem 0}
-li>ul{margin:.4rem 0}
-code{background:var(--code); padding:.12em .38em; border-radius:4px; font-size:.88em;
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; overflow-wrap:anywhere}
-a{color:var(--accent)}
-.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:1.15rem 1.3rem; margin:1.5rem 0}
-.card h3{margin-top:0}
-.card p:last-child,.card ul:last-child{margin-bottom:0}
-.note{border-left:3px solid var(--accent); background:var(--accent-soft); padding:.9rem 1.1rem;
-  border-radius:0 var(--radius) var(--radius) 0; margin:1.5rem 0}
+a{color:var(--ink); text-underline-offset:3px; overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--ink); outline-offset:2px; border-radius:2px}
+.skip{position:fixed; top:8px; left:8px; padding:10px 14px; background:var(--canvas);
+  border:1px solid var(--rule-strong); border-radius:var(--radius); font-size:14px; transform:translateY(-200%)}
+.skip:focus{transform:none}
+.page{max-width:1120px; margin:0 auto; padding:0 var(--pad)}
+
+/* shell: one rule under the masthead, one above the footer, nothing else */
+.masthead{border-bottom:1px solid var(--rule)}
+.masthead-inner{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between;
+  gap:8px 24px; padding-top:28px; padding-bottom:18px}
+.wordmark{margin:0; font-size:15px; font-weight:550; letter-spacing:-0.01em; color:var(--ink)}
+.masthead nav{font-size:14px}
+.masthead nav a{color:var(--ink-2); text-decoration:none}
+.masthead nav a:hover{color:var(--ink); text-decoration:underline}
+
+.hero{padding-top:clamp(32px,5vw,56px)}
+.eyebrow{margin:0 0 14px; font-size:13px; font-weight:500; color:var(--ink-3)}
+h1{max-width:30ch; margin:0; color:var(--ink); font-size:clamp(32px,4.6vw,56px);
+  font-weight:550; line-height:1.08; letter-spacing:-0.03em; overflow-wrap:anywhere}
+.lede{max-width:var(--measure); margin:18px 0 0; font-size:19px; line-height:1.5; color:var(--ink-2)}
+.lang{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; margin:22px 0 0; font-size:14px}
+.lang a{color:var(--ink-2); text-decoration:none; border-bottom:1px solid transparent}
+.lang a:hover,.lang a:focus-visible{color:var(--ink); border-bottom-color:currentColor}
+.lang a[aria-current="page"]{color:var(--ink); font-weight:550}
+.lang .sep{color:var(--ink-3)}
+
+main{padding-bottom:8px}
+h2{margin:var(--chapter) 0 16px; color:var(--ink); font-size:clamp(22px,2.6vw,30px);
+  font-weight:550; letter-spacing:-0.01em; line-height:1.2}
+h3{margin:34px 0 10px; color:var(--ink); font-size:19px; font-weight:550; line-height:1.3}
+p,li{max-width:var(--measure)}
+p{margin:0 0 16px}
+ul,ol{margin:0 0 20px; padding-left:22px}
+li{margin:6px 0}
+strong{color:var(--ink); font-weight:600}
+.muted{color:var(--ink-3)}
+
+.note{margin:24px 0; padding:4px 0 4px 18px; border-left:2px solid var(--ink)}
 .note p:last-child{margin-bottom:0}
-.badge{display:inline-block; font-size:.74rem; font-weight:600; letter-spacing:.03em;
-  text-transform:uppercase; padding:.15em .5em; border-radius:999px; border:1px solid var(--border);
-  color:var(--muted); white-space:nowrap}
-.badge.open{color:var(--accent); border-color:var(--accent)}
-.table-wrap{overflow-x:auto; margin:1.5rem 0; border:1px solid var(--border); border-radius:var(--radius)}
-table{border-collapse:collapse; width:100%; font-size:.92rem; min-width:640px}
-th,td{text-align:left; padding:.6rem .75rem; border-bottom:1px solid var(--border); vertical-align:top}
-thead th{background:var(--code); font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted)}
-tbody tr:last-child td{border-bottom:none}
+
+.badge{display:inline-block; padding:1px 7px; border:1px solid var(--rule); border-radius:6px;
+  font-size:12px; font-weight:550; line-height:1.5; color:var(--ink-2); white-space:nowrap}
+.badge.open{border-color:var(--rule-strong); color:var(--ink)}
+.badge.closed{color:var(--ink-3)}
+.badge.pr{border-color:var(--rule-strong); color:var(--ink-2)}
+
+code{font-family:var(--font); font-size:0.92em; overflow-wrap:anywhere}
+:not(pre) > code{padding:1px 5px; border:1px solid var(--rule); border-radius:4px; background:var(--tint)}
+
+.table-wrap{max-width:100%; overflow-x:auto; margin:0}
+table{border-collapse:collapse; width:100%; font-size:15px}
+th,td{padding:10px 8px; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top}
+th{color:var(--ink); font-weight:550; border-bottom-color:var(--rule-strong)}
 td.num{white-space:nowrap; font-variant-numeric:tabular-nums}
-.hint{font-size:.84rem; color:var(--muted); margin:-.9rem 0 1.5rem}
+.hint{font-size:14px; color:var(--ink-3); margin:0 0 12px}
 .hint[hidden]{display:none}
-footer.site{margin-top:4rem; padding-top:1.5rem; border-top:1px solid var(--border);
-  font-size:.88rem; color:var(--muted)}
-.layer{margin:2.25rem 0 0}
-.layer h3{margin-bottom:.35rem}
-.layer .scope{color:var(--muted); font-size:.94rem; margin:0 0 .75rem}
-@media (max-width:520px){
-  body{font-size:16px}
-  h1{font-size:1.6rem}
-  .wrap{padding:1.75rem 1rem 3.5rem}
+
+.layer + .layer{margin-top:36px}
+.layer h3{margin-top:0}
+.layer ul{margin-bottom:0}
+
+.work + .work{margin-top:36px}
+.work h3{margin-top:0}
+.work p:last-child{margin-bottom:0}
+
+.foot{border-top:1px solid var(--rule); margin-top:var(--chapter)}
+.foot-inner{display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 24px;
+  padding-top:24px; padding-bottom:56px; font-size:13px; color:var(--ink-3)}
+.foot p{margin:0; max-width:var(--measure)}
+.foot nav{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 20px}
+.foot .slug{font-weight:500; color:var(--ink-3)}
+.foot a{color:var(--ink-3)}
+.foot a:hover{color:var(--ink)}
+
+@media (max-width:560px){
+  h1{letter-spacing:-0.02em}
+  th,td{min-width:140px}
 }
-@media print{
-  body{background:#fff}
-  .table-wrap{overflow:visible; border:none}
-  .hint{display:none}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important}
 }
 """
 
 # ---------------------------------------------------------------- render
 def state_badge(kind, state):
     if kind == "PR":
-        return '<span class="badge">merged PR</span>'
+        return '<span class="badge pr">Merged PR</span>'
     if state == "open":
-        return '<span class="badge open">open</span>'
-    return '<span class="badge">closed</span>'
+        return '<span class="badge open">Open</span>'
+    return '<span class="badge closed">Closed</span>'
 
 
 def layer_issues(lid):
@@ -550,10 +604,10 @@ It exists precisely because there is no ACL inside one workspace, which pushed t
         hole = hole_id if id_lang else hole_en
         links = " ".join(link(n) for n in refs)
         work_blocks.append(
-            f'<div class="card"><h3>{need}</h3>'
+            f'<section class="work"><h3>{need}</h3>'
             f'<p><strong>{hs1}:</strong> {how}</p>'
             f'<p><strong>{hs2}:</strong> {hole}</p>'
-            f'<p class="muted">{hs3}: {links}</p></div>')
+            f'<p class="muted">{hs3}: {links}</p></section>')
     work = f'<p>{work_intro}</p>' + "".join(work_blocks) + f'<div class="note"><p>{work_note}</p></div>'
 
     # gaps
@@ -654,21 +708,29 @@ our own WeKnora deployment, so treat those as direction rather than tested instr
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cstyle%3Erect{{fill:%23000}}@media (prefers-color-scheme:dark){{rect{{fill:%23fff}}}}%3C/style%3E%3Crect width='32' height='32' rx='7'/%3E%3C/svg%3E">
 <title>{title}</title>
 <meta name="description" content="{html.escape(re.sub("<[^>]+>", "", lede)[:170], quote=True)}">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-<div class="wrap">
-<header class="site">
+<a class="skip" href="#main">Skip to content</a>
+<header class="masthead">
+<div class="page masthead-inner">
+<p class="wordmark">Irfan's AI agents</p>
+<nav aria-label="Registry"><a href="{REGISTRY}">All artifacts</a></nav>
+</div>
+</header>
+<main id="main" class="page">
+<header class="hero">
 <p class="eyebrow">{T['eyebrow']}</p>
 <h1>{title}</h1>
 <p class="lede">{lede}</p>
-<nav class="switch" aria-label="{'Navigasi dokumen dan bahasa' if id_lang else 'Document and language navigation'}">
+<nav class="lang" aria-label="{'Navigasi dokumen dan bahasa' if id_lang else 'Document and language navigation'}">
 {nav}
 </nav>
 </header>
-<main>
 <h2>{labels['summary']}</h2>
 {summary}
 <h2>{labels['method']}</h2>
@@ -688,10 +750,15 @@ our own WeKnora deployment, so treat those as direction rather than tested instr
 <h2>{labels['src']}</h2>
 {src}
 </main>
-<footer class="site">
+<footer class="foot">
+<div class="page foot-inner">
 <p>{foot}</p>
-</footer>
+<nav aria-label="Registry">
+<span class="slug">{SLUG}</span>
+<a href="{REGISTRY}">All artifacts</a>
+</nav>
 </div>
+</footer>
 <script>
 (function(){{
   var h=document.getElementById('tbl-hint');
@@ -706,10 +773,15 @@ our own WeKnora deployment, so treat those as direction rather than tested instr
 """
 
 
-with open(os.path.join(OUT, "assets", "style.css"), "w") as f:
+with open(OUT / "assets" / "style.css", "w") as f:
     f.write(CSS)
+if FONT_SRC.is_file():
+    shutil.copy2(FONT_SRC, OUT / "assets" / "fonts" / "InterVariable-latin.woff2")
+    print("font:", FONT_SRC, "->", OUT / "assets" / "fonts" / "InterVariable-latin.woff2")
+else:
+    raise SystemExit(f"Inter font not found at {FONT_SRC}; set WEKNORA_LP_FONT")
 for lang, name in (("id", "index.html"), ("en", "index-en.html")):
-    with open(os.path.join(OUT, name), "w") as f:
+    with open(OUT / name, "w") as f:
         f.write(render(lang))
 
 print("written to", OUT)
