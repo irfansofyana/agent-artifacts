@@ -21,7 +21,7 @@
 </ul>
 
 <div class="highlight-box warn">
-<h3>⚠️ Official Position from OpenClaw Docs</h3>
+<h3>Official Position from OpenClaw Docs</h3>
 <p>"OpenClaw is <strong>not</strong> a hostile multi-tenant security boundary for multiple adversarial users sharing one agent or gateway. For mixed-trust or adversarial-user operation, split trust boundaries: separate gateway + credentials, ideally separate OS users or hosts."</p>
 <p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://docs.openclaw.ai/gateway/security">OpenClaw Security Docs</a></p>
 </div>
@@ -114,37 +114,37 @@
 <h2>4. What Security Researchers and Vendors Are Saying</h2>
 
 <div class="highlight-box warn">
-<h3>🔴 CrowdStrike (April 2026)</h3>
+<h3>CrowdStrike (April 2026)</h3>
 <p>"If employees deploy OpenClaw on corporate machines and/or connect it to enterprise systems and leave it misconfigured and unsecured, it could be commandeered as a powerful AI backdoor agent capable of taking orders from adversaries." CrowdStrike released an <strong>OpenClaw Search &amp; Removal Content Pack</strong> for Falcon for IT — essentially an enterprise kill switch that scans for and removes OpenClaw across all managed endpoints.</p>
 <p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://www.crowdstrike.com/en-us/blog/what-security-teams-need-to-know-about-openclaw-ai-super-agent/">CrowdStrike Blog</a></p>
 </div>
 
 <div class="highlight-box warn">
-<h3>🔴 Palo Alto Networks (April 2026)</h3>
+<h3>Palo Alto Networks (April 2026)</h3>
 <p>"It creates a scenario where traditional perimeters dissolve as autonomous entities operate with user-level permissions but without human-level predictability." Recommends: zero standing privileges, just-in-time access, scoped ephemeral tokens, sandbox isolation, and authenticated delegation linking each agent action back to a human.</p>
 <p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://www.paloaltonetworks.com/blog/identity-security/how-autonomous-ai-agents-like-openclaw-are-reshaping-enterprise-identity-security/">Palo Alto Networks Blog</a></p>
 </div>
 
 <div class="highlight-box warn">
-<h3>🔴 Barracuda (April 2026)</h3>
+<h3>Barracuda (April 2026)</h3>
 <p>"Once OpenClaw instances are deployed, in many cases by individual developers acting independently, security teams may have no easy way to discover, inventory or disable them at scale." Key recommendation: "Bring agents under governance. Shadow AI is a real risk. If security teams can't see where agents are running, they can't protect them."</p>
 <p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://blog.barracuda.com/2026/04/09/openclaw-security-risks-agentic-ai">Barracuda Blog</a></p>
 </div>
 
 <div class="highlight-box info">
-<h3>🔵 NVIDIA / Nemotron Labs (April 2026)</h3>
+<h3>NVIDIA / Nemotron Labs (April 2026)</h3>
 <p>NVIDIA introduced <strong>NemoClaw</strong> — a reference implementation that installs OpenClaw + OpenShell secure runtime + Nemotron models with hardened defaults. Sandboxes agents at the process level with policy-based privacy and security guardrails. However, NemoClaw is explicitly <strong>early-access alpha</strong>, not production-ready.</p>
 <p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://blogs.nvidia.com/blog/what-openclaw-agents-mean-for-every-organization/">NVIDIA Blog</a></p>
 </div>
 
 <div class="highlight-box warn">
-<h3>🔴 Codingscape / Simon Willison's "Lethal Trifecta" (April 2026)</h3>
+<h3>Codingscape / Simon Willison's "Lethal Trifecta" (April 2026)</h3>
 <p>Security researcher Simon Willison identified the "lethal trifecta" that OpenClaw hits: <strong>access to private data</strong> + <strong>external content consumption</strong> + <strong>execution power</strong>. A single prompt injection via a website or WhatsApp message can hijack the agent. Cisco audited 31,000 ClawHub skills: <strong>26% contained vulnerabilities or active malware</strong>. In one campaign, 230+ malicious skill plugins were published in 5 days.</p>
 <p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://codingscape.com/blog/openclaw-ai-agent-is-impressive-an-enterprise-security-disaster">Codingscape Blog</a></p>
 </div>
 
 <div class="highlight-box info">
-<h3>🔵 AIQURIS — Authorization Drift (April 2026)</h3>
+<h3>AIQURIS — Authorization Drift (April 2026)</h3>
 <p>In a real enterprise OpenClaw deployment assessment, AIQURIS found that the agent could surface information no single source system would have exposed — not through hallucination or prompt injection, but through <strong>authorization drift</strong>: the access controls of individual source systems became misaligned when aggregated for RAG retrieval. This is a structural vulnerability unique to agentic AI that aggregates across HR, ticketing, investigation, and knowledge systems.</p>
 <p style="font-size:0.85rem;color:var(--text-muted)">— <a href="https://www.aiquris.com/openclaw-and-the-structural-risk-in-enterprise-ai-agents/">AIQURIS Blog</a></p>
 </div>
@@ -166,7 +166,7 @@
 <h2>6. When Is Shared vs Individual Deployment Appropriate?</h2>
 
 <div class="highlight-box good">
-<h3>✅ Company-shared agent is acceptable when:</h3>
+<h3>Company-shared agent is acceptable when:</h3>
 <ul>
   <li>Everyone using the agent is in the <strong>same trust boundary</strong> (e.g., one team with shared responsibilities)</li>
   <li>The agent has <strong>narrowly scoped tools</strong> (e.g., a customer-support agent that only reads a knowledge base and drafts replies)</li>
@@ -178,7 +178,7 @@
 </div>
 
 <div class="highlight-box good">
-<h3>✅ Individual employee agents are acceptable when:</h3>
+<h3>Individual employee agents are acceptable when:</h3>
 <ul>
   <li>Each agent runs in a <strong>dedicated, isolated environment</strong> (separate VPS/container, not on corporate laptops)</li>
   <li>IT provisions the infrastructure with <strong>hardened defaults</strong> (SSH keys only, firewall, non-root user, localhost bind)</li>
@@ -189,7 +189,7 @@
 </div>
 
 <div class="highlight-box warn">
-<h3>❌ Never acceptable:</h3>
+<h3>Never acceptable:</h3>
 <ul>
   <li>One shared OpenClaw gateway with <strong>multiple mutually-untrusted users</strong> sharing the same OS user and config</li>
   <li>Employees running OpenClaw on <strong>corporate laptops</strong> with access to production credentials, SSH keys, or customer data</li>

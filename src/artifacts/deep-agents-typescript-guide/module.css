@@ -1,7 +1,7 @@
 
 .legacy-content{--bg:var(--bg-terminal);--panel:var(--bg-terminal);--border:var(--border-chrome);--text:var(--text-primary);--muted:var(--text-secondary);--accent:var(--phosphor);--code:var(--bg-chrome)}
 .legacy-content *{box-sizing:border-box}.legacy-content{scroll-behavior:smooth}
-.legacy-content{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+.legacy-content{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font-mono)}
 .legacy-content a{color:var(--accent)}
 .legacy-content .layout{display:grid;grid-template-columns:290px minmax(0,1fr);max-width:1400px;margin:auto}
 .legacy-content nav.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:24px 18px;border-right:1px solid var(--border);font-size:.85rem}
@@ -17,3 +17,16 @@
 .legacy-content th,.legacy-content td{border:1px solid var(--border);padding:8px 10px;vertical-align:top;text-align:left}.legacy-content th{background:var(--panel)}
 .legacy-content blockquote{border-left:3px solid var(--accent);margin:0;padding-left:14px;color:var(--muted)}
 @media(max-width:900px){.legacy-content .layout{grid-template-columns:1fr}.legacy-content nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}.legacy-content main{padding:20px;min-width:0;width:100%}}
+
+    /* highlight.js tokens carry hue in their stock themes; the monochrome system
+       keeps the code readable by rank, not by colour. */
+    .legacy-content .hljs { background: transparent; color: var(--text-secondary); }
+    .legacy-content .hljs-comment, .legacy-content .hljs-quote { color: var(--text-muted); font-style: italic; }
+    .legacy-content .hljs-keyword, .legacy-content .hljs-selector-tag, .legacy-content .hljs-literal,
+    .legacy-content .hljs-section, .legacy-content .hljs-name, .legacy-content .hljs-strong { color: var(--text-primary); font-weight: 600; }
+    .legacy-content .hljs-string, .legacy-content .hljs-title, .legacy-content .hljs-attr, .legacy-content .hljs-attribute,
+    .legacy-content .hljs-symbol, .legacy-content .hljs-bullet, .legacy-content .hljs-addition,
+    .legacy-content .hljs-meta, .legacy-content .hljs-built_in, .legacy-content .hljs-type,
+    .legacy-content .hljs-number, .legacy-content .hljs-variable, .legacy-content .hljs-template-variable { color: var(--text-secondary); }
+    .legacy-content .hljs-emphasis { font-style: italic; }
+    .legacy-content .hljs-deletion { color: var(--text-muted); text-decoration: line-through; }

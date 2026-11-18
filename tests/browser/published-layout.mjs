@@ -20,8 +20,8 @@ try {
           hasToc: !!el('.article-toc'), layout: size('.article-layout'), body: size('.artifact-body'),
           inner: inner && getComputedStyle(inner).display !== 'none' ? inner.getBoundingClientRect().width : 0,
           legacy: size('.legacy-content'),
-          scrollWidth: el('.window-scroll').scrollWidth,
-          clientWidth: el('.window-scroll').clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          clientWidth: document.documentElement.clientWidth,
           articleWidth: article?.getBoundingClientRect().width,
           narrowCells: [...document.querySelectorAll('.artifact-body table th,.artifact-body table td')]
             .filter(cell => cell.checkVisibility() && cell.textContent.trim().length > 8 && cell.getBoundingClientRect().width < 145)

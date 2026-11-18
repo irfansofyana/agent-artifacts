@@ -9,7 +9,14 @@ This repository is the source of truth. Read `AGENTS.md` and `README.md` before 
 
 ## Shared layout
 
-`templates/home.html` and `templates/artifact.html` own the terminal-window chrome. `assets/design-system.css` contains design tokens; `assets/site.css` and `assets/site.js` own layout and theme behavior. Source lives in `src/artifacts/<slug>/content.html`; optional `module.css` and `module.js` live beside it. `npm run build` generates the homepage and every artifact page. Preserve stable URLs and registry entries in `artifacts.json`.
+`templates/home.html` and `templates/artifact.html` own the shared shell (masthead, hero, registry, footer). `assets/design-system.css` holds the monochrome ink tokens; `assets/site.css` and `assets/site.js` own layout and theme behavior.
+
+The visual system is **Scandinavian monochrome** (rules: `~/.hermes/skills/creative/scandinavian-design/SKILL.md`): one sans family (Inter), alpha ink on a neutral canvas, hierarchy from size and space, no hue in interface chrome, no all-caps, no gradients, glows or shadows, restrained radii.
+
+- Never hard-code a colour in a module. Module token aliases (`--acid`, `--muted`, `--panel`, `--line`, `--serif` …) must point at the shell tokens, because one shell token change is what restyles every page.
+- No `text-transform: uppercase`, no serif display type, heading weights stay between 500 and 600.
+- A semantic state (error, warning, success, selected) keeps its meaning through a label or border weight, never through hue alone.
+- Colour is allowed only inside real media: diagrams, screenshots, product imagery. Source lives in `src/artifacts/<slug>/content.html`; optional `module.css` and `module.js` live beside it. `npm run build` generates the homepage and every artifact page. Preserve stable URLs and registry entries in `artifacts.json`.
 
 Write a **body fragment**, not a full HTML document. Use headings, anchors, accessible labels, semantic tables and links; never duplicate the shell or theme button. Use `templates/example-content.html` as a starting point. The dark/paper **theme** button is shared and persists. Module CSS must be scoped under `.legacy-content` or `[data-artifact-content]`, use design-system tokens, and not redefine global `html`, `body`, or `:root`.
 
@@ -19,13 +26,26 @@ The renderer supplies a shared TOC for articles with enough anchored sections. D
 
 **Mobile** first: at 320px and 390px, a single vertically scrolling page without document-wide horizontal overflow. Put wide tables/code/diagrams in swipeable containers with keyboard-accessible overflow. Give dense tables a sensible minimum table and minimum column width so labels do not collapse into vertical letters; keep horizontal scroll inside the wrapper rather than the document, give the scroll container keyboard focus and an accessible label, and show a brief visible swipe hint when columns extend offscreen. Preserve interactive controls and visible focus. For **Archify** and other large diagrams, keep the real HTML module under `artifacts/<slug>/diagrams/`, link it relatively, embed it where appropriate, allow internal touch-pan, and provide a full-size link. Mermaid should have readable text/source when its external script cannot load. Never flatten a functional diagram into an image only.
 
-Check foreground/background contrast for prose, inline code, code block text and diagrams in **both dark and paper themes**; normal text needs at least 4.5:1. An accent token such as `--phosphor` is not a safe background behind muted text: use a theme-aware opaque surface such as `--bg-chrome`, keep accent for highlights, and test the computed colors in a browser at mobile widths. When updating a module, test representative populated tables and code, not only the shared shell.
+Check foreground/background contrast for prose, inline code, code block text and diagrams in **both dark and paper themes**; normal text needs at least 4.5:1. Ink is alpha over stacked surfaces, so a contrast check must composite the colour over its effective background before comparing — raw computed values are meaningless for translucent ink (see `tests/browser/mobile-content-contrast.mjs`). An accent token such as `--phosphor` is not a safe background behind muted text: use a theme-aware opaque surface such as `--bg-chrome`, keep accent for highlights, and test the computed colors in a browser at mobile widths. When updating a module, test representative populated tables and code, not only the shared shell.
 
 ## Public-content privacy gate (mandatory)
 
 **Do not publish** company-confidential data, a private person's name or other personal info, a private file, or any credential. This applies even if the page is useful or publication was generally approved. Before committing or pushing, inspect **every publication surface**: title, slug, description and other registry metadata; article prose, code, links, diagrams, labels and examples; asset filenames, screenshots/images (including visible UI and EXIF), PDFs and their embedded metadata; generated HTML and build output. Look for internal company names/projects, customer or employee details, private URLs/repo paths, email/phone/address/location, financial or health information, API keys and tokens. Publicly documented third-party names and the site's deliberate publisher credit are not private-person disclosures; verify the source and context.
 
 If anything sensitive appears, **stop**: omit it or anonymize it in both source and generated output, then re-run build, tests and a manual review of the rendered page and assets. If safe anonymization would destroy the artifact, do not publish it. Do not paste sensitive values into review comments, test logs, commit messages or this skill. Automated secret scans are only a supplement: they cannot prove a page is safe. A general approval to publish never waives this gate.
+
+## Double publish: the source ships with the artifact
+
+Every published artifact keeps its generator in this repository. A Pages artifact's source is
+`src/artifacts/<slug>/`; a here.now artifact's generator is committed under `sources/<slug>/`
+(with the text inputs it reads, no large data dumps) and listed in `sources/README.md`.
+
+- When an artifact is published to here.now, copy its generator into `sources/<slug>/` in the
+  same pass, add the row to `sources/README.md`, and commit both together with the page's other
+  changes. A publish that leaves the generator outside the repo is incomplete.
+- Screen `sources/` with the privacy gate below before committing: it is public.
+- Generators must not carry absolute local paths; read the work directory from an environment
+  variable with a repo-relative default.
 
 ## Local workflow
 

@@ -1,5 +1,70 @@
-/* Adapted from Irfan Devs Design System ZIP, tokens/colors.css + typography.css. */
-@font-face{font-family:'Fira Code';src:url('fonts/FiraCode-latin.woff2') format('woff2');font-display:swap;font-weight:400 600}
-@font-face{font-family:'JetBrains Mono';src:url('fonts/JetBrainsMono-latin.woff2') format('woff2');font-display:swap;font-weight:400 800}
-:root{color-scheme:dark;--bg-base:#0a0a0a;--bg-terminal:#111613;--bg-chrome:#1c1f1c;--border-chrome:#2a2e2a;--phosphor:#36ff7a;--phosphor-soft:rgba(54,255,122,.25);--phosphor-faint:rgba(54,255,122,.1);--text-primary:#e8ffe8;--text-secondary:#a8b8a8;--text-muted:#6a7a6a;--accent-amber:#ffb454;--accent-gold:#ffd966;--accent-cyan:#6ad7ff;--accent-error:#ff7a85;--surface-output:rgba(255,255,255,.03);--font-mono:'Fira Code',monospace;--font-display:'JetBrains Mono',monospace}
-[data-theme="paper"]{color-scheme:light;--bg-base:#ecebe4;--bg-terminal:#f8f7f1;--bg-chrome:#e2e0d6;--border-chrome:#cfccbf;--phosphor:#0b7a3b;--phosphor-soft:rgba(11,122,59,.22);--phosphor-faint:rgba(11,122,59,.1);--text-primary:#142014;--text-secondary:#46544a;--text-muted:#68746b;--accent-amber:#a85a00;--accent-gold:#846300;--accent-cyan:#0a6893;--accent-error:#b72a3a;--surface-output:rgba(0,0,0,.03)}
+/* Scandinavian design system — monochrome alpha ink on a neutral canvas.
+   System rules: ~/.hermes/skills/creative/scandinavian-design/SKILL.md
+   Token NAMES are unchanged from the previous system so every artifact's
+   module.css keeps working: the modules alias their own names onto these
+   (--acid, --muted, --panel, --line, --serif …), so redefining them here
+   restyles all 44 pages at once. */
+
+@font-face {
+  font-family: 'Inter Variable';
+  src: url('fonts/InterVariable-latin.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  /* canvas and surfaces */
+  --bg-base: #0a0a0a;
+  --bg-terminal: #0a0a0a;
+  --bg-chrome: rgb(255 255 255 / 7%);
+  --surface-output: rgb(255 255 255 / 5%);
+  /* ink ladder */
+  --text-primary: #ffffff;
+  --text-secondary: rgb(255 255 255 / 56%);
+  --text-muted: rgb(255 255 255 / 46%);
+  /* the accent slots collapse onto the ink ladder: no hue survives */
+  --phosphor: #ffffff;
+  --phosphor-soft: rgb(255 255 255 / 22%);
+  --phosphor-faint: rgb(255 255 255 / 12%);
+  --accent-amber: rgb(255 255 255 / 64%);
+  --accent-gold: rgb(255 255 255 / 56%);
+  --accent-cyan: #ffffff;
+  --accent-error: rgb(255 255 255 / 88%);
+  --border-chrome: rgb(255 255 255 / 12%);
+  /* structure */
+  --rule: rgb(255 255 255 / 12%);
+  --rule-strong: rgb(255 255 255 / 22%);
+  --hover: rgb(255 255 255 / 9%);
+  --pressed: rgb(255 255 255 / 14%);
+  --font-mono: 'Inter Variable', ui-sans-serif, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Inter Variable', ui-sans-serif, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --radius: 8px;
+  --measure: 68ch;
+  --pad: clamp(24px, 4vw, 64px);
+  --chapter: clamp(56px, 7vw, 96px);
+}
+
+[data-theme="paper"] {
+  color-scheme: light;
+  --bg-base: #ffffff;
+  --bg-terminal: #ffffff;
+  --bg-chrome: rgb(0 0 0 / 4%);
+  --surface-output: rgb(0 0 0 / 3%);
+  --text-primary: #000000;
+  --text-secondary: rgb(0 0 0 / 64%);
+  --text-muted: rgb(0 0 0 / 56%);
+  --phosphor: #000000;
+  --phosphor-soft: rgb(0 0 0 / 18%);
+  --phosphor-faint: rgb(0 0 0 / 10%);
+  --accent-amber: rgb(0 0 0 / 64%);
+  --accent-gold: rgb(0 0 0 / 64%);
+  --accent-cyan: #000000;
+  --accent-error: rgb(0 0 0 / 88%);
+  --border-chrome: rgb(0 0 0 / 10%);
+  --rule: rgb(0 0 0 / 10%);
+  --rule-strong: rgb(0 0 0 / 18%);
+  --hover: rgb(0 0 0 / 5%);
+  --pressed: rgb(0 0 0 / 9%);
+}

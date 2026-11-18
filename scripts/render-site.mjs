@@ -8,16 +8,17 @@ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const homeTemplate = readFileSync(join(repo,'templates/home.html'),'utf8');
 const articleTemplate = readFileSync(join(repo,'templates/artifact.html'),'utf8');
 export const escapeHtml = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+const prettyDate = value => { const d = new Date(String(value ?? '').slice(0,10) + 'T00:00:00Z'); return Number.isNaN(d.getTime()) ? String(value ?? '') : new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(d); };
 function fill(template, fields) { return template.replace(/\{\{([A-Z_]+)\}\}/g, (_,key) => fields[key] ?? ''); }
 function sorted(artifacts) { return [...artifacts].sort((a,b) => b.createdAt.localeCompare(a.createdAt) || a.title.localeCompare(b.title)); }
-function row(entry,index) { return `<a class="artifact-card" data-artifact-row data-slug="${escapeHtml(entry.slug)}" data-date="${escapeHtml(entry.createdAt)}" data-type="${escapeHtml(entry.type)}" href="${escapeHtml(entry.url)}"><small>${String(index+1).padStart(2,'0')} · ${escapeHtml(entry.createdAt)} · ${escapeHtml(entry.type)}</small><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.description)}</p></a>`; }
+function row(entry,index) { return `<a class="artifact-card" data-artifact-row data-slug="${escapeHtml(entry.slug)}" data-date="${escapeHtml(entry.createdAt)}" data-type="${escapeHtml(entry.type)}" href="${escapeHtml(entry.url)}"><small>${String(index+1).padStart(2,'0')} · ${escapeHtml(prettyDate(entry.createdAt))} · ${escapeHtml(entry.type)}</small><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.description)}</p></a>`; }
 export function renderHome(model) {
   const items = sorted(model.artifacts);
   const latest = items[0];
   return fill(homeTemplate, {
     TITLE: 'Irfan’s AI Agents — Published Artifacts', DESCRIPTION: 'Research, field guides, and working tools published by Irfan’s AI agents.',
     COUNT: String(items.length), ARTIFACTS: items.map(row).join('\n'),
-    LATEST: latest ? `<div class="latest"><small>${escapeHtml(latest.createdAt)}</small><h3><a href="${escapeHtml(latest.url)}">${escapeHtml(latest.title)}</a></h3><p>${escapeHtml(latest.description)}</p></div>` : '<p>No artifacts published yet.</p>'
+    LATEST: latest ? `<div class="latest"><small>${escapeHtml(prettyDate(latest.createdAt))}</small><h3><a href="${escapeHtml(latest.url)}">${escapeHtml(latest.title)}</a></h3><p>${escapeHtml(latest.description)}</p></div>` : '<p>No artifacts published yet.</p>'
   });
 }
 function tocFor(fragment) {
@@ -41,7 +42,7 @@ export function renderArtifact(entry,fragment,{moduleCss='',moduleJs=''}={}) {
   const toc = tocFor(fragment);
   const content = `<div class="article-layout${toc.desktop ? '' : ' article-layout--plain'}">${toc.desktop}<div class="artifact-body">${toc.mobile}${fragment}</div></div>`;
   return fill(articleTemplate, {
-    TITLE:escapeHtml(entry.title), DESCRIPTION:escapeHtml(entry.description),SLUG:escapeHtml(entry.slug),TYPE:escapeHtml(entry.type),DATE:escapeHtml(entry.updatedAt ?? entry.createdAt),
+    TITLE:escapeHtml(entry.title), DESCRIPTION:escapeHtml(entry.description),SLUG:escapeHtml(entry.slug),TYPE:escapeHtml(entry.type),DATE:escapeHtml(entry.updatedAt ?? entry.createdAt),DATE_PRETTY:escapeHtml(prettyDate(entry.updatedAt ?? entry.createdAt)),
     CONTENT:content,TOC:'', MODULE_CSS: moduleCss ? `<link rel="stylesheet" href="${escapeHtml(moduleCss)}">` : '', MODULE_JS: moduleJs ? `<script src="${escapeHtml(moduleJs)}" defer></script>` : ''
   });
 }

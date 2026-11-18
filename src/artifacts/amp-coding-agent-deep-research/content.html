@@ -2,7 +2,7 @@
 <div class="legacy-content" data-artifact-content>
 
 
-<h1>⚡ Amp Coding Agent — Deep Research</h1>
+<h1>Amp Coding Agent — Deep Research</h1>
 <p class="subtitle">Design Philosophy, Architecture, Built-in Agents (Oracle, Librarian, Subagents), and Competitive Landscape — July 2026</p>
 
 <div class="toc">
@@ -99,7 +99,7 @@
 
 <h2 id="built-in-agents">4. Built-in Agents &amp; Specialized Tools</h2>
 
-<h3>4.1 🧠 Oracle — The Reasoning Powerhouse</h3>
+<h3>4.1 Oracle — The Reasoning Powerhouse</h3>
 <div class="highlight">
 <strong>What it is:</strong> A read-only subagent powered by <strong>OpenAI's o3</strong> — one of the most capable reasoning models available. It's available as a tool that the main agent can consult for complex reasoning tasks.
 </div>
@@ -124,7 +124,7 @@
 
 <p><strong>Oracle Mode vs Amp Tab:</strong> Together they cover both the micro (cursor-level completions) and macro (architectural reasoning) of software development in a single tool — a pairing more notable than either feature in isolation.</p>
 
-<h3>4.2 📚 Librarian — The Code Searcher</h3>
+<h3>4.2 Librarian — The Code Searcher</h3>
 <div class="highlight">
 <strong>What it is:</strong> A specialized subagent built for searching remote codebases — all public GitHub code plus your private repositories.
 </div>
@@ -148,7 +148,7 @@
 
 <p>Requires a GitHub connection configured in Amp settings.</p>
 
-<h3>4.3 🔀 Parallel Subagents — The Execution Engine</h3>
+<h3>4.3 Parallel Subagents — The Execution Engine</h3>
 <div class="highlight">
 <strong>What it is:</strong> Amp can spawn multiple independent subagents, each with its own isolated context window, shell access, and file editing tools. The orchestration layer handles dependency resolution and scheduling.
 </div>
@@ -159,10 +159,10 @@
 
 <p>This is the feature that most convincingly separates Amp from tools that describe themselves as "agentic" without running genuinely concurrent work.</p>
 
-<h3>4.4 ⌨️ Amp Tab — Free Autocomplete Engine</h3>
+<h3>4.4 Amp Tab — Free Autocomplete Engine</h3>
 <p>A free, compiler-error-aware autocomplete that reads the compiler/linter's current error state, factors in imports and surrounding type context, and generates completions that are already syntactically and semantically valid. In 2026 benchmarks, it ranked as the most accurate compiler-error-aware autocomplete engine among free-tier offerings, beating GitHub Copilot Free and Cody Lite.</p>
 
-<h3>4.5 🧰 Toolboxes — Simple Extensibility</h3>
+<h3>4.5 Toolboxes — Simple Extensibility</h3>
 <p>Like Claude Code skills but with less abstraction. Write simple executables in any language that describe themselves and handle inputs. When Amp starts, it runs each executable with <code>TOOLBOX_ACTION=describe</code> and the tool writes its description to stdout. When the agent decides to use the tool, it runs it again with <code>TOOLBOX_ACTION=execute</code>. No complex SDKs required.</p>
 
 <h2 id="distinctive-features">5. Distinctive Features</h2>

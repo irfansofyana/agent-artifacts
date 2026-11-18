@@ -24,12 +24,12 @@
   .legacy-content a { color: var(--purple); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
   .legacy-content a:hover { border-bottom-color: var(--purple); }
   .legacy-content table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
-  .legacy-content th { background: var(--bg-chrome); color: var(--text-secondary); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .legacy-content th { background: var(--bg-chrome); color: var(--text-secondary); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px; }
   .legacy-content td { padding: 10px 14px; border-bottom: 1px solid var(--gray-200); }
   .legacy-content tr:nth-child(even) td { background: var(--surface-output); }
   .legacy-content .highlight { background: var(--purple-light); border-left: 4px solid var(--purple); padding: 16px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; }
   .legacy-content .highlight strong { color: var(--purple-dark); }
-  .legacy-content blockquote { font-style: italic; color: var(--gray-600); border-left: 3px solid #aaa; padding: 2px 0 2px 18px; margin: 14px 0; }
+  .legacy-content blockquote { font-style: italic; color: var(--gray-600); border-left: 3px solid var(--rule-strong); padding: 2px 0 2px 18px; margin: 14px 0; }
   .legacy-content ul,.legacy-content  ol { margin: 10px 0; padding-left: 26px; }
   .legacy-content li { margin: 6px 0; }
   .legacy-content code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.88em; font-family: var(--font-mono); }
