@@ -4,57 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenSandbox di EKS Jakarta</title>
-<meta name="description" content="Apa itu OpenSandbox, bagaimana aplikasi lain memakainya, dan berapa biaya deploy EKS di Jakarta.">
+<meta name="description" content="Apa itu OpenSandbox, padanannya di AgentCore, control plane untuk agent yang di-spawn, dan biaya deploy EKS di Jakarta.">
 <link rel="stylesheet" href="assets/page.css">
-<style id="herenow-theme">
-:root[data-theme="light"] {
-  color-scheme: light;
-  --canvas: #ffffff; --ink: #000000;
-  --ink-2: rgb(0 0 0 / 64%); --ink-3: rgb(0 0 0 / 56%);
-  --rule: rgb(0 0 0 / 10%); --rule-strong: rgb(0 0 0 / 18%);
-  --tint: rgb(0 0 0 / 3%); --hover: rgb(0 0 0 / 5%);
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --canvas: #0a0a0a; --ink: #ffffff;
-  --ink-2: rgb(255 255 255 / 56%); --ink-3: rgb(255 255 255 / 46%);
-  --rule: rgb(255 255 255 / 12%); --rule-strong: rgb(255 255 255 / 22%);
-  --tint: rgb(255 255 255 / 5%); --hover: rgb(255 255 255 / 9%);
-}
-.theme-switch { padding-top: 8px; padding-bottom: 8px; }
-.theme-switch button {
-  background: none; border: 0; padding: 8px 0; margin: 0; cursor: pointer;
-  color: var(--ink-2); font: inherit; font-size: 14px;
-  text-decoration: underline; text-underline-offset: 3px;
-}
-.theme-switch button:hover { color: var(--ink); }
-.theme-switch button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
-</style>
-<script>
-(function(){
-  var t = null;
-  try { t = localStorage.getItem('herenow-theme'); } catch (e) {}
-  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
-})();
-</script>
-<style id="herenow-registry-link">
-body > .registry-back {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 16px 24px 0;
-  font-size: 14px;
-}
-body > .registry-back a {
-  color: var(--ink-2, var(--text-secondary, CanvasText));
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-body > .registry-back a:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
-</style>
-
 </head>
 <body>
 <a class="skip" href="#main">Langsung ke isi</a>
@@ -65,13 +16,13 @@ body > .registry-back a:focus-visible {
       <a href="index.html">English</a>
       <a href="index-id.html" aria-current="page">Bahasa Indonesia</a>
     </nav>
-  <nav class="registry-back" aria-label="Artifact registry"><a data-registry-link href="https://artifacts.irfansp.dev/">All artifacts</a></nav></div>
-</header><div class="page theme-switch"><button type="button" data-theme-switch>Theme: System</button></div>
+  </div>
+</header>
 <main id="main" class="page">
 
 <p class="eyebrow">OpenSandbox release-1.2.1, AWS ap-southeast-3</p>
 <h1>OpenSandbox di EKS Jakarta</h1>
-<p class="lede">OpenSandbox itu sandbox API yang kamu jalankan sendiri. Cluster EKS kecil di Jakarta, dengan runtime container biasa, kira-kira $777/bulan. Layout 2 AZ kira-kira $1,174/bulan, sebelum PPN dan traffic.</p>
+<p class="lede">OpenSandbox di satu cluster EKS Jakarta menutup pekerjaan AgentCore Code Interpreter, yang AWS tidak tawarkan di region ini. Sisanya dari AgentCore tidak tertutup. Cluster kecil, dengan runtime container biasa, kira-kira $777/bulan. Layout 2 AZ kira-kira $1,174/bulan, sebelum PPN dan traffic.</p>
 <p>English: <a href="index.html">English version</a>.</p>
 
 <h2 id="what">Apa ini</h2>
@@ -98,8 +49,40 @@ body > .registry-back a:focus-visible {
 <p>Pemakaian kedua, yang beda, adalah menjalankan agent di dalam sandbox. Contohnya melakukan itu untuk Claude Code, Codex CLI, Gemini CLI, OpenCode, Qwen Code, Kimi CLI, OpenClaw, LangGraph, Google ADK, Playwright, Chrome, desktop, dan VS Code Web. Itu workload. Client-nya tetap SDK atau MCP server yang membuat sandbox-nya.<a href="#source-8">[8]</a></p>
 <p>Arahkan client ke lifecycle host dan API key. Untuk CLI itu <code>osb config set connection.domain</code>. Untuk MCP itu <code>--domain</code> dan <code>--api-key</code>.<a href="#source-1">[1]</a><a href="#source-6">[6]</a></p>
 
+<h2 id="agentcore">Padanan AgentCore</h2>
+<p>OpenSandbox adalah sandbox-nya, bukan platform agent-nya. Produk AgentCore yang paling dekat adalah Code Interpreter: environment terisolasi tempat agent menjalankan kode. Browser adalah produk AgentCore yang terpisah. OpenSandbox mengerjakan itu hanya kalau image-nya browser. Contoh Chrome dan Playwright adalah image itu.<a href="#source-20">[20]</a><a href="#source-8">[8]</a></p>
+<p>Kalau proses agent-nya sendiri yang jadi sandbox, irisan berikutnya adalah Runtime, dan sebagian Harness. Runtime adalah tempat kamu meng-host agent, dengan isolasi session. Harness adalah agent loop yang dikelola. Setiap session Harness juga dapat microVM dengan filesystem dan shell. OpenSandbox bisa menyalakan box itu. Dia tidak memilih model, dan dia tidak menjalankan loop-nya.<a href="#source-20">[20]</a></p>
+<p>Hermes atau OpenClaw yang tetap di tempatnya sekarang padanannya Code Interpreter. Mereka memanggil sandbox saat butuh shell. Produk yang men-spawn instance OpenClaw padanannya bentuk Runtime, karena proses agent-nya adalah workload. Contoh OpenClaw melakukan itu: Gateway-nya berjalan di dalam sandbox.<a href="#source-8">[8]</a><a href="#source-20">[20]</a></p>
+<div class="table-wrap" role="region" aria-label="Padanan AgentCore" tabindex="0">
+<table>
+<thead>
+<tr><th>Produk AgentCore</th><th>OpenSandbox</th></tr>
+</thead>
+<tbody>
+<tr><td>Code Interpreter</td><td>Ya. Ini padanannya.</td></tr>
+<tr><td>Browser</td><td>Hanya dengan image browser. Bukan produk terpisah.</td></tr>
+<tr><td>Runtime</td><td>Hanya kalau proses agent adalah workload sandbox. Tidak ada produk session yang dikelola di sekelilingnya.</td></tr>
+<tr><td>Harness</td><td>Tidak. Box-nya beririsan. Agent loop-nya tidak.</td></tr>
+<tr><td>Identity</td><td>Tidak. Credential Vault menyuntik secret untuk panggilan keluar. Identity adalah siapa agent itu, dan bagaimana dia mendapat token dari IdP.</td></tr>
+<tr><td>Memory, Gateway, Observability, Payments</td><td>Tidak ada padanannya.</td></tr>
+<tr><td>Policy, Evaluations, Optimization, Registry</td><td>Tidak ada padanannya. Itu fitur AgentCore. OpenSandbox tidak membawanya.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Policy mudah tertukar. OpenSandbox bisa membatasi jaringan sebuah sandbox. AgentCore Policy duduk di Gateway dan memutuskan apakah sebuah tool call boleh jalan sebelum dieksekusi.<a href="#source-20">[20]</a><a href="#source-21">[21]</a></p>
+<p>Tabel region AgentCore tidak punya kolom Asia Pacific (Jakarta). Runtime, built-in tools (Code Interpreter dan Browser), Memory, Gateway, dan Identity tidak tercantum untuk <code>ap-southeast-3</code>. Singapore adalah region terdekat di tabel itu. Cluster ini bisa meng-host proses agent, dan itu pemakaian berbentuk Runtime. Ini bukan AgentCore Runtime: tidak ada identity bawaan, dan tidak ada endpoint Jakarta untuk layanan AWS itu.<a href="#source-21">[21]</a></p>
+
+<h2 id="control-plane">Control plane yang tetap kamu bangun</h2>
+<p>Dua pola, dan keduanya sudah ada di contoh. Produk di mana tiap orang men-spawn OpenClaw, Hermes, atau coding agent adalah pola kedua. OpenSandbox tidak menjadi produk itu dengan sendirinya.</p>
+<p>Agent di luar: satu Hermes atau OpenClaw tetap berjalan dan memanggil OpenSandbox saat butuh shell, file, atau browser. Itu bentuk Code Interpreter. Ini tidak memberi tiap orang sebuah instance. Contoh code-interpreter adalah pola ini.<a href="#source-8">[8]</a></p>
+<p>Agent di dalam: sebuah spawn membuat sandbox yang image-nya adalah agent. Contoh yang sudah ada melakukan ini untuk Claude Code, Codex CLI, dan OpenClaw Gateway. Hermes tidak ada di daftar itu. Image-nya kamu yang buat. User mendapat URL ke sandbox. Client yang membuatnya adalah service kamu.<a href="#source-8">[8]</a></p>
+<p>Satu sandbox per user per jenis agent tetap satu cluster EKS dan satu instalasi OpenSandbox. Bagian yang dibagi adalah lifecycle server, controller, dan ingress gateway. Setiap agent yang di-spawn adalah Pod-nya sendiri, ClusterIP saja, dicapai lewat gateway itu. Isolasinya adalah Pod dan egress sidecar-nya. Cluster kedua adalah pilihan belakangan soal blast radius, bukan modelnya.<a href="#source-3">[3]</a><a href="#source-22">[22]</a></p>
+<p>Control plane adalah yang kamu kirim. Dia mengotentikasi user, memilih image, membuat atau me-resume satu sandbox, mengarahkan ingress ke sana, menyuntik kredensial lewat Credential Vault alih-alih menaruhnya di image, lalu pause atau mematikan sandbox saat user pergi. User tidak menerima API key platform. Server-nya minta satu key, dan default chart adalah satu replica. Tenancy milik kamu.<a href="#source-1">[1]</a><a href="#source-3">[3]</a><a href="#source-4">[4]</a></p>
+<p>Taruh coding agent di dalam sandbox. Mereka butuh shell di mesin yang sama, dan itu yang dilakukan contoh Claude Code dan Codex. Hermes dan OpenClaw ikut pola yang sama kalau produknya adalah "instance kamu". Sandbox anak adalah tambahan yang tepat hanya kalau instance itu harus menjalankan kode yang tidak kamu percaya dengan kredensialnya sendiri. Pemisahan itu pilihan produk. OpenSandbox tidak melakukannya untuk kamu.</p>
+<p>Kirim pola di dalam dulu: satu Pod per user per jenis agent, di cluster pada diagram. Pola di luar adalah fitur belakangan dari control plane yang sama.</p>
+
 <h2 id="architecture">Arsitektur</h2>
-<p>Diagram ini adalah layout Jakarta yang kecil: client di luar region, load balancer, tiga pod control plane, sandbox pod, ECR untuk image, dan Postgres opsional. EKS 1.35 atau 1.36 adalah batas cluster. Fast Sandbox tidak ada di gambar ini.</p>
+<p>Diagram ini adalah layout Jakarta yang kecil: client di luar region, load balancer, tiga pod control plane, sandbox pod, ECR untuk image, dan Postgres opsional. EKS 1.35 atau 1.36 adalah batas cluster. Fast Sandbox tidak ada di gambar ini. Control plane di atas adalah client lain dari lifecycle server. Bukan cluster kedua.</p>
 <figure class="diagram">
   <iframe title="OpenSandbox di EKS Jakarta" src="diagrams/eks-jakarta.html"></iframe>
   <figcaption><a href="diagrams/eks-jakarta.html">Buka diagram</a></figcaption>
@@ -197,6 +180,9 @@ osb command run &lt;sandbox-id&gt; -- python -c "print(1 + 1)"</code></pre>
 <li id="source-17"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/ap-southeast-3/index.json">RDS price list, ap-southeast-3</a></li>
 <li id="source-18"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/ap-southeast-3/index.json">ELB price list, ap-southeast-3</a></li>
 <li id="source-19"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECR/current/ap-southeast-3/index.json">ECR price list, ap-southeast-3</a></li>
+<li id="source-20"><a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html">Amazon Bedrock AgentCore overview</a></li>
+<li id="source-21"><a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html">AgentCore supported regions</a></li>
+<li id="source-22"><a href="https://open-sandbox.ai/architecture/">OpenSandbox architecture</a></li>
 </ol>
 
 </main>
@@ -220,31 +206,6 @@ document.querySelectorAll(".table-wrap").forEach(function (wrap) {
   fit();
   window.addEventListener("resize", fit);
 });
-</script>
-<script>
-(function(){
-  var b = document.querySelector('[data-theme-switch]');
-  if (!b) return;
-  var order = ['system', 'light', 'dark'];
-  var names = { system: 'System', light: 'Light', dark: 'Dark' };
-  function cur() { return document.documentElement.getAttribute('data-theme') || 'system'; }
-  function show() {
-    var c = cur();
-    b.textContent = 'Theme: ' + names[c];
-    b.setAttribute('aria-label', 'Colour theme: ' + names[c] + '. Activate to change.');
-  }
-  show();
-  b.addEventListener('click', function () {
-    var n = order[(order.indexOf(cur()) + 1) % order.length];
-    if (n === 'system') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', n);
-    try {
-      if (n === 'system') localStorage.removeItem('herenow-theme');
-      else localStorage.setItem('herenow-theme', n);
-    } catch (e) {}
-    show();
-  });
-})();
 </script>
 </body>
 </html>

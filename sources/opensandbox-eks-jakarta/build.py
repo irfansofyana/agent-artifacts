@@ -77,6 +77,9 @@ SOURCES = [
     ("RDS price list, ap-southeast-3", "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/ap-southeast-3/index.json"),
     ("ELB price list, ap-southeast-3", "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/ap-southeast-3/index.json"),
     ("ECR price list, ap-southeast-3", "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECR/current/ap-southeast-3/index.json"),
+    ("Amazon Bedrock AgentCore overview", "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html"),
+    ("AgentCore supported regions", "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html"),
+    ("OpenSandbox architecture", "https://open-sandbox.ai/architecture/"),
 ]
 
 
@@ -149,7 +152,7 @@ def en() -> str:
     return f"""
 <p class="eyebrow">OpenSandbox {f["tag"]}, AWS ap-southeast-3</p>
 <h1>OpenSandbox on EKS Jakarta</h1>
-<p class="lede">OpenSandbox is a sandbox API you run yourself. A small EKS cluster in Jakarta, on the default container runtime, is about ${f["pilot"]}/month. A two-AZ layout is about ${f["prod"]}/month, before PPN and traffic.</p>
+<p class="lede">OpenSandbox on one EKS cluster in Jakarta covers the AgentCore Code Interpreter job, which AWS does not offer in this region. It does not cover the rest of AgentCore. A small cluster, on the default container runtime, is about ${f["pilot"]}/month. A two-AZ layout is about ${f["prod"]}/month, before PPN and traffic.</p>
 <p>Bahasa Indonesia: <a href="index-id.html">versi Indonesia</a>.</p>
 
 <h2 id="what">What it is</h2>
@@ -176,8 +179,40 @@ def en() -> str:
 <p>A second, different use is running an agent inside the sandbox. The examples do that for Claude Code, Codex CLI, Gemini CLI, OpenCode, Qwen Code, Kimi CLI, OpenClaw, LangGraph, Google ADK, Playwright, Chrome, a desktop, and VS Code Web. Those are workloads. The client is still the SDK or MCP server that created the sandbox.{src(8)}</p>
 <p>Point the client at the lifecycle host and the API key. For the CLI that is <code>osb config set connection.domain</code>. For MCP it is <code>--domain</code> and <code>--api-key</code>.{src(1)}{src(6)}</p>
 
+<h2 id="agentcore">AgentCore, mapped</h2>
+<p>OpenSandbox is the sandbox, not the agent platform. The closest AgentCore product is Code Interpreter: an isolated environment where an agent runs code. Browser is a separate AgentCore product. OpenSandbox does that job only when the image is a browser. The Chrome and Playwright examples are that image.{src(20)}{src(8)}</p>
+<p>If the agent process itself is the sandbox, the next overlap is Runtime, and partly Harness. Runtime is where you host the agent, with session isolation. Harness is the managed agent loop. Each Harness session also gets a microVM with a filesystem and a shell. OpenSandbox can start that box. It does not pick the model, and it does not run the loop.{src(20)}</p>
+<p>Hermes or OpenClaw, left where they already run, map to Code Interpreter. They call the sandbox when they need a shell. A product that spawns an OpenClaw instance maps to the Runtime shape, because the agent process is the workload. The OpenClaw example does that: the Gateway runs inside the sandbox.{src(8)}{src(20)}</p>
+<div class="table-wrap" role="region" aria-label="AgentCore mapping" tabindex="0">
+<table>
+<thead>
+<tr><th>AgentCore product</th><th>OpenSandbox</th></tr>
+</thead>
+<tbody>
+<tr><td>Code Interpreter</td><td>Yes. This is the match.</td></tr>
+<tr><td>Browser</td><td>Only with a browser image. Not a separate product.</td></tr>
+<tr><td>Runtime</td><td>Only if the agent process is the sandbox workload. No managed session product around it.</td></tr>
+<tr><td>Harness</td><td>No. The box overlaps. The agent loop does not.</td></tr>
+<tr><td>Identity</td><td>No. Credential Vault injects an outbound secret. Identity is who the agent is, and how it gets a token from an IdP.</td></tr>
+<tr><td>Memory, Gateway, Observability, Payments</td><td>No equivalent.</td></tr>
+<tr><td>Policy, Evaluations, Optimization, Registry</td><td>No equivalent. They are AgentCore features. OpenSandbox does not ship them.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Policy is the easy mix-up. OpenSandbox can restrict a sandbox's network. AgentCore Policy sits on Gateway and decides whether a tool call is allowed before it runs.{src(20)}{src(21)}</p>
+<p>The AgentCore region table has no Asia Pacific (Jakarta) column. Runtime, built-in tools (Code Interpreter and Browser), Memory, Gateway, and Identity are not listed for <code>ap-southeast-3</code>. Singapore is the nearest region in that table. This cluster can host the agent process, which is the Runtime-shaped use. It is not AgentCore Runtime: there is no built-in identity, and there is no Jakarta endpoint for the AWS service.{src(21)}</p>
+
+<h2 id="control-plane">The control plane you still build</h2>
+<p>Two patterns, and both already exist in the examples. A product where each person spawns an OpenClaw, a Hermes, or a coding agent is the second one. OpenSandbox does not become that product on its own.</p>
+<p>Agent outside: one Hermes or OpenClaw stays running and calls OpenSandbox when it needs a shell, files, or a browser. That is the Code Interpreter shape. It does not give each person an instance. The code-interpreter example is this pattern.{src(8)}</p>
+<p>Agent inside: a spawn creates a sandbox whose image is the agent. The examples already do this for Claude Code, Codex CLI, and OpenClaw Gateway. Hermes is not in that list. You build that image. The user gets a URL to the sandbox. The client that created it is your service.{src(8)}</p>
+<p>One sandbox per user per agent type is still one EKS cluster and one OpenSandbox install. The shared pieces are the lifecycle server, the controller, and the ingress gateway. Each spawned agent is its own Pod, ClusterIP only, reached through that gateway. Isolation is the Pod and its egress sidecar. A second cluster is a later choice about blast radius, not the model.{src(3)}{src(22)}</p>
+<p>The control plane is what you ship. It authenticates the user, picks an image, creates or resumes one sandbox, routes ingress to it, injects credentials through Credential Vault instead of baking them into the image, and pauses or kills the sandbox when the user leaves. Users do not receive the platform API key. The server wants one key, and the chart default is one replica. Tenancy is yours.{src(1)}{src(3)}{src(4)}</p>
+<p>Put coding agents inside the sandbox. They need the shell on the same machine, which is what the Claude Code and Codex examples do. Hermes and OpenClaw go the same way when the product is "your instance." A child sandbox is the right extra only when that instance must run code you do not trust with its own credentials. That split is a product choice. OpenSandbox does not do it for you.</p>
+<p>Ship the inside pattern first: one Pod per user per agent type, on the cluster in the diagram. The outside pattern is a later feature of the same control plane.</p>
+
 <h2 id="architecture">Architecture</h2>
-<p>The diagram is the small Jakarta layout: clients outside the region, a load balancer, the three control-plane pods, sandbox pods, ECR for images, and optional Postgres. EKS 1.35 or 1.36 is the cluster boundary. Fast Sandbox is not in this drawing.</p>
+<p>The diagram is the small Jakarta layout: clients outside the region, a load balancer, the three control-plane pods, sandbox pods, ECR for images, and optional Postgres. EKS 1.35 or 1.36 is the cluster boundary. Fast Sandbox is not in this drawing. The control plane above is another client of the lifecycle server. It is not a second cluster.</p>
 <figure class="diagram">
   <iframe title="OpenSandbox on EKS Jakarta" src="diagrams/eks-jakarta.html"></iframe>
   <figcaption><a href="diagrams/eks-jakarta.html">Open the diagram</a></figcaption>
@@ -265,7 +300,7 @@ def id_page() -> str:
     return f"""
 <p class="eyebrow">OpenSandbox {f["tag"]}, AWS ap-southeast-3</p>
 <h1>OpenSandbox di EKS Jakarta</h1>
-<p class="lede">OpenSandbox itu sandbox API yang kamu jalankan sendiri. Cluster EKS kecil di Jakarta, dengan runtime container biasa, kira-kira ${f["pilot"]}/bulan. Layout 2 AZ kira-kira ${f["prod"]}/bulan, sebelum PPN dan traffic.</p>
+<p class="lede">OpenSandbox di satu cluster EKS Jakarta menutup pekerjaan AgentCore Code Interpreter, yang AWS tidak tawarkan di region ini. Sisanya dari AgentCore tidak tertutup. Cluster kecil, dengan runtime container biasa, kira-kira ${f["pilot"]}/bulan. Layout 2 AZ kira-kira ${f["prod"]}/bulan, sebelum PPN dan traffic.</p>
 <p>English: <a href="index.html">English version</a>.</p>
 
 <h2 id="what">Apa ini</h2>
@@ -292,8 +327,40 @@ def id_page() -> str:
 <p>Pemakaian kedua, yang beda, adalah menjalankan agent di dalam sandbox. Contohnya melakukan itu untuk Claude Code, Codex CLI, Gemini CLI, OpenCode, Qwen Code, Kimi CLI, OpenClaw, LangGraph, Google ADK, Playwright, Chrome, desktop, dan VS Code Web. Itu workload. Client-nya tetap SDK atau MCP server yang membuat sandbox-nya.{src(8)}</p>
 <p>Arahkan client ke lifecycle host dan API key. Untuk CLI itu <code>osb config set connection.domain</code>. Untuk MCP itu <code>--domain</code> dan <code>--api-key</code>.{src(1)}{src(6)}</p>
 
+<h2 id="agentcore">Padanan AgentCore</h2>
+<p>OpenSandbox adalah sandbox-nya, bukan platform agent-nya. Produk AgentCore yang paling dekat adalah Code Interpreter: environment terisolasi tempat agent menjalankan kode. Browser adalah produk AgentCore yang terpisah. OpenSandbox mengerjakan itu hanya kalau image-nya browser. Contoh Chrome dan Playwright adalah image itu.{src(20)}{src(8)}</p>
+<p>Kalau proses agent-nya sendiri yang jadi sandbox, irisan berikutnya adalah Runtime, dan sebagian Harness. Runtime adalah tempat kamu meng-host agent, dengan isolasi session. Harness adalah agent loop yang dikelola. Setiap session Harness juga dapat microVM dengan filesystem dan shell. OpenSandbox bisa menyalakan box itu. Dia tidak memilih model, dan dia tidak menjalankan loop-nya.{src(20)}</p>
+<p>Hermes atau OpenClaw yang tetap di tempatnya sekarang padanannya Code Interpreter. Mereka memanggil sandbox saat butuh shell. Produk yang men-spawn instance OpenClaw padanannya bentuk Runtime, karena proses agent-nya adalah workload. Contoh OpenClaw melakukan itu: Gateway-nya berjalan di dalam sandbox.{src(8)}{src(20)}</p>
+<div class="table-wrap" role="region" aria-label="Padanan AgentCore" tabindex="0">
+<table>
+<thead>
+<tr><th>Produk AgentCore</th><th>OpenSandbox</th></tr>
+</thead>
+<tbody>
+<tr><td>Code Interpreter</td><td>Ya. Ini padanannya.</td></tr>
+<tr><td>Browser</td><td>Hanya dengan image browser. Bukan produk terpisah.</td></tr>
+<tr><td>Runtime</td><td>Hanya kalau proses agent adalah workload sandbox. Tidak ada produk session yang dikelola di sekelilingnya.</td></tr>
+<tr><td>Harness</td><td>Tidak. Box-nya beririsan. Agent loop-nya tidak.</td></tr>
+<tr><td>Identity</td><td>Tidak. Credential Vault menyuntik secret untuk panggilan keluar. Identity adalah siapa agent itu, dan bagaimana dia mendapat token dari IdP.</td></tr>
+<tr><td>Memory, Gateway, Observability, Payments</td><td>Tidak ada padanannya.</td></tr>
+<tr><td>Policy, Evaluations, Optimization, Registry</td><td>Tidak ada padanannya. Itu fitur AgentCore. OpenSandbox tidak membawanya.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Policy mudah tertukar. OpenSandbox bisa membatasi jaringan sebuah sandbox. AgentCore Policy duduk di Gateway dan memutuskan apakah sebuah tool call boleh jalan sebelum dieksekusi.{src(20)}{src(21)}</p>
+<p>Tabel region AgentCore tidak punya kolom Asia Pacific (Jakarta). Runtime, built-in tools (Code Interpreter dan Browser), Memory, Gateway, dan Identity tidak tercantum untuk <code>ap-southeast-3</code>. Singapore adalah region terdekat di tabel itu. Cluster ini bisa meng-host proses agent, dan itu pemakaian berbentuk Runtime. Ini bukan AgentCore Runtime: tidak ada identity bawaan, dan tidak ada endpoint Jakarta untuk layanan AWS itu.{src(21)}</p>
+
+<h2 id="control-plane">Control plane yang tetap kamu bangun</h2>
+<p>Dua pola, dan keduanya sudah ada di contoh. Produk di mana tiap orang men-spawn OpenClaw, Hermes, atau coding agent adalah pola kedua. OpenSandbox tidak menjadi produk itu dengan sendirinya.</p>
+<p>Agent di luar: satu Hermes atau OpenClaw tetap berjalan dan memanggil OpenSandbox saat butuh shell, file, atau browser. Itu bentuk Code Interpreter. Ini tidak memberi tiap orang sebuah instance. Contoh code-interpreter adalah pola ini.{src(8)}</p>
+<p>Agent di dalam: sebuah spawn membuat sandbox yang image-nya adalah agent. Contoh yang sudah ada melakukan ini untuk Claude Code, Codex CLI, dan OpenClaw Gateway. Hermes tidak ada di daftar itu. Image-nya kamu yang buat. User mendapat URL ke sandbox. Client yang membuatnya adalah service kamu.{src(8)}</p>
+<p>Satu sandbox per user per jenis agent tetap satu cluster EKS dan satu instalasi OpenSandbox. Bagian yang dibagi adalah lifecycle server, controller, dan ingress gateway. Setiap agent yang di-spawn adalah Pod-nya sendiri, ClusterIP saja, dicapai lewat gateway itu. Isolasinya adalah Pod dan egress sidecar-nya. Cluster kedua adalah pilihan belakangan soal blast radius, bukan modelnya.{src(3)}{src(22)}</p>
+<p>Control plane adalah yang kamu kirim. Dia mengotentikasi user, memilih image, membuat atau me-resume satu sandbox, mengarahkan ingress ke sana, menyuntik kredensial lewat Credential Vault alih-alih menaruhnya di image, lalu pause atau mematikan sandbox saat user pergi. User tidak menerima API key platform. Server-nya minta satu key, dan default chart adalah satu replica. Tenancy milik kamu.{src(1)}{src(3)}{src(4)}</p>
+<p>Taruh coding agent di dalam sandbox. Mereka butuh shell di mesin yang sama, dan itu yang dilakukan contoh Claude Code dan Codex. Hermes dan OpenClaw ikut pola yang sama kalau produknya adalah "instance kamu". Sandbox anak adalah tambahan yang tepat hanya kalau instance itu harus menjalankan kode yang tidak kamu percaya dengan kredensialnya sendiri. Pemisahan itu pilihan produk. OpenSandbox tidak melakukannya untuk kamu.</p>
+<p>Kirim pola di dalam dulu: satu Pod per user per jenis agent, di cluster pada diagram. Pola di luar adalah fitur belakangan dari control plane yang sama.</p>
+
 <h2 id="architecture">Arsitektur</h2>
-<p>Diagram ini adalah layout Jakarta yang kecil: client di luar region, load balancer, tiga pod control plane, sandbox pod, ECR untuk image, dan Postgres opsional. EKS 1.35 atau 1.36 adalah batas cluster. Fast Sandbox tidak ada di gambar ini.</p>
+<p>Diagram ini adalah layout Jakarta yang kecil: client di luar region, load balancer, tiga pod control plane, sandbox pod, ECR untuk image, dan Postgres opsional. EKS 1.35 atau 1.36 adalah batas cluster. Fast Sandbox tidak ada di gambar ini. Control plane di atas adalah client lain dari lifecycle server. Bukan cluster kedua.</p>
 <figure class="diagram">
   <iframe title="OpenSandbox di EKS Jakarta" src="diagrams/eks-jakarta.html"></iframe>
   <figcaption><a href="diagrams/eks-jakarta.html">Buka diagram</a></figcaption>
@@ -411,13 +478,13 @@ def main() -> None:
     en_html = shell(
         "en",
         "OpenSandbox on EKS Jakarta",
-        "What OpenSandbox is, how other apps call it, and what an EKS deploy in Jakarta costs.",
+        "What OpenSandbox is, how it maps to AgentCore, the control plane for spawned agents, and what an EKS deploy in Jakarta costs.",
         en(),
     )
     id_html = shell(
         "id",
         "OpenSandbox di EKS Jakarta",
-        "Apa itu OpenSandbox, bagaimana aplikasi lain memakainya, dan berapa biaya deploy EKS di Jakarta.",
+        "Apa itu OpenSandbox, padanannya di AgentCore, control plane untuk agent yang di-spawn, dan biaya deploy EKS di Jakarta.",
         id_page(),
     )
     (OUT / "index.html").write_text(en_html)
