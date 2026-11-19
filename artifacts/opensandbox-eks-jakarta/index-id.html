@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenSandbox di EKS Jakarta</title>
+<meta name="description" content="Apa itu OpenSandbox, bagaimana aplikasi lain memakainya, dan berapa biaya deploy EKS di Jakarta.">
+<link rel="stylesheet" href="assets/page.css">
+<style id="herenow-theme">
+:root[data-theme="light"] {
+  color-scheme: light;
+  --canvas: #ffffff; --ink: #000000;
+  --ink-2: rgb(0 0 0 / 64%); --ink-3: rgb(0 0 0 / 56%);
+  --rule: rgb(0 0 0 / 10%); --rule-strong: rgb(0 0 0 / 18%);
+  --tint: rgb(0 0 0 / 3%); --hover: rgb(0 0 0 / 5%);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0a0a0a; --ink: #ffffff;
+  --ink-2: rgb(255 255 255 / 56%); --ink-3: rgb(255 255 255 / 46%);
+  --rule: rgb(255 255 255 / 12%); --rule-strong: rgb(255 255 255 / 22%);
+  --tint: rgb(255 255 255 / 5%); --hover: rgb(255 255 255 / 9%);
+}
+.theme-switch { padding-top: 8px; padding-bottom: 8px; }
+.theme-switch button {
+  background: none; border: 0; padding: 8px 0; margin: 0; cursor: pointer;
+  color: var(--ink-2); font: inherit; font-size: 14px;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.theme-switch button:hover { color: var(--ink); }
+.theme-switch button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+</style>
+<script>
+(function(){
+  var t = null;
+  try { t = localStorage.getItem('herenow-theme'); } catch (e) {}
+  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<style id="herenow-registry-link">
+body > .registry-back {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 24px 0;
+  font-size: 14px;
+}
+body > .registry-back a {
+  color: var(--ink-2, var(--text-secondary, CanvasText));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+body > .registry-back a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+</style>
+
+</head>
+<body>
+<a class="skip" href="#main">Langsung ke isi</a>
+<header class="masthead">
+  <div class="page">
+    <p class="wordmark">OpenSandbox di EKS Jakarta</p>
+    <nav aria-label="Language">
+      <a href="index.html">English</a>
+      <a href="index-id.html" aria-current="page">Bahasa Indonesia</a>
+    </nav>
+  <nav class="registry-back" aria-label="Artifact registry"><a data-registry-link href="https://artifacts.irfansp.dev/">All artifacts</a></nav></div>
+</header><div class="page theme-switch"><button type="button" data-theme-switch>Theme: System</button></div>
+<main id="main" class="page">
+
+<p class="eyebrow">OpenSandbox release-1.2.1, AWS ap-southeast-3</p>
+<h1>OpenSandbox di EKS Jakarta</h1>
+<p class="lede">OpenSandbox itu sandbox API yang kamu jalankan sendiri. Cluster EKS kecil di Jakarta, dengan runtime container biasa, kira-kira $777/bulan. Layout 2 AZ kira-kira $1,174/bulan, sebelum PPN dan traffic.</p>
+<p>English: <a href="index.html">English version</a>.</p>
+
+<h2 id="what">Apa ini</h2>
+<p>OpenSandbox kasih agent sebuah environment Linux terisolasi untuk menjalankan command, mengedit file, dan, kalau tool-nya ada di image, menggerakkan browser atau desktop. Aplikasi kamu bicara ke satu lifecycle API. Server-nya bisa di Docker untuk laptop, atau di Kubernetes untuk cluster. API-nya sama.<a href="#source-1">[1]</a></p>
+<p>Halaman ini dipin ke release-1.2.1, terbit 13 Nov 2026. Situs dokumentasinya masih mencontohkan checkout <code>release-1.1.0</code>. Pakai tag stable, bukan <code>main</code>.<a href="#source-2">[2]</a><a href="#source-3">[3]</a></p>
+<p>Lisensinya Apache-2.0, dan ini proyek Agentic AI Foundation.<a href="#source-1">[1]</a></p>
+
+<h2 id="features">Apa yang API-nya kasih</h2>
+<p>Di release-1.2.1, kelima SDK bisa membuat sandbox, menyambung lagi, memperpanjang, pause dan resume, lalu mematikannya. Mereka bisa menjalankan command, baca dan tulis file, baca metrics, mengatur egress policy, dan memakai Credential Vault. Snapshot, template, volume, dan pool juga ada di SDK. Pause, snapshot, dan template benar-benar jalan atau tidak tergantung runtime di belakang server, bukan di client.<a href="#source-7">[7]</a></p>
+<ul>
+<li>Traffic masuk di Kubernetes lewat ingress gateway. Sandbox pod-nya ClusterIP saja, jadi gateway-nya wajib, bukan opsional.<a href="#source-3">[3]</a></li>
+<li>Akses keluar adalah policy per sandbox. Credential Vault bisa memanggil layanan luar tanpa menaruh secret aslinya di dalam sandbox.<a href="#source-1">[1]</a></li>
+<li>Pool dan batch create dipakai untuk menjalankan banyak trial sekaligus. C# adalah SDK yang tidak punya Client Pool.<a href="#source-7">[7]</a></li>
+</ul>
+<p>Fast Sandbox adalah runtime terpisah, bukan produk kedua. Create yang menyebut template diarahkan ke Firecracker microVM di dalam pod yang sudah dihangatkan, dan id sandbox-nya diawali <code>fsb-</code>. Create berbasis image tetap memakai pod Kubernetes biasa. SDK-nya tidak berubah.<a href="#source-9">[9]</a></p>
+
+<h2 id="clients">Bagaimana aplikasi lain memakainya</h2>
+<p>Apa pun yang bisa memanggil lifecycle API bisa memakai cluster ini. Server-nya tidak peduli bahwa dia berjalan di EKS.</p>
+<ul>
+<li>Service kamu sendiri memakai SDK: Python (<code>opensandbox</code>), TypeScript (<code>@alibaba-group/opensandbox</code>), Java atau Kotlin, Go, atau C# (<code>Alibaba.OpenSandbox</code>). Python adalah bahasa di quick start. Go yang lebih pas untuk backend yang hidup lama.<a href="#source-1">[1]</a><a href="#source-7">[7]</a></li>
+<li>Orang atau script memakai CLI <code>osb</code>. <code>pip install opensandbox-cli</code>.<a href="#source-1">[1]</a></li>
+<li>Agent yang sudah bicara MCP memakai <code>opensandbox-mcp</code>. Setup yang didokumentasikan adalah Claude Code dan Cursor, lewat stdio atau HTTP. Client MCP lain bisa memakai server yang sama. Tool-nya mencakup create, connect, kill, renew, menjalankan command, dan file teks. Pool, snapshot, template, dan Credential Vault tetap di SDK atau CLI.<a href="#source-6">[6]</a></li>
+</ul>
+<p>Pemakaian kedua, yang beda, adalah menjalankan agent di dalam sandbox. Contohnya melakukan itu untuk Claude Code, Codex CLI, Gemini CLI, OpenCode, Qwen Code, Kimi CLI, OpenClaw, LangGraph, Google ADK, Playwright, Chrome, desktop, dan VS Code Web. Itu workload. Client-nya tetap SDK atau MCP server yang membuat sandbox-nya.<a href="#source-8">[8]</a></p>
+<p>Arahkan client ke lifecycle host dan API key. Untuk CLI itu <code>osb config set connection.domain</code>. Untuk MCP itu <code>--domain</code> dan <code>--api-key</code>.<a href="#source-1">[1]</a><a href="#source-6">[6]</a></p>
+
+<h2 id="architecture">Arsitektur</h2>
+<p>Diagram ini adalah layout Jakarta yang kecil: client di luar region, load balancer, tiga pod control plane, sandbox pod, ECR untuk image, dan Postgres opsional. EKS 1.35 atau 1.36 adalah batas cluster. Fast Sandbox tidak ada di gambar ini.</p>
+<figure class="diagram">
+  <iframe title="OpenSandbox di EKS Jakarta" src="diagrams/eks-jakarta.html"></iframe>
+  <figcaption><a href="diagrams/eks-jakarta.html">Buka diagram</a></figcaption>
+</figure>
+<h3>Komponen</h3>
+<ul>
+<li>Lifecycle server, satu replica, port 80. Dia menolak start tanpa API key. Upgrade memakai <code>Recreate</code>, jadi API-nya sempat putus.<a href="#source-3">[3]</a><a href="#source-4">[4]</a></li>
+<li>Controller, yang merekonsiliasi <code>BatchSandbox</code>, <code>Pool</code>, dan <code>SandboxSnapshot</code>. Ukurannya kecil. Bukan dia yang menentukan ukuran node.<a href="#source-3">[3]</a></li>
+<li>Ingress gateway, dua replica, masing-masing request 1 CPU dan 4 GiB, limit 2 CPU dan 8 GiB, listen di port 28888. Service chart-nya ClusterIP di port 80.<a href="#source-5">[5]</a></li>
+<li>Sandbox pod di namespace <code>opensandbox</code>. <code>execd</code> ada di dalam image sandbox. Egress sidecar ditambahkan hanya kalau create request mengisi <code>networkPolicy</code>.<a href="#source-4">[4]</a></li>
+</ul>
+<h3>Yang harus kamu sediakan</h3>
+<ul>
+<li>EKS 1.35 atau 1.36 di <code>ap-southeast-3</code>. OpenSandbox hanya butuh Kubernetes 1.22+. Jangan buat 1.34: standard support berakhir 2 Des 2026, dan extended support $0.50/jam, $365/bulan, bukan $73.00.<a href="#source-3">[3]</a><a href="#source-11">[11]</a><a href="#source-15">[15]</a></li>
+<li>Helm 3, dari git checkout release-1.2.1. Chart tidak diterbitkan sebagai paket terpisah.<a href="#source-3">[3]</a></li>
+<li>ECR di Jakarta. Registry default chart adalah <code>sandbox-registry.cn-zhangjiakou.cr.aliyuncs.com</code>. Jangan pull itu dari region ini. Mirror <code>server</code>, <code>controller</code>, <code>ingress</code>, <code>execd</code>, dan <code>egress</code> dari Docker Hub atau GHCR, lalu pin digest-nya. Umbrella release yang sekarang tidak Cosign-signed seperti release per-komponen yang lama.<a href="#source-1">[1]</a><a href="#source-4">[4]</a><a href="#source-13">[13]</a></li>
+<li>Secret API key, nama DNS untuk <code>server.gateway.host</code>, dan load balancer di depan server dan gateway.</li>
+<li>RDS PostgreSQL opsional di region yang sama, kalau reschedule tidak boleh menghapus state sandbox. Default chart adalah satu server dan tanpa database.<a href="#source-3">[3]</a></li>
+<li>EBS gp3 kalau sandbox memasang volume. Jalur dasar tidak membutuhkannya di luar disk node.</li>
+</ul>
+
+<h2 id="example">Contoh</h2>
+<p>Python, ke server yang sudah berjalan. Panggilan yang sama jalan ke host EKS begitu domain dan API key diarahkan ke sana.<a href="#source-1">[1]</a></p>
+<pre><code>from opensandbox import Sandbox
+
+sandbox = await Sandbox.create("alpine")
+try:
+    result = await sandbox.commands.run("echo 'Hello OpenSandbox!'")
+finally:
+    await sandbox.destroy()</code></pre>
+<p>Bentuk CLI-nya:</p>
+<pre><code>osb config set connection.domain &lt;lifecycle-host&gt;
+osb config set connection.protocol https
+osb config set connection.api_key &lt;api-key&gt;
+osb sandbox create --image python:3.12 --timeout 30m
+osb command run &lt;sandbox-id&gt; -- python -c "print(1 + 1)"</code></pre>
+
+<h2 id="deploy">Deploy di EKS Jakarta</h2>
+<p>Biarkan <code>fast-sandbox</code> mati. Panduan cloud mereka minta node bare metal dengan <code>/dev/kvm</code>, dan semua node di pool itu harus CPU model yang sama. Satu <code>c7i.metal-24xl</code> di Jakarta kira-kira $3,606/bulan sebelum disk. Nested virtualization AWS bisa membuka <code>/dev/kvm</code> di <code>m7i</code>, <code>c7i</code>, <code>r7i</code>, dan <code>i7i</code> tanpa biaya tambahan, dan <code>m8i</code> / <code>c8i</code> tidak ada di price list Jakarta, tapi OpenSandbox belum menerbitkan resep EKS untuk jalur itu.<a href="#source-10">[10]</a><a href="#source-12">[12]</a><a href="#source-14">[14]</a></p>
+<ol>
+<li>Buat cluster di 1.35 atau 1.36, di <code>ap-southeast-3</code>, dengan subnet private kalau kamu bisa menerima NAT.</li>
+<li>Dua managed node group. Node system menjalankan server, controller, dan gateway. Pilot muat di satu <code>m7i.2xlarge</code>, yang sesuai dengan satu replica server. Worker hanya menjalankan sandbox pod, di-taint, mulai dari satu <code>c7i.2xlarge</code>.</li>
+<li>Mirror kelima image ke ECR pada <code>release-1.2.1</code> dan buat pull secret atau node role yang bisa membaca registry itu.</li>
+<li>Buat namespace <code>opensandbox-system</code> dan <code>opensandbox</code>. Chart tidak membuat namespace workload.<a href="#source-3">[3]</a></li>
+<li>Checkout release-1.2.1, jalankan <code>helm dependency build</code> di <code>manifests/charts</code>, lalu install umbrella chart dengan <code>ingress-gateway.enabled=true</code> dan repository image mengarah ke ECR. Simpan API key di Secret dan referensikan dari values server. Isi <code>server.gateway.host</code> dengan nama yang akan dipakai client.</li>
+<li>Pasang ALB atau NLB di depan server dan gateway. Pastikan <code>/health</code> jawab sebelum mengarahkan client ke sana.</li>
+<li>Tambah RDS hanya kalau state harus bertahan saat pod di-reschedule. Biarkan <code>server.replicaCount</code> di 1. Replica kedua bukan high availability umum.<a href="#source-3">[3]</a></li>
+</ol>
+
+<h2 id="cost">Biaya</h2>
+<p>On-demand, 730 jam, USD, belum termasuk PPN. Diambil 19 Nov 2026 dari offer file <code>ap-southeast-3</code>. Baris di price list bukan kuota. ALB LCU, data NAT, internet egress, CloudWatch, dan Support tidak masuk floor.<a href="#source-14">[14]</a><a href="#source-15">[15]</a><a href="#source-16">[16]</a><a href="#source-17">[17]</a><a href="#source-18">[18]</a><a href="#source-19">[19]</a></p>
+<div class="table-wrap" role="region" aria-label="Biaya bulanan" tabindex="0">
+<table>
+<thead>
+<tr><th>Baris</th><th>Pilot</th><th>2 AZ kecil</th></tr>
+</thead>
+<tbody>
+<tr><td>EKS control plane, $0.10/jam</td><td>73.00</td><td>73.00</td></tr>
+<tr><td>System node</td><td>367.92 (1× m7i.2xlarge)</td><td>367.92 (2× m7i.xlarge)</td></tr>
+<tr><td>Sandbox worker</td><td>300.47 (1× c7i.2xlarge)</td><td>600.94 (2× c7i.2xlarge)</td></tr>
+<tr><td>gp3, $0.096/GB-bulan</td><td>9.60 (100 GB)</td><td>19.20 (200 GB)</td></tr>
+<tr><td>NAT, $0.059/jam</td><td>0</td><td>43.07</td></tr>
+<tr><td>Public IPv4, $0.005/jam</td><td>7.30 (2)</td><td>10.95 (3, asumsi)</td></tr>
+<tr><td>ALB, $0.0252/jam</td><td>18.40</td><td>18.40</td></tr>
+<tr><td>RDS db.t4g.small + 20 GB gp3</td><td>0</td><td>39.99</td></tr>
+<tr><td>ECR, 5 GB</td><td>0.50</td><td>0.50</td></tr>
+<tr><td>Floor</td><td>777</td><td>1,174</td></tr>
+</tbody>
+</table>
+</div>
+<p>Tiga public IPv4 di baris 2 AZ adalah asumsi jumlah alamat: satu untuk NAT, dua untuk load balancer yang menghadap internet di dua AZ. Tarif jam-nya dari offer file.</p>
+<p>Setiap <code>c7i.2xlarge</code> private tambahan plus 50 GB gp3 kira-kira $305/bulan. Berapa sandbox yang muat tergantung CPU dan memory di create request, bukan di chart.</p>
+<p>Yang biasanya mengejutkan adalah jam NAT, bukan gigabyte-nya. 100 GB lewat NAT harganya $5.90. Gateway yang sekadar ada sudah $43.07/bulan sebelum ada traffic sandbox. EKS sendiri $73.00 bahkan dengan dua node.</p>
+<p>Kalau kamu tidak ingin mengubah limit 8 GiB di chart, ganti dua system node <code>m7i.xlarge</code> dengan dua <code>m7i.2xlarge</code>. Itu menambah kira-kira $368/bulan. Kubernetes menjadwalkan berdasarkan request, jadi pasangan yang lebih murah muat kalau server dan dua pod gateway tersebar.</p>
+<p>Kalau cluster dibiarkan di 1.34 lewat 2 Des 2026, control plane pindah ke extended support dan baris $73.00 menjadi $365, naik $292, tanpa perubahan di OpenSandbox.<a href="#source-11">[11]</a><a href="#source-15">[15]</a></p>
+
+<h2 id="sources">Sumber</h2>
+<ol>
+<li id="source-1"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/README.md">OpenSandbox README, release-1.2.1</a></li>
+<li id="source-2"><a href="https://github.com/opensandbox-group/OpenSandbox/releases/tag/release-1.2.1">OpenSandbox 1.2.1 release</a></li>
+<li id="source-3"><a href="https://open-sandbox.ai/deployment">Kubernetes deployment guide</a></li>
+<li id="source-4"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/manifests/charts/server/values.yaml">Server chart values, 1.2.1</a></li>
+<li id="source-5"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/manifests/charts/ingress-gateway/values.yaml">Ingress gateway values, 1.2.1</a></li>
+<li id="source-6"><a href="https://open-sandbox.ai/sdks/mcp">MCP server</a></li>
+<li id="source-7"><a href="https://raw.githubusercontent.com/opensandbox-group/OpenSandbox/release-1.2.1/docs/sdks/index.md">SDK capability matrix, release-1.2.1</a></li>
+<li id="source-8"><a href="https://raw.githubusercontent.com/opensandbox-group/OpenSandbox/release-1.2.1/docs/examples/index.md">Examples index, release-1.2.1</a></li>
+<li id="source-9"><a href="https://open-sandbox.ai/architecture/fast-sandbox">Fast Sandbox</a></li>
+<li id="source-10"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/docs/deployment/ack.md">ACK deployment notes, release-1.2.1</a></li>
+<li id="source-11"><a href="https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html">EKS Kubernetes version lifecycle</a></li>
+<li id="source-12"><a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/amazon-ec2-nested-virtualization.html">EC2 nested virtualization</a></li>
+<li id="source-13"><a href="https://github.com/opensandbox-group/OpenSandbox/issues/2463">Umbrella release signing gap</a></li>
+<li id="source-14"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/ap-southeast-3/index.json">EC2 price list, ap-southeast-3</a></li>
+<li id="source-15"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEKS/current/ap-southeast-3/index.json">EKS price list, ap-southeast-3</a></li>
+<li id="source-16"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonVPC/current/ap-southeast-3/index.json">VPC price list, ap-southeast-3</a></li>
+<li id="source-17"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/ap-southeast-3/index.json">RDS price list, ap-southeast-3</a></li>
+<li id="source-18"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/ap-southeast-3/index.json">ELB price list, ap-southeast-3</a></li>
+<li id="source-19"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECR/current/ap-southeast-3/index.json">ECR price list, ap-southeast-3</a></li>
+</ol>
+
+</main>
+<footer class="foot">
+  <div class="page">
+    <p>Dicek 19 Nov 2026. OpenSandbox release-1.2.1.</p>
+    <p><a href="diagrams/eks-jakarta.html">Diagram</a></p>
+  </div>
+</footer>
+<script>
+document.querySelectorAll(".table-wrap").forEach(function (wrap) {
+  var table = wrap.querySelector("table");
+  if (!table) return;
+  var hint = document.createElement("p");
+  hint.className = "swipe";
+  hint.textContent = "Geser ke samping untuk membaca tabel.";
+  wrap.insertBefore(hint, table);
+  function fit() {
+    hint.hidden = wrap.scrollWidth <= wrap.clientWidth + 1;
+  }
+  fit();
+  window.addEventListener("resize", fit);
+});
+</script>
+<script>
+(function(){
+  var b = document.querySelector('[data-theme-switch]');
+  if (!b) return;
+  var order = ['system', 'light', 'dark'];
+  var names = { system: 'System', light: 'Light', dark: 'Dark' };
+  function cur() { return document.documentElement.getAttribute('data-theme') || 'system'; }
+  function show() {
+    var c = cur();
+    b.textContent = 'Theme: ' + names[c];
+    b.setAttribute('aria-label', 'Colour theme: ' + names[c] + '. Activate to change.');
+  }
+  show();
+  b.addEventListener('click', function () {
+    var n = order[(order.indexOf(cur()) + 1) % order.length];
+    if (n === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', n);
+    try {
+      if (n === 'system') localStorage.removeItem('herenow-theme');
+      else localStorage.setItem('herenow-theme', n);
+    } catch (e) {}
+    show();
+  });
+})();
+</script>
+</body>
+</html>

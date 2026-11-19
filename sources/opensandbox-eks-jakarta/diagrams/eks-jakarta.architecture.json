@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "OpenSandbox on EKS Jakarta",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [1180, 560]
+  },
+  "components": [
+    {
+      "id": "clients",
+      "type": "external",
+      "label": "SDK, CLI, MCP",
+      "sublabel": "lifecycle API clients",
+      "pos": [470, 12],
+      "size": [168, 52]
+    },
+    {
+      "id": "alb",
+      "type": "security",
+      "label": "ALB or NLB",
+      "sublabel": "public HTTPS",
+      "pos": [470, 104],
+      "size": [168, 52]
+    },
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "Lifecycle server",
+      "sublabel": "1 replica, port 80",
+      "pos": [80, 210],
+      "size": [176, 56]
+    },
+    {
+      "id": "gateway",
+      "type": "backend",
+      "label": "Ingress gateway",
+      "sublabel": "port 28888",
+      "pos": [470, 210],
+      "size": [168, 56]
+    },
+    {
+      "id": "controller",
+      "type": "backend",
+      "label": "Controller",
+      "sublabel": "BatchSandbox CRDs",
+      "pos": [80, 330],
+      "size": [176, 56]
+    },
+    {
+      "id": "workers",
+      "type": "cloud",
+      "label": "Sandbox pods",
+      "sublabel": "namespace opensandbox",
+      "pos": [470, 330],
+      "size": [168, 56]
+    },
+    {
+      "id": "ecr",
+      "type": "cloud",
+      "label": "ECR Jakarta",
+      "sublabel": "mirrored images",
+      "pos": [820, 330],
+      "size": [168, 56]
+    },
+    {
+      "id": "rds",
+      "type": "database",
+      "label": "RDS PostgreSQL",
+      "sublabel": "optional state",
+      "pos": [80, 450],
+      "size": [176, 56]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "AWS ap-southeast-3",
+      "wraps": ["alb", "server", "gateway", "controller", "workers", "ecr", "rds"],
+      "pad": 22
+    },
+    {
+      "kind": "security-group",
+      "label": "EKS 1.35 or 1.36",
+      "wraps": ["server", "gateway", "controller", "workers"],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    {
+      "from": "clients",
+      "to": "alb",
+      "label": "HTTPS",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [554, 78]
+    },
+    {
+      "from": "alb",
+      "to": "server",
+      "label": "lifecycle API",
+      "fromSide": "left",
+      "toSide": "top",
+      "labelAt": [250, 168]
+    },
+    {
+      "from": "alb",
+      "to": "gateway",
+      "label": "sandbox traffic",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [554, 176]
+    },
+    {
+      "from": "server",
+      "to": "controller",
+      "label": "creates CRDs",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [168, 286]
+    },
+    {
+      "from": "controller",
+      "to": "workers",
+      "label": "schedules pods",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [360, 348]
+    },
+    {
+      "from": "gateway",
+      "to": "workers",
+      "label": "routes to pods",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [554, 286]
+    },
+    {
+      "from": "ecr",
+      "to": "workers",
+      "label": "image pull",
+      "fromSide": "left",
+      "toSide": "right",
+      "labelAt": [720, 348]
+    },
+    {
+      "from": "server",
+      "to": "rds",
+      "label": "optional state",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "left",
+      "via": [[28, 238], [28, 478]],
+      "labelAt": [52, 400]
+    }
+  ]
+}

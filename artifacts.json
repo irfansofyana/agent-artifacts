@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "OpenSandbox on EKS Jakarta",
+      "slug": "opensandbox-eks-jakarta",
+      "description": "What OpenSandbox is, how other apps call it, and what an EKS deploy in Jakarta costs.",
+      "createdAt": "2026-11-19",
+      "type": "html",
+      "url": "artifacts/opensandbox-eks-jakarta/"
+    },
+    {
       "title": "Open-source projects that use AI to fix GitLab vulnerabilities",
       "slug": "open-source-gitlab-ai-autofix",
       "description": "Ranked by GitHub stars, with GitLab fit and licence. Which open-source projects use AI to fix security findings from GitLab, and which are trustworthy enough to use.",

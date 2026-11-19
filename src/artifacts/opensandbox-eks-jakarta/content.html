@@ -1,0 +1,133 @@
+<div data-artifact-content class="legacy-content">
+<main>
+<p class="eyebrow">OpenSandbox release-1.2.1, AWS ap-southeast-3</p>
+<h1>OpenSandbox on EKS Jakarta</h1>
+<p class="lede">OpenSandbox is a sandbox API you run yourself. A small EKS cluster in Jakarta, on the default container runtime, is about $777/month. A two-AZ layout is about $1,174/month, before PPN and traffic.</p>
+<p>Bahasa Indonesia: <a href="index-id.html">versi Indonesia</a>.</p>
+
+<h2 id="what">What it is</h2>
+<p>OpenSandbox gives an agent an isolated Linux environment to run commands, edit files, and, if you put the tools in the image, drive a browser or a desktop. Your application talks to one lifecycle API. The server can sit on Docker for a laptop, or on Kubernetes for a cluster. The API does not change.<a href="#source-1">[1]</a></p>
+<p>This page is pinned to release-1.2.1, published 13 Nov 2026. The docs site still shows <code>release-1.1.0</code> as the example checkout. Use the stable tag, not <code>main</code>.<a href="#source-2">[2]</a><a href="#source-3">[3]</a></p>
+<p>It is Apache-2.0, and it is a project of the Agentic AI Foundation.<a href="#source-1">[1]</a></p>
+
+<h2 id="features">What the API gives you</h2>
+<p>On release-1.2.1, the five language SDKs can create a sandbox, reconnect to it, renew it, pause and resume it, and kill it. They can run commands, read and write files, read metrics, set an egress policy, and use Credential Vault. Snapshots, templates, volumes, and pools are in the SDK too. Whether pause, snapshots, and templates actually work depends on the runtime behind the server, not on the client.<a href="#source-7">[7]</a></p>
+<ul>
+<li>Inbound traffic on Kubernetes goes through the ingress gateway. Sandbox pods are ClusterIP-only, so the gateway is required, not optional.<a href="#source-3">[3]</a></li>
+<li>Outbound access is a per-sandbox policy. Credential Vault can call an external service without putting the real secret in the sandbox.<a href="#source-1">[1]</a></li>
+<li>Pools and batch create are for running many trials at once. C# is the SDK that does not have Client Pool.<a href="#source-7">[7]</a></li>
+</ul>
+<p>Fast Sandbox is a separate runtime, not a second product. A create that names a template is routed to Firecracker microVMs inside pre-warmed pods, and the sandbox id starts with <code>fsb-</code>. Image-based creates stay on ordinary Kubernetes pods. The SDK does not change.<a href="#source-9">[9]</a></p>
+
+<h2 id="clients">How other apps use it</h2>
+<p>Anything that can call the lifecycle API can use the cluster. The server does not care that it is running on EKS.</p>
+<ul>
+<li>Your own service uses a SDK: Python (<code>opensandbox</code>), TypeScript (<code>@alibaba-group/opensandbox</code>), Java or Kotlin, Go, or C# (<code>Alibaba.OpenSandbox</code>). Python is the quick-start language. Go is the one you would pick for a long-running backend.<a href="#source-1">[1]</a><a href="#source-7">[7]</a></li>
+<li>A person or a script uses the <code>osb</code> CLI. <code>pip install opensandbox-cli</code>.<a href="#source-1">[1]</a></li>
+<li>An agent that already speaks MCP uses <code>opensandbox-mcp</code>. Documented setups are Claude Code and Cursor, over stdio or HTTP. Any other MCP client can use the same server. The tools cover create, connect, kill, renew, run a command, and text files. Pools, snapshots, templates, and Credential Vault stay on the SDK or the CLI.<a href="#source-6">[6]</a></li>
+</ul>
+<p>A second, different use is running an agent inside the sandbox. The examples do that for Claude Code, Codex CLI, Gemini CLI, OpenCode, Qwen Code, Kimi CLI, OpenClaw, LangGraph, Google ADK, Playwright, Chrome, a desktop, and VS Code Web. Those are workloads. The client is still the SDK or MCP server that created the sandbox.<a href="#source-8">[8]</a></p>
+<p>Point the client at the lifecycle host and the API key. For the CLI that is <code>osb config set connection.domain</code>. For MCP it is <code>--domain</code> and <code>--api-key</code>.<a href="#source-1">[1]</a><a href="#source-6">[6]</a></p>
+
+<h2 id="architecture">Architecture</h2>
+<p>The diagram is the small Jakarta layout: clients outside the region, a load balancer, the three control-plane pods, sandbox pods, ECR for images, and optional Postgres. EKS 1.35 or 1.36 is the cluster boundary. Fast Sandbox is not in this drawing.</p>
+<figure class="diagram">
+  <iframe title="OpenSandbox on EKS Jakarta" src="diagrams/eks-jakarta.html"></iframe>
+  <figcaption><a href="diagrams/eks-jakarta.html">Open the diagram</a></figcaption>
+</figure>
+<h3>Components</h3>
+<ul>
+<li>Lifecycle server, one replica, port 80. It refuses to start without an API key. Upgrades use <code>Recreate</code>, so the API blips.<a href="#source-3">[3]</a><a href="#source-4">[4]</a></li>
+<li>Controller, which reconciles <code>BatchSandbox</code>, <code>Pool</code>, and <code>SandboxSnapshot</code>. It is small. It is not what sizes the node.<a href="#source-3">[3]</a></li>
+<li>Ingress gateway, two replicas, each requesting 1 CPU and 4 GiB, limit 2 CPU and 8 GiB, listening on port 28888. The chart service is ClusterIP on port 80.<a href="#source-5">[5]</a></li>
+<li>Sandbox pods in the <code>opensandbox</code> namespace. <code>execd</code> is inside the sandbox image. An egress sidecar is added only when the create request sets <code>networkPolicy</code>.<a href="#source-4">[4]</a></li>
+</ul>
+<h3>What you have to bring</h3>
+<ul>
+<li>EKS 1.35 or 1.36 in <code>ap-southeast-3</code>. OpenSandbox only needs Kubernetes 1.22+. Do not create 1.34: standard support ends 2 Dec 2026, and extended support is $0.50/hour, $365/month, instead of $73.00.<a href="#source-3">[3]</a><a href="#source-11">[11]</a><a href="#source-15">[15]</a></li>
+<li>Helm 3, from a git checkout of release-1.2.1. Charts are not published as standalone packages.<a href="#source-3">[3]</a></li>
+<li>ECR in Jakarta. The chart default registry is <code>sandbox-registry.cn-zhangjiakou.cr.aliyuncs.com</code>. Do not pull that from this region. Mirror <code>server</code>, <code>controller</code>, <code>ingress</code>, <code>execd</code>, and <code>egress</code> from Docker Hub or GHCR, and pin the digest. Current umbrella releases are not Cosign-signed the way the old per-component releases were.<a href="#source-1">[1]</a><a href="#source-4">[4]</a><a href="#source-13">[13]</a></li>
+<li>An API key secret, a DNS name for <code>server.gateway.host</code>, and a load balancer in front of the server and the gateway.</li>
+<li>Optional RDS PostgreSQL in the same region, if a reschedule must not drop sandbox state. The chart default is one server and no database.<a href="#source-3">[3]</a></li>
+<li>EBS gp3 if a sandbox mounts a volume. The basic path does not need it beyond the node disks.</li>
+</ul>
+
+<h2 id="example">Example</h2>
+<p>Python, against a server you already started. The same calls work against the EKS host once the domain and API key point there.<a href="#source-1">[1]</a></p>
+<pre><code>from opensandbox import Sandbox
+
+sandbox = await Sandbox.create("alpine")
+try:
+    result = await sandbox.commands.run("echo 'Hello OpenSandbox!'")
+finally:
+    await sandbox.destroy()</code></pre>
+<p>The CLI form:</p>
+<pre><code>osb config set connection.domain &lt;lifecycle-host&gt;
+osb config set connection.protocol https
+osb config set connection.api_key &lt;api-key&gt;
+osb sandbox create --image python:3.12 --timeout 30m
+osb command run &lt;sandbox-id&gt; -- python -c "print(1 + 1)"</code></pre>
+
+<h2 id="deploy">Deploy on EKS Jakarta</h2>
+<p>Leave <code>fast-sandbox</code> off. Their cloud guide wants bare-metal nodes with <code>/dev/kvm</code>, and every node in that pool has to be the same CPU model. One <code>c7i.metal-24xl</code> in Jakarta is about $3,606/month before disks. AWS nested virtualization can expose <code>/dev/kvm</code> on <code>m7i</code>, <code>c7i</code>, <code>r7i</code>, and <code>i7i</code> at no extra charge, and <code>m8i</code> / <code>c8i</code> are not in the Jakarta price list, but OpenSandbox has not published an EKS recipe for that path.<a href="#source-10">[10]</a><a href="#source-12">[12]</a><a href="#source-14">[14]</a></p>
+<ol>
+<li>Create the cluster on 1.35 or 1.36, in <code>ap-southeast-3</code>, with a private subnet if you can accept a NAT.</li>
+<li>Two managed node groups. System nodes run the server, controller, and gateway. A pilot fits on one <code>m7i.2xlarge</code>, which matches the single server replica. Workers run sandbox pods only, tainted, starting at one <code>c7i.2xlarge</code>.</li>
+<li>Mirror the five images into ECR at <code>release-1.2.1</code> and create a pull secret or a node role that can read that registry.</li>
+<li>Create namespaces <code>opensandbox-system</code> and <code>opensandbox</code>. The chart does not create the workload namespace.<a href="#source-3">[3]</a></li>
+<li>Check out release-1.2.1, run <code>helm dependency build</code> in <code>manifests/charts</code>, and install the umbrella chart with <code>ingress-gateway.enabled=true</code> and the image repositories pointed at ECR. Store the API key in a Secret and reference it from the server values. Set <code>server.gateway.host</code> to the name clients will use.</li>
+<li>Put an ALB or NLB in front of the server and the gateway. Confirm <code>/health</code> before pointing a client at it.</li>
+<li>Add RDS only when you need state to survive a pod reschedule. Keep <code>server.replicaCount</code> at 1. A second replica is not general high availability.<a href="#source-3">[3]</a></li>
+</ol>
+
+<h2 id="cost">Cost</h2>
+<p>On-demand, 730 hours, USD, excluding PPN. Retrieved 19 Nov 2026 from the <code>ap-southeast-3</code> offer files. A price-list row is not a quota. ALB LCU, NAT data, internet egress, CloudWatch, and Support are not in the floor.<a href="#source-14">[14]</a><a href="#source-15">[15]</a><a href="#source-16">[16]</a><a href="#source-17">[17]</a><a href="#source-18">[18]</a><a href="#source-19">[19]</a></p>
+<div class="table-wrap" role="region" aria-label="Monthly cost" tabindex="0">
+<table>
+<thead>
+<tr><th>Line</th><th>Pilot</th><th>Small 2-AZ</th></tr>
+</thead>
+<tbody>
+<tr><td>EKS control plane, $0.10/hour</td><td>73.00</td><td>73.00</td></tr>
+<tr><td>System nodes</td><td>367.92 (1× m7i.2xlarge)</td><td>367.92 (2× m7i.xlarge)</td></tr>
+<tr><td>Sandbox workers</td><td>300.47 (1× c7i.2xlarge)</td><td>600.94 (2× c7i.2xlarge)</td></tr>
+<tr><td>gp3, $0.096/GB-month</td><td>9.60 (100 GB)</td><td>19.20 (200 GB)</td></tr>
+<tr><td>NAT, $0.059/hour</td><td>0</td><td>43.07</td></tr>
+<tr><td>Public IPv4, $0.005/hour</td><td>7.30 (2)</td><td>10.95 (3, assumed)</td></tr>
+<tr><td>ALB, $0.0252/hour</td><td>18.40</td><td>18.40</td></tr>
+<tr><td>RDS db.t4g.small + 20 GB gp3</td><td>0</td><td>39.99</td></tr>
+<tr><td>ECR, 5 GB</td><td>0.50</td><td>0.50</td></tr>
+<tr><td>Floor</td><td>777</td><td>1,174</td></tr>
+</tbody>
+</table>
+</div>
+<p>The three public IPv4 addresses on the 2-AZ row are an address-count assumption: one for the NAT, two for an internet-facing load balancer across two AZs. The hourly rates are from the offer files.</p>
+<p>Each extra private <code>c7i.2xlarge</code> plus 50 GB gp3 is about $305/month. How many sandboxes fit depends on the CPU and memory in the create request, not on the chart.</p>
+<p>The NAT hour is the line that surprises people, not the gigabytes. 100 GB through the NAT is $5.90. The gateway existing at all is $43.07/month before any sandbox traffic. EKS itself is $73.00 even with two nodes.</p>
+<p>If you do not want to tune the chart's 8 GiB limits, replace the two <code>m7i.xlarge</code> system nodes with two <code>m7i.2xlarge</code>. That adds about $368/month. Kubernetes schedules on requests, so the cheaper pair fits if the server and the two gateway pods are spread.</p>
+<p>If a cluster is left on 1.34 past 2 Dec 2026, the control plane moves to extended support and the $73.00 line becomes $365, a $292 increase, with no change in OpenSandbox.<a href="#source-11">[11]</a><a href="#source-15">[15]</a></p>
+
+<h2 id="sources">Sources</h2>
+<ol>
+<li id="source-1"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/README.md">OpenSandbox README, release-1.2.1</a></li>
+<li id="source-2"><a href="https://github.com/opensandbox-group/OpenSandbox/releases/tag/release-1.2.1">OpenSandbox 1.2.1 release</a></li>
+<li id="source-3"><a href="https://open-sandbox.ai/deployment">Kubernetes deployment guide</a></li>
+<li id="source-4"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/manifests/charts/server/values.yaml">Server chart values, 1.2.1</a></li>
+<li id="source-5"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/manifests/charts/ingress-gateway/values.yaml">Ingress gateway values, 1.2.1</a></li>
+<li id="source-6"><a href="https://open-sandbox.ai/sdks/mcp">MCP server</a></li>
+<li id="source-7"><a href="https://raw.githubusercontent.com/opensandbox-group/OpenSandbox/release-1.2.1/docs/sdks/index.md">SDK capability matrix, release-1.2.1</a></li>
+<li id="source-8"><a href="https://raw.githubusercontent.com/opensandbox-group/OpenSandbox/release-1.2.1/docs/examples/index.md">Examples index, release-1.2.1</a></li>
+<li id="source-9"><a href="https://open-sandbox.ai/architecture/fast-sandbox">Fast Sandbox</a></li>
+<li id="source-10"><a href="https://github.com/opensandbox-group/OpenSandbox/blob/release-1.2.1/docs/deployment/ack.md">ACK deployment notes, release-1.2.1</a></li>
+<li id="source-11"><a href="https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html">EKS Kubernetes version lifecycle</a></li>
+<li id="source-12"><a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/amazon-ec2-nested-virtualization.html">EC2 nested virtualization</a></li>
+<li id="source-13"><a href="https://github.com/opensandbox-group/OpenSandbox/issues/2463">Umbrella release signing gap</a></li>
+<li id="source-14"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/ap-southeast-3/index.json">EC2 price list, ap-southeast-3</a></li>
+<li id="source-15"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEKS/current/ap-southeast-3/index.json">EKS price list, ap-southeast-3</a></li>
+<li id="source-16"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonVPC/current/ap-southeast-3/index.json">VPC price list, ap-southeast-3</a></li>
+<li id="source-17"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/ap-southeast-3/index.json">RDS price list, ap-southeast-3</a></li>
+<li id="source-18"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/ap-southeast-3/index.json">ELB price list, ap-southeast-3</a></li>
+<li id="source-19"><a href="https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECR/current/ap-southeast-3/index.json">ECR price list, ap-southeast-3</a></li>
+</ol>
+</main>
+</div>

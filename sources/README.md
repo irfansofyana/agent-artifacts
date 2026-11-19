@@ -25,6 +25,7 @@ artifact from both hosts.
 | Getting started with UAEF | <https://artifacts.irfansp.dev/uaef-getting-started/> | `uaef-getting-started` | `build.py` |
 | Running Hermes and OpenClaw on AWS | <https://artifacts.irfansp.dev/hermes-openclaw-aws/> | `hermes-openclaw-aws` | `gen.py` |
 | Open-source projects that use AI to fix GitLab vulnerabilities | <https://artifacts.irfansp.dev/open-source-gitlab-ai-autofix/> | `open-source-gitlab-ai-autofix` | `build.py` |
+| OpenSandbox on EKS Jakarta | <https://artifacts.irfansp.dev/opensandbox-eks-jakarta/> | `opensandbox-eks-jakarta` | `build.py` (bilingual) |
 
 Rebuild and republish (the mount keeps the URL):
 
