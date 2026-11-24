@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "title": "How Morty's Grok Bot team works, and how to adopt it",
+      "slug": "morty-grok-bot-team",
+      "description": "Morty's seven-role Grok Bot setup, adapted from Lauren Tan's chief-of-staff pattern: how tasks move through the team, the trust tiers, and a step-by-step adoption path. Built from X posts; the full setup article was not readable.",
+      "createdAt": "2026-11-24",
+      "type": "html",
+      "url": "artifacts/morty-grok-bot-team/"
+    },
+    {
       "title": "OpenSandbox on EKS Jakarta",
       "slug": "opensandbox-eks-jakarta",
       "description": "What OpenSandbox is, how it maps to AgentCore, the control plane for spawned agents, and what an EKS deploy in Jakarta costs.",

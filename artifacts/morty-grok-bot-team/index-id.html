@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light"><meta name="description" content="Tujuh role Morty, alur task, tier kepercayaan, dan langkah adopsi, disusun dari postingan X tentang setup chief-of-staff Lauren Tan."><title>Cara kerja tim Grok Bot ala Morty, dan cara adopsinya · Irfan's AI agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><header class="masthead"><div class="page masthead-inner"><p class="wordmark"><a href="../../">← All artifacts</a></p><nav aria-label="Site navigation"><a href="../../">Registry</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav></div></header><main id="site-main" class="page"><header class="artifact-hero"><p class="eyebrow">24 Nov 2026 · html</p><h1>Cara kerja tim Grok Bot ala Morty, dan cara adopsinya</h1><p class="lede">Tujuh role Morty, alur task, tier kepercayaan, dan langkah adopsi, disusun dari postingan X tentang setup chief-of-staff Lauren Tan.</p></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#roles">Tujuh role</a><a href="#flow">Gimana task berpindah di tim</a><a href="#daily">Cara tim ini dipakai sehari-hari</a><a href="#engineering">Sisi engineering-nya</a><a href="#numbers">Ukuran tim</a><a href="#unverified">Yang belum bisa saya verifikasi</a><a href="#adopt">Cara mengadopsinya</a><a href="#pitfalls">Jebakan yang perlu dihindari</a><a href="#sources">Sumber</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#roles">Tujuh role</a><a href="#flow">Gimana task berpindah di tim</a><a href="#daily">Cara tim ini dipakai sehari-hari</a><a href="#engineering">Sisi engineering-nya</a><a href="#numbers">Ukuran tim</a><a href="#unverified">Yang belum bisa saya verifikasi</a><a href="#adopt">Cara mengadopsinya</a><a href="#pitfalls">Jebakan yang perlu dihindari</a><a href="#sources">Sumber</a></details><div data-artifact-content class="legacy-content">
+<main>
+<p class="eyebrow">Grok Bot · setup tim · dari postingan X, 24 Nov 2026</p>
+<h1>Cara kerja tim Grok Bot ala Morty, dan cara adopsinya</h1>
+<p class="lede">Morty merangkum setup Grok Bot milik Lauren Tan (@poteto), salah satu engineer yang membangun Grok Bot. Intinya ada Chief of Staff di depan, specialist di belakang, dan manusia yang approve apa pun yang mau keluar dari sistem. Role-nya gampang di-copy. Yang bikin setup ini jalan itu aturan handoff-nya.</p>
+<p>English: <a href="index.html">English version</a>.</p>
+
+<h2 id="roles">Tujuh role</h2>
+<p>Postingan Morty menyebut tujuh role, dan masing-masing cuma punya satu tugas.</p>
+<ul>
+<li>Chief of Staff merencanakan kerjaan dan mendelegasikannya. Dia pintu depannya, dan kamu ngobrol sama dia kalau belum tahu bot mana yang pegang sebuah task.</li>
+<li>Researcher mencari dan menyaring fakta.</li>
+<li>Engineer membangun dan menguji solusinya.</li>
+<li>Reviewer mengecek kualitas, akurasi, dan risiko.</li>
+<li>Doc Writer mengubah hasil kerja jadi dokumen yang bisa dipakai ulang.</li>
+<li>Operator menjaga workflow yang berulang tetap jalan.</li>
+<li>Memory Manager menjaga konteks yang berguna antar sesi.</li>
+</ul>
+<p>Nama role-nya beda-beda antar postingan Morty. Ada postingan lain yang pakai Dr Eggbot sebagai reviewer dan Crumb sebagai memory bot. Anggap namanya sebagai label untuk tugas, bukan struktur organisasi yang baku.</p>
+
+<h2 id="flow">Gimana task berpindah di tim</h2>
+<p>Morty menggambarkan alurnya begini: intake, delegate, execute, synthesize, deliver. Postingan kedua menulisnya sebagai goal, plan, specialist, review, lalu hasil akhir. Dua-duanya sama saja. Chief of Staff mengubah permintaan yang masih kabur jadi rencana, lalu mengirim tiap bagian ke satu specialist. Reviewer mengecek hasilnya sebelum sampai ke kamu. Tiap bot punya tugas yang sempit, pemicu yang jelas, dan output yang sudah ditentukan.</p>
+
+<h2 id="daily">Cara tim ini dipakai sehari-hari</h2>
+<ul>
+<li>Ngobrol dengan satu bot saja. Sebagian besar waktu kamu cuma ngobrol sama Chief of Staff, dan dia yang meneruskan permintaannya. Poin Lauren: kamu nggak perlu inget bot mana yang pegang apa.</li>
+<li>Taruh aturan tetap di deskripsi bot, bukan di memory-nya. Deskripsi berfungsi sebagai instruksi bot. Kalau bot di-duplicate, instruksinya ikut kecopy tapi memory-nya mulai dari kosong.</li>
+<li>Simpan fakta tentang kamu di memory, dan cara mengerjakan sesuatu di skill. Guide 0chob memisahkan keduanya dengan jelas.</li>
+<li>Jalankan rutinitas seperlunya saja: brief pagi di hari kerja, sweep inbox yang cuma bikin draft dan nggak pernah kirim sendiri, dan review Jumat tentang apa yang dikerjakan tiap bot.</li>
+<li>Bagi aksi ke empat tier. Kerjaan yang bisa di-undo dikerjakan lalu dicatat. Apa pun yang dilihat orang lain, atau yang memakan waktu kamu, dibuat draft-nya dan nunggu persetujuan. Uang, password, penghapusan, dan posting atas nama kamu tidak pernah dikerjakan bot. Kalau ragu, bot nanya.</li>
+<li>Pantau angka trust. Setelah minggu pertama, hitung berapa draft yang kamu kirim tanpa diubah sama sekali. Kasih bot lebih banyak otonomi hanya kalau angka itu naik.</li>
+</ul>
+
+<h2 id="engineering">Sisi engineering-nya</h2>
+<p>Setup engineering Lauren menambah tiga hal. Engineer bot menjalankan coding agent. Test bot mengecek hasil kerjanya sendiri sebelum apa pun di-merge. "Done" harus bisa dicek, bukan cuma diklaim. Daftar Morlex menyebut standar ini "poteto-mode": satu tugas, tanpa slop, dan terverifikasi. Skill set pstack-nya adalah deskripsi publik paling detail untuk lapisan ini. Dia bilang ini membantunya kirim sekitar 2.000 pull request per bulan, dan angka itu klaim dia sendiri.</p>
+
+<h2 id="numbers">Ukuran tim</h2>
+<p>Sumbernya berbeda soal berapa agent yang dia jalankan. Rekap talk-nya yang dikutip smerkzz menyebut satu Chief of Staff, 9 manager, dan 21 worker, jadi 30 agent lebih. Postingan Morty lain mengutipnya di sekitar sepuluh. Jumlahnya berubah dari waktu ke waktu, jadi yang di-copy strukturnya, bukan angkanya.</p>
+
+<h2 id="unverified">Yang belum bisa saya verifikasi</h2>
+<ul>
+<li>Artikel setup tim lengkapnya balik HTTP 403 waktu di-fetch. Postingan Morty pertama bilang "full bot-team setup below", dan bagian itu nggak bisa dibaca.</li>
+<li>Semua isi halaman ini berasal dari postingan X dan artikel yang merangkum talk dia. Tidak ada config yang bisa diekspor, jadi prompt dan rutinitasnya tidak saya tulis ulang.</li>
+<li>Poin soal field deskripsi berasal dari cuplikan hasil pencarian artikel setup tim dia, bukan dari pembacaan penuh.</li>
+<li>Belum pasti apakah Memory Manager itu bot terpisah di setup live-nya atau cuma role di dalam bot lain.</li>
+</ul>
+
+<h2 id="adopt">Cara mengadopsinya</h2>
+<ol>
+<li>Mulai dari satu bot. Jadikan dia Chief of Staff, lalu wawancarai dia tentang kerjaanmu: apa yang kamu kerjakan, prioritas utamamu, orang-orang penting, dan seberapa cepat tiap orang harus dibalas. Minta dia mengulang semuanya dengan kata-katanya sendiri, lalu simpan.</li>
+<li>Tulis empat tier sebelum kasih akses sungguhan: kerjaan yang bisa di-undo, hal yang dilihat orang lain, uang dan penghapusan, dan apa pun yang bikin ragu. Taruh di instruksi tetap bot.</li>
+<li>Pilih satu task yang kamu kerjakan manual tiap minggu. Kerjakan bareng bot sambil kamu perhatikan, minta dia simpan prosedurnya sebagai skill, lalu jalankan skill itu tanpa dibantu. Baru jadwalkan kalau sudah berhasil di percobaan pertama.</li>
+<li>Tambah specialist hanya kalau sebuah job jelas terpisah, dan setelah bot pertama jalan sekitar seminggu. Tiap specialist cukup punya satu tugas, satu pemicu, dan satu format output.</li>
+<li>Minta bukti di setiap handoff. Handoff harus menyebut apa yang sudah dikerjakan, di mana outputnya, dan apa yang masih terbuka. Selesai artinya hasilnya sudah dicek.</li>
+<li>Pisahkan memory jadi tiga: fakta tentang kamu, prosedur sebagai skill, dan keputusan bersama di satu tempat yang bisa dibaca semua bot, misalnya halaman Notion atau folder Obsidian.</li>
+<li>Kalau bot salah, perbaiki aturan, skill, atau deskripsi yang membuat kesalahan itu bisa terjadi. Cuma mengoreksi satu output tidak cukup.</li>
+</ol>
+
+<h2 id="pitfalls">Jebakan yang perlu dihindari</h2>
+<ul>
+<li>Bikin enam bot di hari pertama. Ujung-ujungnya kamu malah ngurusin enam bot. Morlex, yang meng-copy setup ini, bilang enam bot artinya dia harus baca enam chat tiap hari, jadi dia menambah satu boss bot.</li>
+<li>Jadwal yang sudah nggak dibutuhkan siapa pun. Tiap run memakan usage, jadi review jadwal tiap minggu.</li>
+<li>Membiarkan bot kirim apa pun atas nama kamu sebelum angka trust-nya mendukung.</li>
+</ul>
+
+<h2 id="sources">Sumber</h2>
+<ol>
+<li><a href="https://x.com/0xMortyx/status/2123102354345959885">Morty, ringkasan tujuh role (18 Nov 2026)</a></li>
+<li><a href="https://x.com/0xMortyx/status/2118029736819773540">Morty, alur intake sampai deliver</a></li>
+<li><a href="https://x.com/0xMortyx/status/2111869526308511982">Morty, tim dengan Eggbot, Crumb, dan handoff</a></li>
+<li><a href="https://x.com/0xMortyx/status/2109664252264907082">Morty, mengutip Lauren soal sekitar sepuluh agent dan routing Chief of Staff</a></li>
+<li><a href="https://x.com/0xMorlex/status/2122006602010009793">Morlex, daftar 16 bot, agent, dan skill</a></li>
+<li><a href="https://x.com/0xMorlex/status/2122327754850857142">Morlex, menjalankan enam bot di bawah chief of staff</a></li>
+<li><a href="https://x.com/rae1101x/article/2122108077071872129">The poteto Principles for Grok Bot (field guide)</a></li>
+<li><a href="https://x.com/0chob/article/2116874941651898755">How to Hire Grok Bot as Your Chief of Staff (guide)</a></li>
+<li><a href="https://x.com/poteto/article/2094457600259842065">Lauren Tan, The Complete Guide to pstack, Pt. 1</a></li>
+<li><a href="https://x.com/0xsmerkzz/status/2110125681585627175">smerkzz, mengutip talk Lauren soal ukuran tim</a></li>
+</ol>
+</main>
+</div>
+</div></div></main><footer class="foot"><div class="page foot-inner"><p>Irfan's AI agents · morty-grok-bot-team</p><nav aria-label="Sources"><a href="../../">All artifacts</a><a href="https://irfansp.dev/">irfansp.dev</a></nav></div></footer><script src="../../assets/site.js" defer></script></body></html>

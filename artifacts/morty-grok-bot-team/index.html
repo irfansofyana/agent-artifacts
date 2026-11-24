@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light"><meta name="description" content="Morty&#39;s seven-role Grok Bot setup, adapted from Lauren Tan&#39;s chief-of-staff pattern: how tasks move through the team, the trust tiers, and a step-by-step adoption path. Built from X posts; the full setup article was not readable."><title>How Morty&#39;s Grok Bot team works, and how to adopt it · Irfan's AI agents</title><link rel="stylesheet" href="../../assets/design-system.css"><link rel="stylesheet" href="../../assets/site.css"><script>(function(){try{if(localStorage.getItem('artifact-theme')==='paper')document.documentElement.dataset.theme='paper'}catch(e){}})()</script></head>
+<body><a class="skip-link" href="#site-main">Skip to content</a><header class="masthead"><div class="page masthead-inner"><p class="wordmark"><a href="../../">← All artifacts</a></p><nav aria-label="Site navigation"><a href="../../">Registry</a><button type="button" data-theme-toggle aria-label="Switch to paper theme">Theme: Dark</button></nav></div></header><main id="site-main" class="page"><header class="artifact-hero"><p class="eyebrow">24 Nov 2026 · html</p><h1>How Morty&#39;s Grok Bot team works, and how to adopt it</h1><p class="lede">Morty&#39;s seven-role Grok Bot setup, adapted from Lauren Tan&#39;s chief-of-staff pattern: how tasks move through the team, the trust tiers, and a step-by-step adoption path. Built from X posts; the full setup article was not readable.</p></header><div class="article-layout"><nav class="article-toc" aria-label="On this page"><a href="#roles">The seven roles</a><a href="#flow">How a task moves through the team</a><a href="#daily">How the team runs day to day</a><a href="#engineering">The engineering side</a><a href="#numbers">Team size</a><a href="#unverified">What I could not verify</a><a href="#adopt">How to adopt it</a><a href="#pitfalls">Pitfalls</a><a href="#sources">Sources</a></nav><div class="artifact-body"><details class="mobile-toc"><summary>On this page · sections</summary><a href="#roles">The seven roles</a><a href="#flow">How a task moves through the team</a><a href="#daily">How the team runs day to day</a><a href="#engineering">The engineering side</a><a href="#numbers">Team size</a><a href="#unverified">What I could not verify</a><a href="#adopt">How to adopt it</a><a href="#pitfalls">Pitfalls</a><a href="#sources">Sources</a></details><div data-artifact-content class="legacy-content">
+<main>
+<p class="eyebrow">Grok Bot · team setup · from X posts, 24 Nov 2026</p>
+<h1>How Morty's Grok Bot team works, and how to adopt it</h1>
+<p class="lede">Morty summarizes the Grok Bot setup of Lauren Tan (@poteto), one of the engineers building Grok Bot. There is a Chief of Staff in front, specialists behind it, and a human who approves anything that leaves the building. The roles are easy to copy. The handoff rules are what make the setup work.</p>
+<p>Bahasa Indonesia: <a href="index-id.html">versi Indonesia</a>.</p>
+
+<h2 id="roles">The seven roles</h2>
+<p>Morty's post lists seven roles, and each one has a single job.</p>
+<ul>
+<li>Chief of Staff plans the work and delegates it. It is the front door, and you talk to it when you do not know which bot owns a task.</li>
+<li>Researcher finds and filters the facts.</li>
+<li>Engineer builds and tests the solution.</li>
+<li>Reviewer checks quality, accuracy, and risk.</li>
+<li>Doc Writer turns finished work into reusable docs.</li>
+<li>Operator keeps recurring workflows running.</li>
+<li>Memory Manager keeps the useful context across sessions.</li>
+</ul>
+<p>Names change between Morty's posts. Another one has Dr Eggbot as the reviewer and Crumb as the memory bot. Treat the names as labels for jobs, not a fixed org chart.</p>
+
+<h2 id="flow">How a task moves through the team</h2>
+<p>Morty describes the flow as intake, delegate, execute, synthesize, deliver. A second post puts it as goal, plan, specialists, review, final result. Either way, the Chief of Staff turns a fuzzy request into a plan and sends each part to one specialist. A reviewer checks the result before it reaches you. Each bot has a narrow job, a clear trigger, and an expected output.</p>
+
+<h2 id="daily">How the team runs day to day</h2>
+<ul>
+<li>Talk to one bot. Most of the time you only talk to the Chief of Staff, and it routes the request. Lauren's point is that you never have to remember which bot owns what.</li>
+<li>Put standing rules in the bot's description, not in its memory. The description works as the bot's instructions. When you duplicate a bot, the instructions are copied but the memory starts empty.</li>
+<li>Keep memory for facts about you, and skills for how to do a job. The 0chob guide makes this split explicit.</li>
+<li>Run only a few routines: a weekday morning brief, an inbox sweep that drafts replies and never sends them, and a Friday review of what each bot did.</li>
+<li>Sort actions into four tiers. Reversible work is done and logged. Anything another person sees, or anything that commits your time, is drafted and waits for a yes. Money, passwords, deletions, and posting as you are never done by the bot. When it is unsure, it asks.</li>
+<li>Track a trust number. After week one, count how many drafts you sent without changing a word. Give the bot more autonomy only as that number grows.</li>
+</ul>
+
+<h2 id="engineering">The engineering side</h2>
+<p>Lauren's engineering setup adds three things. Engineer bots launch coding agents. Test bots check their own work before anything merges. "Done" has to be checkable, not just claimed. Morlex's list calls the bar "poteto-mode": one job, no slop, verified. Her pstack skill set is the most detailed public description of this layer. She says it helped her ship about 2,000 pull requests a month, and that figure is her own claim.</p>
+
+<h2 id="numbers">Team size</h2>
+<p>Sources disagree on how many agents she runs. A recap of her talk, quoted by smerkzz, says a Chief of Staff, 9 managers, and 21 workers, which is 30 or more agents. A Morty post quotes her at about ten. The count changes over time, so copy the structure, not the number.</p>
+
+<h2 id="unverified">What I could not verify</h2>
+<ul>
+<li>The full team setup article returned HTTP 403 when fetched. The first Morty post says "full bot-team setup below", and that part was not readable.</li>
+<li>Everything here comes from X posts and articles that summarize her talks. No config export was available, so prompts and routines are not reproduced.</li>
+<li>The points about the description field come from search excerpts of her team setup article, not a full read.</li>
+<li>Whether Memory Manager is a separate bot in her live setup or a role inside another bot is not confirmed.</li>
+</ul>
+
+<h2 id="adopt">How to adopt it</h2>
+<ol>
+<li>Start with one bot. Make it the Chief of Staff and interview it about your work: what you do, your top priorities, the people who matter, and how fast each should hear back. Ask it to restate that in its own words, then save it.</li>
+<li>Write the four tiers before you give the bot any real access: reversible work, things others see, money and deletions, and anything unsure. Put them in the bot's standing instructions.</li>
+<li>Pick one task you repeat by hand every week. Do it with the bot while you watch, ask it to save the procedure as a skill, then run the skill without help. Only schedule it after it succeeds on the first try.</li>
+<li>Add a specialist only when a job is clearly separate, and only after the first bot has run for about a week. Give each specialist one job, one trigger, and one output format.</li>
+<li>Require evidence at every handoff. A handoff should say what was done, where the output lives, and what is still open. Done means the result was checked.</li>
+<li>Split memory three ways: facts about you, procedures as skills, and shared decisions in one place every bot can read, such as a Notion page or an Obsidian folder.</li>
+<li>When a bot gets something wrong, fix the rule, skill, or description that let it happen. Correcting the single output is not enough.</li>
+</ol>
+
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>Building six bots on day one. Then you manage six bots. Morlex, who copied the setup, said six bots meant reading six chats a day, so he added a boss bot.</li>
+<li>Scheduled runs nobody needs anymore. Each one burns usage, so review the schedule every week.</li>
+<li>Letting a bot send anything in your name before the trust number supports it.</li>
+</ul>
+
+<h2 id="sources">Sources</h2>
+<ol>
+<li><a href="https://x.com/0xMortyx/status/2123102354345959885">Morty, seven-role summary (18 Nov 2026)</a></li>
+<li><a href="https://x.com/0xMortyx/status/2118029736819773540">Morty, intake to deliver flow</a></li>
+<li><a href="https://x.com/0xMortyx/status/2111869526308511982">Morty, team with Eggbot, Crumb, and the handoff</a></li>
+<li><a href="https://x.com/0xMortyx/status/2109664252264907082">Morty, quoting Lauren on about ten agents and Chief of Staff routing</a></li>
+<li><a href="https://x.com/0xMorlex/status/2122006602010009793">Morlex, list of 16 bots, agents, and skills</a></li>
+<li><a href="https://x.com/0xMorlex/status/2122327754850857142">Morlex, running six bots under a chief of staff</a></li>
+<li><a href="https://x.com/rae1101x/article/2122108077071872129">The poteto Principles for Grok Bot (field guide)</a></li>
+<li><a href="https://x.com/0chob/article/2116874941651898755">How to Hire Grok Bot as Your Chief of Staff (guide)</a></li>
+<li><a href="https://x.com/poteto/article/2094457600259842065">Lauren Tan, The Complete Guide to pstack, Pt. 1</a></li>
+<li><a href="https://x.com/0xsmerkzz/status/2110125681585627175">smerkzz, quoting Lauren's talk on team size</a></li>
+</ol>
+</main>
+</div>
+</div></div></main><footer class="foot"><div class="page foot-inner"><p>Irfan's AI agents · morty-grok-bot-team</p><nav aria-label="Sources"><a href="../../">All artifacts</a><a href="https://irfansp.dev/">irfansp.dev</a></nav></div></footer><script src="../../assets/site.js" defer></script></body></html>
